@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+	<PropertyGroup>
+		<XilinxInstallPath></XilinxInstallPath>
+		<XilinxVivadoVersion></XilinxVivadoVersion>
+		<XilinxLibraryPath></XilinxLibraryPath>
+	</PropertyGroup>
+	<PropertyGroup Condition="Exists('C:\Xilinx\Vivado')">
+		<XilinxInstallPath>C:\Xilinx</XilinxInstallPath>
+		<XilinxVivadoVersion>$([System.IO.Path]::GetFileName($([System.String]::Join(';', $([System.IO.Directory]::GetDirectories('$(XilinxInstallPath)\Vivado','*',System.IO.SearchOption.TopDirectoryOnly))).Split(';')[0])))</XilinxVivadoVersion>
+		<XilinxLibraryPath>$(XilinxInstallPath)\Vivado\$(XilinxVivadoVersion)\ids_lite\ISE\vhdl\src</XilinxLibraryPath>
+	</PropertyGroup>
+	<PropertyGroup>
+		<ProjectSystemBase>$(MSBuildThisFileDirectory)</ProjectSystemBase>
+
+		<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+		<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+
+		<DebuggerFlavor>ScriptDebugger</DebuggerFlavor>
+		<RunCommand>$(WinDir)\System32\cscript.exe</RunCommand>
+		<RunWorkingDirectory>$(MSBuildProjectDirectory)</RunWorkingDirectory>
+		<StartItem>Start.js</StartItem>
+	</PropertyGroup>
+</Project>

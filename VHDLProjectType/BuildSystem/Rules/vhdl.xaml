@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--Copyright, Microsoft Corporation, All rights reserved.-->
+<Rule
+	Name="ConfigurationVHDL"
+	DisplayName="VHDL"
+	PageTemplate="generic"
+	Description="VHDL"
+	xmlns="http://schemas.microsoft.com/build/2009/properties">
+    <Rule.Categories>
+        <Category Name="General" DisplayName="General" Description="General" />
+    </Rule.Categories>
+    <Rule.DataSource>
+        <DataSource Persistence="ProjectFile" Label="Configuration" />
+    </Rule.DataSource>
+
+    <EnumProperty Name="Language standard" Visible="True">
+        <EnumValue Name="IEEE_1076_2008" IsDefault="True" DisplayName="IEEE 1076-2008" />
+    </EnumProperty>
+
+    <StringListProperty Name="LibraryPaths" Visible="True" DisplayName="Library paths" Separator=";">
+    </StringListProperty>
+    <StringProperty Name="ProjectGuid" Visible="False">
+        <StringProperty.DataSource>
+            <DataSource Persistence="ProjectFile" Label="Globals" HasConfigurationCondition="False" />
+        </StringProperty.DataSource>
+    </StringProperty>
+</Rule>

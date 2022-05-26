@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" Type="Item" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005" xmlns:sdk="http://schemas.microsoft.com/developer/vstemplate-sdkextension/2010">
+  <TemplateData>
+    <Name>VHDL Module</Name>
+    <Description>An empty vhdl module</Description>
+    <Icon>VHDLItemTemplate.ico</Icon>
+    <TemplateID>6f968345-38c2-49cb-bab8-249f8e4b7eb9</TemplateID>
+    <ProjectType>VHDL</ProjectType>
+	<DefaultName>module.vhd</DefaultName>
+  </TemplateData>
+  <TemplateContent>
+	<ProjectItem ReplaceParameters="true">module.vhd</ProjectItem>
+  </TemplateContent>
+</VSTemplate>
