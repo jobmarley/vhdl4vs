@@ -74,8 +74,10 @@ namespace MyCompany.LanguageServices.VHDL
             NormalizedSpanCollection newSpanCollection = new NormalizedSpanCollection(newSpans);
 			NormalizedSpanCollection oldSpanCollection = new NormalizedSpanCollection(oldSpans);
 
-			//the changed regions are regions that appear in one set or the other, but not both.
-			NormalizedSpanCollection removed = NormalizedSpanCollection.Difference(oldSpanCollection, newSpanCollection);
+            //System.Diagnostics.Debug.WriteLine(string.Format("ErrorTagger reparse {}, {} errors", m_vhdlDoc.Filepath, newSpanCollection.Count));
+
+            //the changed regions are regions that appear in one set or the other, but not both.
+            NormalizedSpanCollection removed = NormalizedSpanCollection.Difference(oldSpanCollection, newSpanCollection);
 
             Span? change = null;
 
@@ -95,7 +97,7 @@ namespace MyCompany.LanguageServices.VHDL
 
             if (change.HasValue)
             {
-				TagsChanged?.Invoke(this, new SnapshotSpanEventArgs(new SnapshotSpan(daResult.Snapshot, change.Value)));
+            	TagsChanged?.Invoke(this, new SnapshotSpanEventArgs(new SnapshotSpan(daResult.Snapshot, change.Value)));
             }
         }
         public IEnumerable<ITagSpan<IErrorTag>> GetTags(NormalizedSnapshotSpanCollection spans)

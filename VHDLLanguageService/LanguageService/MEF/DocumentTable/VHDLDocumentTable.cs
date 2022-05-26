@@ -196,8 +196,8 @@ namespace MyCompany.LanguageServices.VHDL
 			vhdldoc = new VHDLDocument(this);
 			vhdldoc.Filepath = doc.FilePath;
 			vhdldoc.TextDocument = doc;
-			vhdldoc.Parser.Parser = new VHDLBackgroundParser(buffer, TaskScheduler.Default, vhdldoc);
 			vhdldoc.Project = m_projects.Values.FirstOrDefault(); // Add first project so libraries work kind of
+			vhdldoc.Parser.Parser = new VHDLBackgroundParser(buffer, TaskScheduler.Default, vhdldoc);
 
 			VHDLDocument addedDocument = m_orphanDocuments.GetOrAdd(doc.FilePath.ToLower(), vhdldoc);
 			if (addedDocument == vhdldoc)

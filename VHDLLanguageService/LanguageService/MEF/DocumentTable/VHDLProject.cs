@@ -116,8 +116,8 @@ namespace MyCompany.LanguageServices.VHDL
 							VHDLDocument doc = new VHDLDocument(m_documentTable);
 							doc.Filepath = absolutePath;
 							doc.TextDocument = null;
-							doc.Parser.Parser = new VHDLSimpleParser(doc);
 							doc.Project = this;
+							doc.Parser.Parser = new VHDLSimpleParser(doc);
 							if (m_documents.TryAdd(doc.Filepath, doc))
 							{
 								doc.Parser.AnalysisComplete += OnDocumentAnalysisCompleted;
@@ -198,8 +198,8 @@ namespace MyCompany.LanguageServices.VHDL
 							VHDLDocument doc = new VHDLDocument(m_documentTable);
 							doc.Filepath = filepath;
 							doc.TextDocument = null;
-							doc.Parser.Parser = new VHDLSimpleParser(doc);
 							doc.Project = this;
+							doc.Parser.Parser = new VHDLSimpleParser(doc);
 
 							lib.Documents.Add(doc);
 
@@ -215,6 +215,8 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			try
 			{
+				//System.Diagnostics.Debug.WriteLine(string.Format("OnLibraryAnalysisCompleted {0}", e.Parser.Document.Filepath));
+				//System.Diagnostics.Debug.WriteLine("{");
 				// Get list of library names from the packages in that file
 				// Then update them in the library list
 				AnalysisResult aresult = e.Result;
@@ -258,6 +260,7 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 			catch (Exception ex)
 			{ }
+			//System.Diagnostics.Debug.WriteLine("}");
 		}
 
 		private void OnDocumentAnalysisCompleted(object sender, AnalysisResultEventArgs e)

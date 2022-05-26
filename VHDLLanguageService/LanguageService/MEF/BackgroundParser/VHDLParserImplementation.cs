@@ -70,6 +70,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// Not sure if DocumentAdded/Removed are necessary...
 			VHDLProject proj = Document.Project;
+			//Debug.WriteLine(string.Format("ParserImplementation created, document: {0}, project: {1}", document.Filepath, proj?.UnconfiguredProject?.FullPath ?? "null"));
 			if (proj != null)
 			{
 				proj.LibraryChanged += OnLibraryChanged;
@@ -339,18 +340,21 @@ namespace MyCompany.LanguageServices.VHDL
 		private bool m_deepAnalysisDirty = true;
 		protected void RequestParse()
 		{
+			//System.Diagnostics.Debug.WriteLine(string.Format("RequestParse {0}", Document.Filepath));
 			m_parseDirty = true;
 			MarkDirty();
 		}
 
 		protected void RequestAnalysis()
 		{
+			//System.Diagnostics.Debug.WriteLine(string.Format("RequestAnalysis {0}", Document.Filepath));
 			m_analysisDirty = true;
 			MarkDirty();
 		}
 
 		protected void RequestDeepAnalysis()
 		{
+			//System.Diagnostics.Debug.WriteLine(string.Format("RequestDeepAnalysis {0}", Document.Filepath));
 			m_deepAnalysisDirty = true;
 			MarkDirty();
 		}
@@ -391,7 +395,10 @@ namespace MyCompany.LanguageServices.VHDL
 				AnalysisResult aresult = Analyse(PResult);
 				aresult.Version = version;
 				AResult = aresult;
+				//System.Diagnostics.Debug.WriteLine(string.Format("AnalysisComplete.Invoke {0}", Document.Filepath));
+				//System.Diagnostics.Debug.WriteLine("{");
 				AnalysisComplete?.Invoke(this, new AnalysisResultEventArgs(this, aresult));
+				//System.Diagnostics.Debug.WriteLine("}");
 				UpdateUsedPackages(aresult);
 			}
 
@@ -404,7 +411,11 @@ namespace MyCompany.LanguageServices.VHDL
 				DeepAnalysisResult daresult = DeepAnalyse(AResult);
 				daresult.Version = version;
 				DAResult = daresult;
+
+				//System.Diagnostics.Debug.WriteLine(string.Format("DeepAnalysisComplete.Invoke {0}", Document.Filepath));
+				//System.Diagnostics.Debug.WriteLine("{");
 				DeepAnalysisComplete?.Invoke(this, new DeepAnalysisResultEventArgs(this, daresult));
+				//System.Diagnostics.Debug.WriteLine("}");
 			}
 		}
 
