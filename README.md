@@ -10,7 +10,7 @@ Feel free to contribute, even if it's just a small fix.
 # Supported features
 
 ### Context aware syntax coloring
-![image](https://user-images.githubusercontent.com/99695100/170529260-5dd92c6c-ceb3-446e-91d8-90a0dce6f57a.png)
+![image](https://user-images.githubusercontent.com/99695100/170562106-6179298e-eee7-4754-8d9f-2608d36242fa.png)
 
 ### Type evaluation
 ![image](https://user-images.githubusercontent.com/99695100/170529491-b065ba62-2b4a-4488-93b2-162a671f5519.png)
@@ -20,3 +20,6 @@ Feel free to contribute, even if it's just a small fix.
 
 ### Outlining
 ![image](https://user-images.githubusercontent.com/99695100/170530029-097eb58d-2624-49ae-b855-b32bf69fbd06.png)
+
+### Completion
+![image](https://user-images.githubusercontent.com/99695100/170561963-0508ed3e-3cc8-428a-8e05-5288629e9820.png)
