@@ -23,3 +23,6 @@ Feel free to contribute, even if it's just a small fix.
 
 ### Completion
 ![image](https://user-images.githubusercontent.com/99695100/170561963-0508ed3e-3cc8-428a-8e05-5288629e9820.png)
+
+### Library path
+![image](https://user-images.githubusercontent.com/99695100/170562949-82136cd0-264b-438a-a401-9262d5fc081d.png)
