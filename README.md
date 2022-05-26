@@ -1,6 +1,6 @@
 # VHDLLanguageService
 I started doing VHDL stuff some time ago, so naturally I looked for a VHDL extension for Visual studio. Unfortunately, the existing extensions are not free. So I decided to make my own extension for VHDL.
-There is a bit of vivado integration as well but I didn't have enough time to finish it. And tcl being an atrocious language makes it rather annoying as well.
+There is a bit of vivado integration as well but I didn't have enough time to finish it. And tcl being tcl... makes it rather annoying as well.
 
 There is quite a few bugs. VHDL is not exactly a simple language, but I like there is already a lot of usefull features and error checks, and I feel like the design is
 pretty solid. So it's pretty simple to fix things and add new features.
