@@ -2278,6 +2278,10 @@ namespace MyCompany.LanguageServices.VHDL
 							throw new VHDLCodeException(string.Format("Wrong argument type, '{0}' expected, got '{1}'",
 								aat.IndexTypes.First()?.GetClassifiedText()?.Text ?? "<error type>",
 								evaluatedArg.Type?.GetClassifiedText()?.Text ?? "<error type>"), Span);
+
+						VHDLRange ra = aat.GetIndexRange(0);
+						if (ra?.IsOutOfBound(Arguments[0]) == VHDLCompatibilityResult.No)
+							throw new VHDLCodeException(string.Format("Argument is out of bounds"), Span);
 					}
 
 					return new VHDLEvaluatedExpression(aat.ElementType, this, null);

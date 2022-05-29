@@ -408,32 +408,111 @@ namespace MyCompany.LanguageServices.VHDL
 				{
 					try
 					{
-						// Check if name is a name expression (could be a slice, but too complicated for now)
-						if (!(parameter.Argument is VHDLNameExpression))
+						if (parameter.Argument is VHDLNameExpression ne)
 						{
-							errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Expected name expression", parameter.Argument.Span));
+							string name = ne.Name;
+
+							// Check if port exist in component
+							VHDLPortDeclaration componentPort = componentDecl.Ports.FirstOrDefault(p => string.Compare(p.Name, name, true) == 0);
+							if (componentPort == null)
+							{
+								errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Port '{0}' doesn't exist in component '{1}'", name, componentDecl.Name), parameter.Argument.Span));
+								continue;
+							}
+							VHDLType portType = componentPort.Type.Dereference();
+							if (portType is VHDLAbstractArrayType aat)
+							{
+								// If this the port is an array, we add all the elements
+								if (aat.Dimension != 1)
+								{
+									errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, "Array with dimension != 1 not supported", parameter.Argument.Span));
+									continue;
+								}
+								VHDLRange r = aat.GetIndexRange(0);
+								long start;
+								long end;
+								if (r?.TryGetIntegerRange(out start, out end) != true)
+								{
+									errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, "Expression cannot be evaluated", parameter.Argument.Span));
+									continue;
+								}
+								for (long i = start; i <= end; ++i)
+								{
+									string n = name + "(" + i.ToString() + ")";
+									if (!usedPorts.Add(n))
+									{
+										errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Port already associated '{0}'", n), parameter.Argument.Span));
+										continue;
+									}
+								}
+							}
+							else
+							{
+								if (!usedPorts.Add(name))
+								{
+									errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Port already associated '{0}'", name), parameter.Argument.Span));
+									continue;
+								}
+							}
+							// Check types are same
+							VHDLStatementUtilities.CheckExpressionType(parameter.Value, componentPort.Type, errorListener);
+
+						}
+						else if (parameter.Argument is VHDLFunctionCallOrIndexExpression fce)
+						{
+							if (!(fce.NameExpression is VHDLNameExpression))
+							{
+								errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Expected name expression", fce.NameExpression.Span));
+								continue;
+							}
+
+							string name = (fce.NameExpression as VHDLNameExpression)?.Name;
+							VHDLPortDeclaration componentPort = componentDecl.Ports.FirstOrDefault(p => string.Compare(p.Name, name, true) == 0);
+							if (componentPort == null)
+							{
+								errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Port '{0}' doesn't exist in component '{1}'", name, componentDecl.Name), parameter.Argument.Span));
+								continue;
+							}
+							VHDLRange r = (fce.Arguments[0] as VHDLRangeExpression)?.Range;
+							VHDLEvaluatedExpression estart = (r?.Start ?? fce.Arguments[0])?.Evaluate();
+							VHDLEvaluatedExpression eend = (r?.End ?? fce.Arguments[0])?.Evaluate();
+							long? iStart = r?.Direction == VHDLRangeDirection.To ? (estart.Result as VHDLIntegerLiteral)?.Value : (eend.Result as VHDLIntegerLiteral)?.Value;
+							long? iEnd = r?.Direction == VHDLRangeDirection.To ? (eend.Result as VHDLIntegerLiteral)?.Value : (estart.Result as VHDLIntegerLiteral)?.Value;
+							if (iStart == null || iEnd == null)
+							{
+								errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Expression cannot be evaluated", parameter.Argument.Span));
+								continue;
+							}
+							for (long i = iStart.Value; i <= iEnd.Value; ++i)
+							{
+								string n = name + "(" + i.ToString() + ")";
+								if (!usedPorts.Add(n))
+								{
+									errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Port already associated '{0}'", n), parameter.Argument.Span));
+									continue;
+								}
+							}
+							VHDLType argType = null;
+							try
+							{
+								argType = parameter.Argument.Evaluate()?.Type;
+							}
+							catch (VHDLCodeException ce)
+							{
+								errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, ce.Message, parameter.Argument.Span));
+							}
+							catch (Exception ex)
+							{
+								continue;
+							}
+							VHDLStatementUtilities.CheckExpressionType(parameter.Value, argType, errorListener);
+						}
+						else
+						{
+							errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Expected name or index expression", parameter.Argument.Span));
 							continue;
 						}
 
-						// Check if port was already used in this instantiation
-						string name = (parameter.Argument as VHDLNameExpression).Name;
-						if (usedPorts.Contains(name))
-						{
-							errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Port already associated '{0}'", name), parameter.Argument.Span));
-							continue;
-						}
-						usedPorts.Add(name);
-
-						// Check if port exist in component
-						VHDLPortDeclaration componentPort = componentDecl.Ports.FirstOrDefault(p => string.Compare(p.Name, name, true) == 0);
-						if (componentPort == null)
-						{
-							errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Port '{0}' doesn't exist in component '{1}'", name, componentDecl.Name), parameter.Argument.Span));
-							continue;
-						}
-
-						// Check types are same
-						VHDLStatementUtilities.CheckExpressionType(parameter.Value, componentPort.Type, errorListener);
 					}
 					catch (Exception ex)
 					{
@@ -441,13 +520,51 @@ namespace MyCompany.LanguageServices.VHDL
 					}
 				}
 
-				var missingPorts = componentDecl.Ports.Where(p => !usedPorts.Contains(p.Name));
-				if (missingPorts.Any(x => x.Mode == VHDLSignalMode.Out))
-					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, string.Format("Missing out ports {0} from entity '{1}'", string.Join(", ", missingPorts.Select(x => "'" + x.Name + "'")), componentDecl.Name), ComponentNameExpression.Span));
-				if (missingPorts.Any(x => x.Mode == VHDLSignalMode.In))
-					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Missing in ports {0} from entity '{1}'", string.Join(", ", missingPorts.Select(x => "'" + x.Name + "'")), componentDecl.Name), ComponentNameExpression.Span));
-				if (missingPorts.Any(x => x.Mode == VHDLSignalMode.Inout))
-					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Missing inout ports {0} from entity '{1}'", string.Join(", ", missingPorts.Select(x => "'" + x.Name + "'")), componentDecl.Name), ComponentNameExpression.Span));
+				// Get list of ports that are not assigned
+				List<string> missingOutPorts = new List<string>();
+				List<string> missingInPorts = new List<string>();
+				List<string> missingInoutPorts = new List<string>();
+				foreach (var p in componentDecl.Ports)
+				{
+					if (p.Type is VHDLAbstractArrayType aat)
+					{
+						if (aat.Dimension != 1)
+							continue;
+						VHDLRange r = aat.GetIndexRange(0);
+						VHDLEvaluatedExpression estart = r.Start.Evaluate();
+						VHDLEvaluatedExpression eend = r.End.Evaluate();
+						long? iStart = r.Direction == VHDLRangeDirection.To ? (estart.Result as VHDLIntegerLiteral)?.Value : (eend.Result as VHDLIntegerLiteral)?.Value;
+						long? iEnd = r.Direction == VHDLRangeDirection.To ? (eend.Result as VHDLIntegerLiteral)?.Value : (estart.Result as VHDLIntegerLiteral)?.Value;
+						if (iStart == null || iEnd == null)
+							continue;
+
+						var m = Enumerable.Range((int)iStart.Value, (int)iEnd.Value - (int)iStart.Value + 1).Select(i => p.Name + "(" + i + ")").Where(x => !usedPorts.Contains(x)).Take(2);
+						if (p.Mode == VHDLSignalMode.Out)
+							missingOutPorts.AddRange(m);
+						else if (p.Mode == VHDLSignalMode.In)
+							missingInPorts.AddRange(m);
+						else if (p.Mode == VHDLSignalMode.Inout)
+							missingInoutPorts.AddRange(m);
+					}
+					else
+					{
+						if (usedPorts.Contains(p.Name))
+							continue;
+
+						if (p.Mode == VHDLSignalMode.Out)
+							missingOutPorts.Add(p.Name);
+						else if (p.Mode == VHDLSignalMode.In)
+							missingInPorts.Add(p.Name);
+						else if (p.Mode == VHDLSignalMode.Inout)
+							missingInoutPorts.Add(p.Name);
+					}
+				}
+				if (missingOutPorts.Any())
+					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, string.Format("Missing out ports {0} from entity '{1}'", string.Join(", ", missingOutPorts.Select(x => "'" + x + "'")), componentDecl.Name), ComponentNameExpression.Span));
+				if (missingInPorts.Any())
+					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Missing in ports {0} from entity '{1}'", string.Join(", ", missingInPorts.Select(x => "'" + x + "'")), componentDecl.Name), ComponentNameExpression.Span));
+				if (missingInoutPorts.Any())
+					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Missing inout ports {0} from entity '{1}'", string.Join(", ", missingInoutPorts.Select(x => "'" + x + "'")), componentDecl.Name), ComponentNameExpression.Span));
 
 			}
 			else

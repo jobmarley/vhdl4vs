@@ -318,6 +318,42 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			return (Start ?? End)?.Evaluate()?.Type;
 		}
+
+		public bool TryGetIntegerRange(out long start, out long end)
+		{
+			start = 0;
+			end = 0;
+			VHDLEvaluatedExpression estart = Start?.Evaluate();
+			VHDLEvaluatedExpression eend = End?.Evaluate();
+			long? iStart = Direction == VHDLRangeDirection.To ? (estart.Result as VHDLIntegerLiteral)?.Value : (eend.Result as VHDLIntegerLiteral)?.Value;
+			long? iEnd = Direction == VHDLRangeDirection.To ? (eend.Result as VHDLIntegerLiteral)?.Value : (estart.Result as VHDLIntegerLiteral)?.Value;
+			if (iStart == null || iEnd == null)
+				return false;
+
+			start = iStart.Value;
+			end = iEnd.Value;
+			return true;
+		}
+		public VHDLCompatibilityResult IsOutOfBound(VHDLExpression e)
+		{
+			VHDLEvaluatedExpression estart = Start?.Evaluate();
+			VHDLEvaluatedExpression eend = End?.Evaluate();
+			long? iStart = Direction == VHDLRangeDirection.To ? (estart.Result as VHDLIntegerLiteral)?.Value : (eend.Result as VHDLIntegerLiteral)?.Value;
+			long? iEnd = Direction == VHDLRangeDirection.To ? (eend.Result as VHDLIntegerLiteral)?.Value : (estart.Result as VHDLIntegerLiteral)?.Value;
+			if (iStart == null || iEnd == null)
+				return VHDLCompatibilityResult.Unsure;
+
+			VHDLEvaluatedExpression ee = e?.Evaluate();
+			if (ee.Result is VHDLIntegerLiteral l)
+			{
+				if (l.Value >= iStart.Value && l.Value <= iEnd.Value)
+					return VHDLCompatibilityResult.Yes;
+				else
+					return VHDLCompatibilityResult.No;
+			}
+
+			return VHDLCompatibilityResult.Unsure;
+		}
 	}
 	abstract class VHDLAbstractArrayType
 		: VHDLType
