@@ -413,9 +413,13 @@ namespace MyCompany.LanguageServices.VHDL
 						if (typedChar == '"')
 						{
 							ITextBuffer textBuffer = m_textView.TextBuffer;
-							textBuffer.Insert(m_textView.Caret.Position.BufferPosition, "\"\"");
-							SnapshotPoint point = m_textView.Caret.Position.BufferPosition;
-							m_textView.Caret.MoveTo(point - 1);
+							if (m_textView.Selection.IsEmpty)
+							{
+								textBuffer.Insert(m_textView.Caret.Position.BufferPosition, "\"\"");
+								m_textView.Caret.MoveTo(m_textView.Caret.Position.BufferPosition - 1);
+							}
+							else
+								textBuffer.Replace(m_textView.Selection.SelectedSpans.Last(), "\"");
 							return VSConstants.S_OK;
 						}
 						else if (typedChar == '(')
@@ -435,7 +439,10 @@ namespace MyCompany.LanguageServices.VHDL
 						else if(typedChar == ',')
 						{
 							ITextBuffer textBuffer = m_textView.TextBuffer;
-							textBuffer.Insert(m_textView.Caret.Position.BufferPosition, ",");
+							if (m_textView.Selection.IsEmpty)
+								textBuffer.Insert(m_textView.Caret.Position.BufferPosition, ",");
+							else
+								textBuffer.Replace(m_textView.Selection.SelectedSpans.Last(), ",");
 							if (m_signatureHelpSession != null)
 							{
 								m_signatureHelpSession.Recalculate();
@@ -452,6 +459,12 @@ namespace MyCompany.LanguageServices.VHDL
 						}
 						else if(typedChar == ')')
 						{
+							ITextBuffer textBuffer = m_textView.TextBuffer;
+							if (m_textView.Selection.IsEmpty)
+								textBuffer.Insert(m_textView.Caret.Position.BufferPosition, ")");
+							else
+								textBuffer.Replace(m_textView.Selection.SelectedSpans.Last(), ")");
+
 							if (m_signatureHelpSession != null && !m_signatureHelpSession.IsDismissed)
 							{
 								m_signatureHelpSession.Dismiss();
