@@ -8,32 +8,24 @@
         DisplayName="VHDL Source file"
         ItemType="VHDLSource">
     </ContentType>
+    
     <ContentType
         Name="VerilogSourceFile"
         DisplayName="Verilog Source file"
         ItemType="VerilogSource">
     </ContentType>
 
-        <!--<ContentType
-        Name="Script"
-        DisplayName="Script file"
-        ItemType="Script">
-    </ContentType>-->
-
     <ContentType
-        Name="Text"
-        DisplayName="Text file"
+        Name="None"
+        DisplayName="None"
         ItemType="None">
     </ContentType>
 
     <ItemType Name="VHDLSource" DisplayName="VHDL source file"/>
     <ItemType Name="VerilogSource" DisplayName="Verilog source file"/>
-    <!--<ItemType Name="Script" DisplayName="Script"/>-->
     <ItemType Name="None" DisplayName="Does not participate in build"/>
 
     <FileExtension Name=".vhd" ContentType="VHDLSource"/>
     <FileExtension Name=".v" ContentType="VerilogSource"/>
-    <!--<FileExtension Name=".vbs" ContentType="Script"/>
-    <FileExtension Name=".jS" ContentType="Script"/>-->
-    <FileExtension Name=".txt" ContentType="Text"/>
+    <FileExtension Name=".*" ContentType="None"/>
 </ProjectSchemaDefinitions>

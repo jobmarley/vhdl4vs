@@ -81,7 +81,6 @@ namespace MyCompany.LanguageServices.VHDL
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 			m_runningDocumentTable = m_serviceProvider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable4;
 
-			m_textDocumentFactoryService.TextDocumentCreated += OnTextDocumentCreated;
 			m_textDocumentFactoryService.TextDocumentDisposed += OnTextDocumentDisposed;
 		}
 		[ImportingConstructor]
@@ -109,34 +108,7 @@ namespace MyCompany.LanguageServices.VHDL
 		public event EventHandler<VHDLDocumentEventArgs> DocumentOpened;
 		public event EventHandler<VHDLDocumentEventArgs> DocumentClosed;
 
-		private async void OnTextDocumentCreated(object sender, TextDocumentEventArgs e)
-		{
-			if (e.TextDocument.TextBuffer.ContentType.TypeName == "inert")
-				return;
-			VHDLDocument doc = GetDocument(e.TextDocument.FilePath);
-			if (doc == null)
-			{
-				//	New document
-				doc = new VHDLDocument(this);
-				doc.Filepath = e.TextDocument.FilePath;
-				doc.TextDocument = e.TextDocument;
-				doc.Project = m_projects.Values.FirstOrDefault(); // Add first project so libraries work kind of
-				doc.Parser.Parser = new VHDLBackgroundParser(e.TextDocument.TextBuffer, TaskScheduler.Default, doc);
-				if (m_orphanDocuments.TryAdd(doc.Filepath, doc))
-				{
-					DocumentAdded?.Invoke(this, new VHDLDocumentEventArgs(doc));
-					DocumentOpened?.Invoke(this, new VHDLDocumentEventArgs(doc));
-				}
-			}
-			else
-			{
-				//	Document found
-				doc.TextDocument = e.TextDocument;
-				doc.Parser.Parser = new VHDLBackgroundParser(e.TextDocument.TextBuffer, TaskScheduler.Default, doc);
-				DocumentOpened?.Invoke(this, new VHDLDocumentEventArgs(doc));
-			}
-		}
-		private async void OnTextDocumentDisposed(object sender, TextDocumentEventArgs e)
+		private void OnTextDocumentDisposed(object sender, TextDocumentEventArgs e)
 		{
 			VHDLDocument doc = GetDocument(e.TextDocument.FilePath);
 			if (doc == null)

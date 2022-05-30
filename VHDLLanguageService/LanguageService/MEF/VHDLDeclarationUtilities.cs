@@ -267,7 +267,7 @@ namespace MyCompany.LanguageServices.VHDL
 				// we do this here not to repeat it for each parent scope
 				var siblingARs = enclosingDeclaration.Document.DocumentTable.EnumerateSiblings(enclosingDeclaration.Document).Where(x => x != enclosingDeclaration.Document).Select(x => x?.Parser?.AResult).Where(x => x != null);
 				// x.Declarations.Values.First() is the file declaration
-				foreach (var v in siblingARs.SelectMany(x => x.Declarations.Values.First().Children).Where(x => predicate(x)))
+				foreach (var v in siblingARs.Select(x => x.Declarations.Values.FirstOrDefault()).Where(x => x != null).SelectMany(x => x.Children).Where(x => predicate(x)))
 					yield return v;
 			}
 		}
