@@ -93,7 +93,7 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			//	When an analysis of an external document completes, the list of declared elements changes,
 			//	thus we requires a new deep analysis on this document
-			if (e.Document != Document)
+			if (e.Document != Document && !(Document is VHDLLibraryDocument))
 			{
 				RequestDeepAnalysis();
 			}

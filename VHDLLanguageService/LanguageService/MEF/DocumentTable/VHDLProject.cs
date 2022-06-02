@@ -8,6 +8,15 @@ using System.Threading.Tasks;
 
 namespace MyCompany.LanguageServices.VHDL
 {
+	class VHDLLibraryDocument
+		: VHDLDocument
+	{
+		public VHDLLibraryDocument(VHDLDocumentTable documentTable)
+			: base(documentTable)
+		{
+
+		}
+	}
 	enum VHDLLibraryChangedType
 	{
 		PackageAdded,
@@ -195,7 +204,7 @@ namespace MyCompany.LanguageServices.VHDL
 							if (!exts.Contains(System.IO.Path.GetExtension(filepath), StringComparer.OrdinalIgnoreCase))
 								continue;
 
-							VHDLDocument doc = new VHDLDocument(m_documentTable);
+							VHDLDocument doc = new VHDLLibraryDocument(m_documentTable);
 							doc.Filepath = filepath;
 							doc.TextDocument = null;
 							doc.Project = this;
