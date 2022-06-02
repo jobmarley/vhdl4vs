@@ -365,6 +365,25 @@ namespace MyCompany.LanguageServices.VHDL.ExpressionVisitors
 			VHDLExpression literal = Visit(context.abstract_literal());
 			return new VHDLPhysicalLiteral(m_analysisResult, context.GetSpan(), literal as VHDLLiteral, context.identifier().GetText());
 		}
+
+		public override VHDLExpression VisitDiscrete_range([NotNull] vhdlParser.Discrete_rangeContext context)
+		{
+			if (context.range_decl()?.explicit_range() != null)
+				return VisitExplicit_range(context.range_decl()?.explicit_range());
+			return null;
+		}
+		public override VHDLExpression VisitExplicit_range([NotNull] vhdlParser.Explicit_rangeContext context)
+		{
+			VHDLExpressionVisitor visitor = new VHDLExpressionVisitor(m_analysisResult, m_errorListener);
+			VHDLExpression expr = visitor.Visit(context.simple_expression()[0]);
+			if (context.simple_expression().Count() > 1)
+			{
+				VHDLExpression expr2 = visitor.Visit(context.simple_expression()[1]);
+				return new VHDLRangeExpression(m_analysisResult, expr.Span.Union(expr2.Span), expr, expr2, context.direction()?.DOWNTO() != null ? VHDLRangeDirection.DownTo : VHDLRangeDirection.To);
+			}
+
+			return expr;
+		}
 	}
 
 	class VHDLNameExpressionVisitor

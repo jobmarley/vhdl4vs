@@ -508,7 +508,8 @@ namespace MyCompany.LanguageServices.VHDL
 				VHDLForStatement statement = new VHDLForStatement(m_analysisResult, m_parent);
 				ExpressionVisitors.VHDLExpressionVisitor visitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener);
 				statement.Variable = context.iteration_scheme().parameter_specification().identifier().GetText();
-
+				statement.Range = visitor.Visit(context.iteration_scheme().parameter_specification().discrete_range()) as VHDLRangeExpression;
+				
 				foreach (var statementContext in context.sequence_of_statements().sequential_statement())
 				{
 					try

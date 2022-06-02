@@ -253,6 +253,8 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 		}
 		public string Variable { get; set; } = null;
+		public VHDLRangeExpression Range { get; set; } = null;
+
 		public List<VHDLStatement> Statements { get; set; } = new List<VHDLStatement>();
 
 		public override void Check(Action<VHDLError> errorListener)

@@ -1056,10 +1056,23 @@ namespace MyCompany.LanguageServices.VHDL
 				return false;
 			}
 		}
+		IEnumerable<VHDLReferenceExpression> CollectAllReferences(VHDLExpression e)
+		{
+			if (e is VHDLReferenceExpression r)
+				yield return r;
+
+			foreach (var y in e.Children.SelectMany(x => CollectAllReferences(x)))
+				yield return y;
+		}
 		IEnumerable<VHDLExpression> CollectAllExpressions(VHDLStatement s)
 		{
 			var children = s.Children;
 			return children.OfType<VHDLExpression>().Concat(children.OfType<VHDLStatement>().SelectMany(x => CollectAllExpressions(x)));
+		}
+		IEnumerable<VHDLStatement> CollectAllStatements(VHDLStatement s)
+		{
+			var children = s.Children;
+			return children.OfType<VHDLStatement>().Concat(children.OfType<VHDLStatement>().SelectMany(x => CollectAllStatements(x)));
 		}
 		public override void Check(DeepAnalysisResult deepAnalysisResult, Action<VHDLError> errorListener)
 		{
@@ -1079,6 +1092,45 @@ namespace MyCompany.LanguageServices.VHDL
 			foreach (var r in sensitivity)
 				if (allExpressions.All(x => !ExpressionContainsReference(x, r.Declaration)))
 					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, "Signal in sensitivity list is not used in the process", r.Span));
+
+			var allStatements = Statements.SelectMany(x => CollectAllStatements(x)).Concat(Statements).ToArray();
+			foreach (VHDLStatement s in allStatements)
+			{
+				List<VHDLExpression> expressionList = new List<VHDLExpression>();
+				if (s is VHDLSignalAssignmentStatement sas)
+				{
+					expressionList.AddRange(sas.Values.Select(x => x.ConditionExpression).Concat(sas.Values.Select(x => x.ValueExpression)));
+				}
+				else if (s is VHDLVariableAssignmentStatement vas)
+				{
+					expressionList.AddRange(vas.Values.Select(x => x.ConditionExpression).Concat(vas.Values.Select(x => x.ValueExpression)));
+				}
+				else if (s is VHDLIfStatement ifs)
+				{
+					expressionList.AddRange(ifs.ElseIfStatements.Select(x => x.Item1).Prepend(ifs.Condition));
+				}
+				else if (s is VHDLWhileStatement ws)
+				{
+					expressionList.Add(ws.Condition);
+				}
+				else if (s is VHDLForStatement fs)
+				{
+					expressionList.Add(fs.Range?.Range?.Start);
+					expressionList.Add(fs.Range?.Range?.End);
+				}
+				else if (s is VHDLCaseStatement cs)
+				{
+					expressionList.AddRange(cs.Alternatives.SelectMany(x => x.Conditions).Prepend(cs.Expression));
+				}
+				var allReferences = expressionList.Where(x => x != null).SelectMany(x => CollectAllReferences(x));
+				foreach (var r in allReferences)
+				{
+					if (r?.Declaration is VHDLSignalDeclaration && sensitivity.All(x => x.Declaration != r.Declaration))
+					{
+						errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, String.Format("Signal '{0}' in is not in the sensitivity list", r.Declaration.Name), r.Span));
+					}
+				}
+			}
 		}
 	}
 
