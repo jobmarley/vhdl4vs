@@ -15,7 +15,7 @@ namespace MyCompany.LanguageServices.VHDL
 			{
 				try
 				{
-					VHDLEvaluatedExpression eval = expression.Evaluate();
+					VHDLEvaluatedExpression eval = expression.Evaluate(new EvaluationContext());
 					if (eval?.Type == null)
 						errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Type cannot be evaluated", expression.Span));
 
@@ -98,7 +98,7 @@ namespace MyCompany.LanguageServices.VHDL
 			{
 				try
 				{
-					type = NameExpression.Evaluate()?.Type;
+					type = NameExpression.Evaluate(new EvaluationContext())?.Type;
 					if (type == null)
 						errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Type cannot be evaluated", NameExpression.Span));
 				}
@@ -157,7 +157,7 @@ namespace MyCompany.LanguageServices.VHDL
 			{
 				try
 				{
-					type = NameExpression.Evaluate()?.Type;
+					type = NameExpression.Evaluate(new EvaluationContext())?.Type;
 					if (type == null)
 						errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Type cannot be evaluated", NameExpression.Span));
 				}
@@ -476,8 +476,8 @@ namespace MyCompany.LanguageServices.VHDL
 								continue;
 							}
 							VHDLRange r = (fce.Arguments[0] as VHDLRangeExpression)?.Range;
-							VHDLEvaluatedExpression estart = (r?.Start ?? fce.Arguments[0])?.Evaluate();
-							VHDLEvaluatedExpression eend = (r?.End ?? fce.Arguments[0])?.Evaluate();
+							VHDLEvaluatedExpression estart = (r?.Start ?? fce.Arguments[0])?.Evaluate(new EvaluationContext());
+							VHDLEvaluatedExpression eend = (r?.End ?? fce.Arguments[0])?.Evaluate(new EvaluationContext());
 							long? iStart = r?.Direction == VHDLRangeDirection.To ? (estart.Result as VHDLIntegerLiteral)?.Value : (eend.Result as VHDLIntegerLiteral)?.Value;
 							long? iEnd = r?.Direction == VHDLRangeDirection.To ? (eend.Result as VHDLIntegerLiteral)?.Value : (estart.Result as VHDLIntegerLiteral)?.Value;
 							if (iStart == null || iEnd == null)
@@ -497,7 +497,7 @@ namespace MyCompany.LanguageServices.VHDL
 							VHDLType argType = null;
 							try
 							{
-								argType = parameter.Argument.Evaluate()?.Type;
+								argType = parameter.Argument.Evaluate(new EvaluationContext())?.Type;
 							}
 							catch (VHDLCodeException ce)
 							{
@@ -533,8 +533,8 @@ namespace MyCompany.LanguageServices.VHDL
 						if (aat.Dimension != 1)
 							continue;
 						VHDLRange r = aat.GetIndexRange(0);
-						VHDLEvaluatedExpression estart = r.Start.Evaluate();
-						VHDLEvaluatedExpression eend = r.End.Evaluate();
+						VHDLEvaluatedExpression estart = r.Start.Evaluate(new EvaluationContext());
+						VHDLEvaluatedExpression eend = r.End.Evaluate(new EvaluationContext());
 						long? iStart = r.Direction == VHDLRangeDirection.To ? (estart.Result as VHDLIntegerLiteral)?.Value : (eend.Result as VHDLIntegerLiteral)?.Value;
 						long? iEnd = r.Direction == VHDLRangeDirection.To ? (eend.Result as VHDLIntegerLiteral)?.Value : (estart.Result as VHDLIntegerLiteral)?.Value;
 						if (iStart == null || iEnd == null)

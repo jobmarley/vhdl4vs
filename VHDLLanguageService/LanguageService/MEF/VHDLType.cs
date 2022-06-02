@@ -316,15 +316,15 @@ namespace MyCompany.LanguageServices.VHDL
 
 		public VHDLType DeduceType()
 		{
-			return (Start ?? End)?.Evaluate()?.Type;
+			return (Start ?? End)?.Evaluate(new EvaluationContext())?.Type;
 		}
 
 		public bool TryGetIntegerRange(out long start, out long end)
 		{
 			start = 0;
 			end = 0;
-			VHDLEvaluatedExpression estart = Start?.Evaluate();
-			VHDLEvaluatedExpression eend = End?.Evaluate();
+			VHDLEvaluatedExpression estart = Start?.Evaluate(new EvaluationContext());
+			VHDLEvaluatedExpression eend = End?.Evaluate(new EvaluationContext());
 			long? iStart = Direction == VHDLRangeDirection.To ? (estart.Result as VHDLIntegerLiteral)?.Value : (eend.Result as VHDLIntegerLiteral)?.Value;
 			long? iEnd = Direction == VHDLRangeDirection.To ? (eend.Result as VHDLIntegerLiteral)?.Value : (estart.Result as VHDLIntegerLiteral)?.Value;
 			if (iStart == null || iEnd == null)
@@ -336,14 +336,14 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public VHDLCompatibilityResult IsOutOfBound(VHDLExpression e)
 		{
-			VHDLEvaluatedExpression estart = Start?.Evaluate();
-			VHDLEvaluatedExpression eend = End?.Evaluate();
+			VHDLEvaluatedExpression estart = Start?.Evaluate(new EvaluationContext());
+			VHDLEvaluatedExpression eend = End?.Evaluate(new EvaluationContext());
 			long? iStart = Direction == VHDLRangeDirection.To ? (estart.Result as VHDLIntegerLiteral)?.Value : (eend.Result as VHDLIntegerLiteral)?.Value;
 			long? iEnd = Direction == VHDLRangeDirection.To ? (eend.Result as VHDLIntegerLiteral)?.Value : (estart.Result as VHDLIntegerLiteral)?.Value;
 			if (iStart == null || iEnd == null)
 				return VHDLCompatibilityResult.Unsure;
 
-			VHDLEvaluatedExpression ee = e?.Evaluate();
+			VHDLEvaluatedExpression ee = e?.Evaluate(new EvaluationContext());
 			if (ee.Result is VHDLIntegerLiteral l)
 			{
 				if (l.Value >= iStart.Value && l.Value <= iEnd.Value)
@@ -417,7 +417,7 @@ namespace MyCompany.LanguageServices.VHDL
 				// Try to check if size match
 				VHDLType t1 = IndexTypes.First();
 				VHDLRange r1 = GetRange(t1);
-				VHDLEvaluatedExpression count1 = r1?.Count(t1)?.Evaluate();
+				VHDLEvaluatedExpression count1 = r1?.Count(t1)?.Evaluate(new EvaluationContext());
 				if (count1?.Result is VHDLIntegerLiteral l1 && l1.Value != s.Length)
 					return VHDLCompatibilityResult.No;
 
@@ -452,8 +452,8 @@ namespace MyCompany.LanguageServices.VHDL
 					if (r1 == null || r2 == null)
 						return VHDLCompatibilityResult.Unsure;
 
-					VHDLEvaluatedExpression count1 = r1.Count(t1)?.Evaluate();
-					VHDLEvaluatedExpression count2 = r2.Count(t2)?.Evaluate();
+					VHDLEvaluatedExpression count1 = r1.Count(t1)?.Evaluate(new EvaluationContext());
+					VHDLEvaluatedExpression count2 = r2.Count(t2)?.Evaluate(new EvaluationContext());
 					if (count1.Result is VHDLIntegerLiteral l1 && count2.Result is VHDLIntegerLiteral l2)
 						return l1.Value == l2.Value ? VHDLCompatibilityResult.Yes : VHDLCompatibilityResult.No;
 
@@ -473,8 +473,8 @@ namespace MyCompany.LanguageServices.VHDL
 					if (r1 == null || r2 == null)
 						return VHDLCompatibilityResult.No;
 
-					VHDLEvaluatedExpression count1 = r1.Count(t1)?.Evaluate();
-					VHDLEvaluatedExpression count2 = r2.Count(t2)?.Evaluate();
+					VHDLEvaluatedExpression count1 = r1.Count(t1)?.Evaluate(new EvaluationContext());
+					VHDLEvaluatedExpression count2 = r2.Count(t2)?.Evaluate(new EvaluationContext());
 					if (count1.Result is VHDLIntegerLiteral l1 && count2.Result is VHDLIntegerLiteral l2)
 						return l1.Value == l2.Value ? VHDLCompatibilityResult.Yes : VHDLCompatibilityResult.No;
 

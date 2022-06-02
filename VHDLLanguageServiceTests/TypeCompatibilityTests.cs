@@ -148,13 +148,13 @@ namespace VHDLLanguageServiceTests
 			AssertNotCompatible(VHDLBuiltinTypeInteger.Instance, enum_type_1);
 
 			// yes
-			AssertCompatible(enum_type_1, Char('0').Evaluate().Type);
+			AssertCompatible(enum_type_1, Char('0').Evaluate(null).Type);
 			// no
-			AssertNotCompatible(Char('0').Evaluate().Type, enum_type_1);
+			AssertNotCompatible(Char('0').Evaluate(null).Type, enum_type_1);
 
 			// no
-			AssertNotCompatible(enum_type_1, Char('z').Evaluate().Type);
-			AssertNotCompatible(Char('z').Evaluate().Type, enum_type_1);
+			AssertNotCompatible(enum_type_1, Char('z').Evaluate(null).Type);
+			AssertNotCompatible(Char('z').Evaluate(null).Type, enum_type_1);
 
 			// yes
 			AssertCompatible(enum_type_1, enum_type_1_value_decl.Type);

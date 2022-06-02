@@ -1239,6 +1239,41 @@ namespace MyCompany.LanguageServices.VHDL
 			ReturnType.
 		}*/
 	}
+
+	class EvaluationContext
+	{
+		private Stack<Dictionary<VHDLDeclaration, VHDLEvaluatedExpression>> m_scopes = new Stack<Dictionary<VHDLDeclaration, VHDLEvaluatedExpression>>();
+		const int MAX_LEVEL = 10;
+		public EvaluationContext()
+		{
+
+		}
+		public bool Contains(VHDLDeclaration declaration)
+		{
+			if (m_scopes.Count == 0)
+				return false;
+			return m_scopes.Peek().ContainsKey(declaration);
+		}
+
+		public VHDLEvaluatedExpression this[VHDLDeclaration d]
+		{
+			get => m_scopes.Peek()[d];
+			set => m_scopes.Peek()[d] = value;
+		}
+
+		public void Push()
+		{
+			if (m_scopes.Count >= MAX_LEVEL)
+				throw new Exception();
+			m_scopes.Push(new Dictionary<VHDLDeclaration, VHDLEvaluatedExpression>());
+		}
+
+		public void Pop()
+		{
+			m_scopes.Pop();
+		}
+
+	}
 	class VHDLFunctionBodyDeclaration
 		: VHDLFunctionnalDeclaration
 	{
@@ -1337,6 +1372,196 @@ namespace MyCompany.LanguageServices.VHDL
 				return text;
 			}
 			return new VHDLClassifiedText(UndecoratedName, "vhdl.function");
+		}
+
+		bool ExecuteStatement(VHDLStatement statement, EvaluationContext evaluationContext, out VHDLEvaluatedExpression returnedValue, ref ulong performanceCounter)
+		{
+			returnedValue = null;
+			if (performanceCounter == 0)
+				throw new Exception("Performance counter reached 0");
+
+			--performanceCounter;
+
+			if (statement is VHDLReturnStatement rs)
+			{
+				returnedValue = rs.Expression.Evaluate(evaluationContext);
+				return true;
+			}
+			else if (statement is VHDLSignalAssignmentStatement sas)
+			{
+				if (sas.NameExpression is VHDLNameExpression ne)
+				{
+					foreach (var v in sas.Values)
+					{
+						bool condition = true;
+						if (v.ConditionExpression != null)
+						{
+							VHDLEvaluatedExpression ee = v.ConditionExpression.Evaluate(evaluationContext);
+							if (ee?.Result is VHDLBooleanLiteral l)
+							{
+								condition = l.Value;
+							}
+							else
+								throw new Exception("Unable to evaluate assignment condition");
+						}
+						if (condition)
+						{
+							evaluationContext[ne.Declaration] = v.ValueExpression.Evaluate(evaluationContext);
+							break;
+						}
+					}
+				}
+				else
+					throw new Exception("Unable to evaluate assignment name");
+
+			}
+			else if (statement is VHDLVariableAssignmentStatement vas)
+			{
+				if (vas.NameExpression is VHDLNameExpression ne)
+				{
+					foreach (var v in vas.Values)
+					{
+						bool condition = true;
+						if (v.ConditionExpression != null)
+						{
+							VHDLEvaluatedExpression ee = v.ConditionExpression.Evaluate(evaluationContext);
+							if (ee?.Result is VHDLBooleanLiteral l)
+							{
+								condition = l.Value;
+							}
+							else
+								throw new Exception("Unable to evaluate assignment condition");
+						}
+						if (condition)
+						{
+							evaluationContext[ne.Declaration] = v.ValueExpression.Evaluate(evaluationContext);
+							break;
+						}
+					}
+				}
+				else
+					throw new Exception("Unable to evaluate assignment name");
+			}
+			else if (statement is VHDLIfStatement ifs)
+			{
+				VHDLEvaluatedExpression ee = ifs.Condition.Evaluate(evaluationContext);
+				if (ee?.Result is VHDLBooleanLiteral l)
+				{
+					if (l.Value == true)
+					{
+						foreach (VHDLStatement s in ifs.Statements)
+						{
+							if (ExecuteStatement(s, evaluationContext, out returnedValue, ref performanceCounter))
+								return true;
+						}
+					}
+				}
+				else
+					throw new Exception("Unable to evaluate if condition");
+			}
+			else if (statement is VHDLWhileStatement ws)
+			{
+				while (true)
+				{
+					// make sure its not an empty loop
+					--performanceCounter;
+					if (performanceCounter == 0)
+						throw new Exception("Performance counter reached 0");
+
+					VHDLEvaluatedExpression ee = ws.Condition.Evaluate(evaluationContext);
+					if (ee?.Result is VHDLBooleanLiteral l)
+					{
+						if (l.Value == true)
+						{
+							foreach (VHDLStatement s in ws.Statements)
+							{
+								if (ExecuteStatement(s, evaluationContext, out returnedValue, ref performanceCounter))
+									return true;
+							}
+						}
+						else
+							break;
+					}
+					else
+						throw new Exception("Unable to evaluate if condition");
+				}
+			}
+			else if (statement is VHDLForStatement fs)
+			{
+
+				//while (true)
+				//{
+				//	VHDLEvaluatedExpression eeStart = fs.Range?.Range?.Start?.Evaluate(evaluationContext);
+				//	VHDLEvaluatedExpression eeEnd = fs.Range?.Range?.End?.Evaluate(evaluationContext);
+				//	if (ee?.Result is VHDLBooleanLiteral l)
+				//	{
+				//		if (l.Value == true)
+				//		{
+				//			foreach (VHDLStatement s in ws.Statements)
+				//			{
+				//				if (ExecuteStatement(s, evaluationContext, out returnedValue, ref performanceCounter))
+				//					return true;
+				//			}
+				//		}
+				//		else
+				//			break;
+				//	}
+				//	else
+				//		throw new Exception("Unable to evaluate if condition");
+				//}
+				throw new Exception("Unable to evaluate for statement");
+			}
+			else if (statement is VHDLCaseStatement cs)
+			{
+				//VHDLEvaluatedExpression ee = cs.Expression.Evaluate(evaluationContext);
+				//if (ee == null)
+				//	throw new Exception("Unable to evaluate case expression");
+				//foreach(var a in cs.Alternatives)
+				//{
+				//	VHDLIsEqualExpression ieq = new VHDLIsEqualExpression(cs.AnalysisResult, new Span(), cs.Expression, a.Conditions);
+				//	a.Conditions
+				//}
+				throw new Exception("Unable to evaluate case statement");
+			}
+			else
+			{
+				throw new Exception("Unable to evaluate statement");
+			}
+			return false;
+		}
+		public VHDLEvaluatedExpression EvaluateCall(IEnumerable<VHDLEvaluatedExpression> args, EvaluationContext evaluationContext)
+		{
+			try
+			{
+				evaluationContext.Push();
+
+				ulong performanceCounter = 100;
+				foreach (var p in Parameters.Zip(args, (x, y) => Tuple.Create(x, y)))
+				{
+					if (p.Item1.Type.IsCompatible(p.Item2.Type) == VHDLCompatibilityResult.No)
+						return null;
+					evaluationContext[p.Item1] = p.Item2;
+				}
+				foreach (var d in Children.OfType<VHDLAbstractVariableDeclaration>())
+				{
+					if (!d.IsParameter)
+						evaluationContext[d] = d.InitializationExpression?.Evaluate(evaluationContext);
+				}
+				foreach (VHDLStatement s in Statements)
+				{
+					VHDLEvaluatedExpression result = null;
+					if (ExecuteStatement(s, evaluationContext, out result, ref performanceCounter))
+						return result;
+				}
+
+			}
+			catch (Exception ex)
+			{
+
+			}
+
+			evaluationContext.Pop();
+			return null;
 		}
 	}
 	class VHDLProcedureDeclaration
