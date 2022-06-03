@@ -186,14 +186,25 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public override VHDLStatement VisitProcedure_call([NotNull] vhdlParser.Procedure_callContext context)
 		{
-			ExpressionVisitors.VHDLExpressionVisitor visitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener);
+			ExpressionVisitors.VHDLNameExpressionVisitor visitor = new ExpressionVisitors.VHDLNameExpressionVisitor(m_analysisResult, m_errorListener);
+			ExpressionVisitors.VHDLNameExpressionVisitor paramNameVisitor = new ExpressionVisitors.VHDLNameExpressionVisitor(m_analysisResult, m_errorListener, (x, y, z) => { });
 			VHDLProcedureCallStatement statement = new VHDLProcedureCallStatement(m_analysisResult, m_parent);
 			statement.NameExpression = visitor.Visit(context.selected_name());
 			if (context.actual_parameter_part()?.association_list()?.association_element() != null)
 			{
 				foreach (var elementContext in context.actual_parameter_part()?.association_list()?.association_element())
 				{
-					statement.Arguments.Add(visitor.Visit(elementContext));
+					VHDLExpression formalPartExpression = null;
+					if (elementContext.formal_part() != null)
+					{
+						formalPartExpression = paramNameVisitor.VisitFormal_part(elementContext.formal_part());
+					}
+
+					VHDLExpression valueExpression = visitor.VisitActual_part(elementContext.actual_part());
+					if (formalPartExpression != null)
+						statement.Arguments.Add(new VHDLArgumentAssociationExpression(m_analysisResult, context.GetSpan(), formalPartExpression, valueExpression));
+					else
+						statement.Arguments.Add(valueExpression);
 				}
 			}
 
