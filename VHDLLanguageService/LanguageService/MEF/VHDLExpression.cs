@@ -422,10 +422,10 @@ namespace MyCompany.LanguageServices.VHDL
 		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e = Expression.Evaluate(evaluationContext, expectedType);
-			if (e.Result is VHDLIntegerLiteral il)
-				return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, new VHDLIntegerLiteral(e.Result.AnalysisResult, new Span(), il.Value, null));
-			if (e.Result is VHDLRealLiteral rl)
-				return new VHDLEvaluatedExpression(VHDLBuiltinTypeReal.Instance, null, new VHDLRealLiteral(e.Result.AnalysisResult, new Span(), rl.Value, null));
+			if (VHDLType.IsInteger(e.Type))
+				return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, e.Result as VHDLIntegerLiteral);
+			if (VHDLType.IsReal(e.Type))
+				return new VHDLEvaluatedExpression(VHDLBuiltinTypeReal.Instance, this, e.Result as VHDLRealLiteral);
 
 			// Look for an operator function with arguments of the correct type
 			VHDLDeclaration enclosingDecl = VHDLDeclarationUtilities.GetEnclosingDeclaration(AnalysisResult, Span.Start);
@@ -468,10 +468,20 @@ namespace MyCompany.LanguageServices.VHDL
 		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e = Expression.Evaluate(evaluationContext, expectedType);
-			if (e.Result is VHDLIntegerLiteral il)
-				return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, new VHDLIntegerLiteral(e.Result.AnalysisResult, new Span(), -il.Value, null));
-			if (e.Result is VHDLRealLiteral rl)
-				return new VHDLEvaluatedExpression(VHDLBuiltinTypeReal.Instance, null, new VHDLRealLiteral(e.Result.AnalysisResult, new Span(), -rl.Value, null));
+			if (VHDLType.IsInteger(e.Type))
+			{
+				if (e?.Result is VHDLIntegerLiteral l)
+					return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, new VHDLIntegerLiteral(e.Result.AnalysisResult, new Span(), -l.Value, null));
+				else
+					return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, null);
+			}
+			if (VHDLType.IsReal(e.Type))
+			{
+				if (e?.Result is VHDLRealLiteral l)
+					return new VHDLEvaluatedExpression(VHDLBuiltinTypeReal.Instance, null, new VHDLRealLiteral(e.Result.AnalysisResult, new Span(), -l.Value, null));
+				else
+					return new VHDLEvaluatedExpression(VHDLBuiltinTypeReal.Instance, this, null);
+			}
 
 			// Look for an operator function with arguments of the correct type
 			VHDLDeclaration enclosingDecl = VHDLDeclarationUtilities.GetEnclosingDeclaration(AnalysisResult, Span.Start);
