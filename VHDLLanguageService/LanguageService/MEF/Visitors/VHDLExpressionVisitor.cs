@@ -503,6 +503,9 @@ namespace MyCompany.LanguageServices.VHDL.ExpressionVisitors
 			}
 			else if (context.name_function_call_or_indexed_part() != null)
 			{
+				VHDLFunctionCallOrIndexExpression fce = new VHDLFunctionCallOrIndexExpression(m_analysisResult, nameExpression.Span.Union(context.name_function_call_or_indexed_part().GetSpan()), nameExpression, null);
+				var tmpOverrider = m_resolveOverrider;
+				m_resolveOverrider = (x, y, z) => fce.ResolveFunctionParameter(x, y, z);
 				List<VHDLExpression> arguments = new List<VHDLExpression>();
 				if (context.name_function_call_or_indexed_part().actual_parameter_part()?.association_list()?.association_element() != null)
 				{
@@ -511,8 +514,9 @@ namespace MyCompany.LanguageServices.VHDL.ExpressionVisitors
 						arguments.Add(VisitAssociation_element(elementContext));
 					}
 				}
-
-				return new VHDLFunctionCallOrIndexExpression(m_analysisResult, nameExpression.Span.Union(context.name_function_call_or_indexed_part().GetSpan()), nameExpression, arguments);
+				m_resolveOverrider = tmpOverrider;
+				fce.Arguments = arguments;
+				return fce;
 			}
 			else if (context.name_slice_part() != null)
 			{
@@ -539,7 +543,7 @@ namespace MyCompany.LanguageServices.VHDL.ExpressionVisitors
 				formalPartExpression = VisitFormal_part(context.formal_part());
 			}
 
-			VHDLExpression valueExpression = VisitActual_part(context.actual_part());
+			VHDLExpression valueExpression = new VHDLNameExpressionVisitor(m_analysisResult, m_errorListener).VisitActual_part(context.actual_part());
 			if (formalPartExpression != null)
 				return new VHDLArgumentAssociationExpression(m_analysisResult, context.GetSpan(), formalPartExpression, valueExpression);
 			else
@@ -551,7 +555,7 @@ namespace MyCompany.LanguageServices.VHDL.ExpressionVisitors
 			AddToResolve(expr);
 			if (context.explicit_range() != null)
 			{
-				VHDLExpression rangeExpression = VisitExplicit_range(context.explicit_range());
+				VHDLExpression rangeExpression = new VHDLNameExpressionVisitor(m_analysisResult, m_errorListener).VisitExplicit_range(context.explicit_range());
 				return new VHDLFunctionCallOrIndexExpression(m_analysisResult, expr.Span.Union(rangeExpression.Span), expr, new VHDLExpression[] { rangeExpression } );
 			}
 			return expr;

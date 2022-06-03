@@ -347,9 +347,9 @@ namespace MyCompany.LanguageServices.VHDL
 			if (ee.Result is VHDLIntegerLiteral l)
 			{
 				if (l.Value >= iStart.Value && l.Value <= iEnd.Value)
-					return VHDLCompatibilityResult.Yes;
-				else
 					return VHDLCompatibilityResult.No;
+				else
+					return VHDLCompatibilityResult.Yes;
 			}
 
 			return VHDLCompatibilityResult.Unsure;

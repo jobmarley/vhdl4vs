@@ -2432,17 +2432,17 @@ namespace MyCompany.LanguageServices.VHDL
 			: base(analysisResult, span)
 		{
 			NameExpression = expression;
-			Arguments = new List<VHDLExpression>(arguments);
+			Arguments = arguments;
 		}
 		public VHDLExpression NameExpression { get; set; } = null;
-		public List<VHDLExpression> Arguments { get; set; } = null;
+		public IEnumerable<VHDLExpression> Arguments { get; set; } = null;
 				
 		public override VHDLClassifiedText GetClassifiedText()
 		{
 			VHDLClassifiedText text = new VHDLClassifiedText();
 			text.Add(NameExpression.GetClassifiedText());
 			text.Add("(");
-			foreach (var arg in Arguments.Take(Arguments.Count - 1))
+			foreach (var arg in Arguments.Take(Arguments.Count() - 1))
 			{
 				text.Add(arg.GetClassifiedText());
 				text.Add(", ");
@@ -2465,32 +2465,46 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 			return -1;
 		}
-		private IEnumerable<VHDLExpression> ReorderParameters(VHDLFunctionDeclaration declaration, IEnumerable<VHDLExpression> arguments)
+		private IEnumerable<VHDLExpression> ReorderParameters(VHDLFunctionDeclaration declaration, IEnumerable<VHDLExpression> arguments, EvaluationContext evaluationContext)
 		{
 			if (!arguments.Any())
 				return arguments;
 
-			if (!(arguments.First() is VHDLArgumentAssociationExpression))
-				return arguments;
-
 			VHDLExpression[] args = new VHDLExpression[arguments.Count()];
-			foreach (var a in arguments)
+			for (int i = 0; i < declaration.Parameters.Count; ++i)
+				args[i] = declaration.Parameters[i].InitializationExpression;
+
+			if (arguments.All(x => !(x is VHDLArgumentAssociationExpression)))
 			{
-				VHDLArgumentAssociationExpression aae = a as VHDLArgumentAssociationExpression;
-				if (aae == null)
-					throw new VHDLCodeException(string.Format("Cannot mix positionnal and named arguments"), Span);
-
-				VHDLNameExpression ne = aae.Argument as VHDLNameExpression;
-				if (ne == null)
-					throw new VHDLCodeException(string.Format("Positionnal argument other than name not supported"), Span);
-
-				int i = IndexOf(declaration.Parameters, x => string.Compare(x.Name, ne.Name, true) == 0);
-				if (i == -1)
-					throw new VHDLCodeException(string.Format("Parameter name not found '{0}'", ne.Name), Span);
-
-				args[i] = aae.Value;
+				for (int i = 0; i < arguments.Count(); ++i)
+					args[i] = arguments.ElementAt(i);
 			}
+			else
+			{
+				foreach (var a in arguments)
+				{
+					VHDLArgumentAssociationExpression aae = a as VHDLArgumentAssociationExpression;
+					if (aae == null)
+						throw new VHDLCodeException(string.Format("Cannot mix positionnal and named arguments"), Span);
+
+					VHDLNameExpression ne = aae.Argument as VHDLNameExpression;
+					if (ne == null)
+						throw new VHDLCodeException(string.Format("Positionnal argument other than name not supported"), Span);
+
+					int i = IndexOf(declaration.Parameters, x => string.Compare(x.Name, ne.Name, true) == 0);
+					if (i == -1)
+						throw new VHDLCodeException(string.Format("Parameter name not found '{0}'", ne.Name), Span);
+
+					args[i] = aae.Value;
+				}
+			}
+
+			if (args.Any(x => x == null))
+				throw new VHDLCodeException(string.Format("No function found that match the arguments"), Span);
 			return args;
+		}
+		public void ResolveFunctionParameter(IVHDLToResolve overriden, DeepAnalysisResult deepAnalysisResult, Action<VHDLError> errorListener)
+		{
 		}
 		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
@@ -2513,10 +2527,10 @@ namespace MyCompany.LanguageServices.VHDL
 						// There is no alternatives, so we can deduce the expected parameter types.
 						// This can help resolve ambiguities in parameters
 						VHDLFunctionDeclaration d = declarations.First();
-						if (d.Parameters.Count != Arguments.Count)
-							throw new VHDLCodeException(string.Format("'{0}' arguments expected, got '{1}'", d.Parameters.Count, Arguments.Count), Span);
+						if (d.Parameters.Count != Arguments.Count())
+							throw new VHDLCodeException(string.Format("'{0}' arguments expected, got '{1}'", d.Parameters.Count, Arguments.Count()), Span);
 
-						var evaluatedParameters = ReorderParameters(d, Arguments).Zip(d.Parameters, (x, y) => Tuple.Create(x.Evaluate(evaluationContext, y.Type), y));
+						var evaluatedParameters = ReorderParameters(d, Arguments, evaluationContext).Zip(d.Parameters, (x, y) => Tuple.Create(x.Evaluate(evaluationContext, y.Type), y));
 						foreach (var (ev, ex) in evaluatedParameters)
 						{
 							if (ex.Type.IsCompatible(ev.Type) == VHDLCompatibilityResult.No)
@@ -2535,10 +2549,10 @@ namespace MyCompany.LanguageServices.VHDL
 					{
 						try
 						{
-							if (d.Parameters.Count != Arguments.Count)
+							if (d.Parameters.Count != Arguments.Count())
 								continue;
 
-							var evaluatedParameters = ReorderParameters(d, Arguments).Zip(d.Parameters, (x, y) => Tuple.Create(x.Evaluate(evaluationContext, y.Type), y)).ToArray();
+							var evaluatedParameters = ReorderParameters(d, Arguments, evaluationContext).Zip(d.Parameters, (x, y) => Tuple.Create(x.Evaluate(evaluationContext, y.Type), y)).ToArray();
 							if (evaluatedParameters.Any(x => x.Item2.Type.IsCompatible(x.Item1.Type) == VHDLCompatibilityResult.No))
 								continue;
 							VHDLEvaluatedExpression result = (d as VHDLFunctionBodyDeclaration)?.EvaluateCall(evaluatedParameters.Select(x => x.Item1), evaluationContext);
@@ -2557,7 +2571,9 @@ namespace MyCompany.LanguageServices.VHDL
 					{
 						throw new VHDLCodeException(string.Format("Call to {0} is ambiguous. Possibilities are {1}",
 							NameExpression?.GetClassifiedText()?.Text ?? "<error>",
-							string.Join(", ", results.Select(x => "'" + x?.Item2?.GetClassifiedName()?.Text ?? "<error>" + "'"))), Span);
+							string.Join(", ", results.Select(x => "'" + x?.Item2?.GetClassifiedName()?.Text + "(" + 
+								string.Join(", ", x.Item2.Parameters.Select(y => y.Type.GetClassifiedText()?.Text ?? "<error>")) +
+								")" + " return " + x.Item2.ReturnType.GetClassifiedText()?.Text ?? "<error>" + "'"))), Span);
 					}
 					return results[0].Item1;
 				}
@@ -2565,10 +2581,10 @@ namespace MyCompany.LanguageServices.VHDL
 				{
 					VHDLType t = (r.Declaration as VHDLTypeDeclaration)?.Type ?? (r.Declaration as VHDLSubTypeDeclaration)?.Type;
 
-					if (Arguments.Count != 1)
+					if (Arguments.Count() != 1)
 						throw new VHDLCodeException("Type cast can only have 1 argument", Span);
 
-					VHDLEvaluatedExpression evaluatedArg = Arguments[0].Evaluate(evaluationContext);
+					VHDLEvaluatedExpression evaluatedArg = Arguments.ElementAt(0).Evaluate(evaluationContext);
 					if (!evaluatedArg.Type.IsCastable(t))
 					{
 						throw new VHDLCodeException(string.Format("Type '{0}' cannot be converted to type '{1}'", evaluatedArg.Type.GetClassifiedText().Text, t.Declaration.GetClassifiedName().Text), Span);
@@ -2585,12 +2601,12 @@ namespace MyCompany.LanguageServices.VHDL
 
 			if (evaluatedName?.Type?.Dereference() is VHDLAbstractArrayType aat)
 			{
-				if (aat.Dimension != Arguments.Count)
-					throw new VHDLCodeException(string.Format("Array of dimension {0} expects {0} arguments, {1} given", aat.Dimension, Arguments.Count), Span);
+				if (aat.Dimension != Arguments.Count())
+					throw new VHDLCodeException(string.Format("Array of dimension {0} expects {0} arguments, {1} given", aat.Dimension, Arguments.Count()), Span);
 
 				if (aat.Dimension == 1)
 				{
-					if (Arguments[0] is VHDLRangeExpression range)
+					if (Arguments.First() is VHDLRangeExpression range)
 					{
 						// This is wrong, we should make a slice
 						// it's not the same as the array type because the size is different
@@ -2599,14 +2615,14 @@ namespace MyCompany.LanguageServices.VHDL
 					}
 					else
 					{
-						VHDLEvaluatedExpression evaluatedArg = Arguments[0].Evaluate(evaluationContext);
-						if (aat.IndexTypes.First().IsCompatible(evaluatedArg.Type) == VHDLCompatibilityResult.No)
+						VHDLEvaluatedExpression evaluatedArg = Arguments.First().Evaluate(evaluationContext);
+						if (aat.GetIndexType(0).IsCompatible(evaluatedArg.Type) == VHDLCompatibilityResult.No)
 							throw new VHDLCodeException(string.Format("Wrong argument type, '{0}' expected, got '{1}'",
 								aat.IndexTypes.First()?.GetClassifiedText()?.Text ?? "<error type>",
 								evaluatedArg.Type?.GetClassifiedText()?.Text ?? "<error type>"), Span);
 
 						VHDLRange ra = aat.GetIndexRange(0);
-						if (ra?.IsOutOfBound(Arguments[0]) == VHDLCompatibilityResult.Yes)
+						if (ra?.IsOutOfBound(Arguments.First()) == VHDLCompatibilityResult.Yes)
 							throw new VHDLCodeException(string.Format("Argument is out of bounds"), Span);
 					}
 

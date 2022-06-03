@@ -475,9 +475,9 @@ namespace MyCompany.LanguageServices.VHDL
 								errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Port '{0}' doesn't exist in component '{1}'", name, componentDecl.Name), parameter.Argument.Span));
 								continue;
 							}
-							VHDLRange r = (fce.Arguments[0] as VHDLRangeExpression)?.Range;
-							VHDLEvaluatedExpression estart = (r?.Start ?? fce.Arguments[0])?.Evaluate(new EvaluationContext());
-							VHDLEvaluatedExpression eend = (r?.End ?? fce.Arguments[0])?.Evaluate(new EvaluationContext());
+							VHDLRange r = (fce.Arguments.First() as VHDLRangeExpression)?.Range;
+							VHDLEvaluatedExpression estart = (r?.Start ?? fce.Arguments.First())?.Evaluate(new EvaluationContext());
+							VHDLEvaluatedExpression eend = (r?.End ?? fce.Arguments.First())?.Evaluate(new EvaluationContext());
 							long? iStart = r?.Direction == VHDLRangeDirection.To ? (estart.Result as VHDLIntegerLiteral)?.Value : (eend.Result as VHDLIntegerLiteral)?.Value;
 							long? iEnd = r?.Direction == VHDLRangeDirection.To ? (eend.Result as VHDLIntegerLiteral)?.Value : (estart.Result as VHDLIntegerLiteral)?.Value;
 							if (iStart == null || iEnd == null)
