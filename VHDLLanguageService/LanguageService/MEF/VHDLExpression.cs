@@ -2470,7 +2470,7 @@ namespace MyCompany.LanguageServices.VHDL
 			if (!arguments.Any())
 				return arguments;
 
-			VHDLExpression[] args = new VHDLExpression[arguments.Count()];
+			VHDLExpression[] args = new VHDLExpression[declaration.Parameters.Count];
 			for (int i = 0; i < declaration.Parameters.Count; ++i)
 				args[i] = declaration.Parameters[i].InitializationExpression;
 
@@ -2527,8 +2527,6 @@ namespace MyCompany.LanguageServices.VHDL
 						// There is no alternatives, so we can deduce the expected parameter types.
 						// This can help resolve ambiguities in parameters
 						VHDLFunctionDeclaration d = declarations.First();
-						if (d.Parameters.Count != Arguments.Count())
-							throw new VHDLCodeException(string.Format("'{0}' arguments expected, got '{1}'", d.Parameters.Count, Arguments.Count()), Span);
 
 						var evaluatedParameters = ReorderParameters(d, Arguments, evaluationContext).Zip(d.Parameters, (x, y) => Tuple.Create(x.Evaluate(evaluationContext, y.Type), y));
 						foreach (var (ev, ex) in evaluatedParameters)
@@ -2549,9 +2547,6 @@ namespace MyCompany.LanguageServices.VHDL
 					{
 						try
 						{
-							if (d.Parameters.Count != Arguments.Count())
-								continue;
-
 							var evaluatedParameters = ReorderParameters(d, Arguments, evaluationContext).Zip(d.Parameters, (x, y) => Tuple.Create(x.Evaluate(evaluationContext, y.Type), y)).ToArray();
 							if (evaluatedParameters.Any(x => x.Item2.Type.IsCompatible(x.Item1.Type) == VHDLCompatibilityResult.No))
 								continue;
