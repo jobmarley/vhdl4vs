@@ -262,7 +262,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 					VHDLVariableDeclaration decl = new VHDLVariableDeclaration(m_analysisResult, context, identifier_context, name, m_declarationStack.FirstOrDefault());
 					DeclarationsByContext.Add(identifier_context, decl);
-					(m_declarationStack.First() as VHDLFunctionnalDeclaration)?.Parameters.Add(decl);
+					(m_declarationStack.First() as VHDLSubprogramDeclaration)?.Parameters.Add(decl);
 					m_declarationStack.Peek().Children.Add(decl);
 					decl.Type = type;
 
@@ -318,7 +318,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 					VHDLConstantDeclaration decl = new VHDLConstantDeclaration(m_analysisResult, context, identifier_context, name, m_declarationStack.FirstOrDefault());
 					DeclarationsByContext.Add(identifier_context, decl);
-					(m_declarationStack.First() as VHDLFunctionnalDeclaration)?.Parameters.Add(decl);
+					(m_declarationStack.First() as VHDLSubprogramDeclaration)?.Parameters.Add(decl);
 					m_declarationStack.Peek().Children.Add(decl);
 
 					decl.Type = type;
@@ -373,7 +373,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 					VHDLSignalDeclaration decl = new VHDLSignalDeclaration(m_analysisResult, context, identifier_context, name, m_declarationStack.FirstOrDefault());
 					DeclarationsByContext.Add(identifier_context, decl);
-					(m_declarationStack.First() as VHDLFunctionnalDeclaration)?.Parameters.Add(decl);
+					(m_declarationStack.First() as VHDLSubprogramDeclaration)?.Parameters.Add(decl);
 					m_declarationStack.Peek().Children.Add(decl);
 					decl.Type = type;
 					

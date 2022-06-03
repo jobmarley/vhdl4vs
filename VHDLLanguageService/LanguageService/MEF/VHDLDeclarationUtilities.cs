@@ -19,8 +19,61 @@ namespace MyCompany.LanguageServices.VHDL
 	}
 	class VHDLDeclarationUtilities
 	{
-		public static FunctionType GetBestMatch<FunctionType> (IEnumerable<FunctionType> functionList, params VHDLType[] argTypes)
-			where FunctionType : VHDLFunctionnalDeclaration
+		public static VHDLDeclaration GetBody(VHDLDeclaration d)
+		{
+			if (d is VHDLPackageBodyDeclaration || d is VHDLFunctionBodyDeclaration || d is VHDLProcedureBodyDeclaration)
+				return d;
+
+			if (d.TreePath.EndsWith("@declaration"))
+			{
+				var s = d.TreePath.Split('@');
+				string bodyPath = string.Join("@", s.Take(s.Length - 1)) + "@body";
+				if (d.AnalysisResult.Declarations.ContainsKey(bodyPath))
+					return d.AnalysisResult.Declarations[bodyPath];
+			}
+
+			if (d is VHDLFunctionDeclaration fd && fd?.Parent is VHDLPackageDeclaration)
+			{
+				VHDLPackageDeclaration packageDecl = fd.Parent as VHDLPackageDeclaration;
+				string basePath = packageDecl.Body.TreePath + "." + fd.UndecoratedName;
+				for (int i = 1; true; ++i)
+				{
+					string path = basePath + "@" + i.ToString();
+					if (!packageDecl.AnalysisResult.Declarations.ContainsKey(path))
+						break;
+					VHDLFunctionBodyDeclaration bodyDeclaration = packageDecl.AnalysisResult.Declarations[path] as VHDLFunctionBodyDeclaration;
+					if (bodyDeclaration == null)
+						continue;
+
+					if (fd?.ReturnType?.Dereference() != bodyDeclaration?.ReturnType?.Dereference())
+						continue;
+
+					if (fd.Parameters.Zip(bodyDeclaration.Parameters, (x, y) => x.Type.Dereference() == y.Type.Dereference()).All(b => b))
+						return bodyDeclaration;
+				}
+			}
+			else if (d is VHDLProcedureDeclaration procedureDecl && procedureDecl?.Parent is VHDLPackageDeclaration)
+			{
+				VHDLPackageDeclaration packageDecl = procedureDecl.Parent as VHDLPackageDeclaration;
+				string basePath = packageDecl.Body.TreePath + "." + procedureDecl.UndecoratedName;
+				for (int i = 1; true; ++i)
+				{
+					string path = basePath + "@" + i.ToString();
+					if (!packageDecl.AnalysisResult.Declarations.ContainsKey(path))
+						break;
+					VHDLProcedureBodyDeclaration bodyDeclaration = packageDecl.AnalysisResult.Declarations[path] as VHDLProcedureBodyDeclaration;
+					if (bodyDeclaration == null)
+						continue;
+
+					if (procedureDecl.Parameters.Zip(bodyDeclaration.Parameters, (x, y) => x.Type.Dereference() == y.Type.Dereference()).All(b => b))
+						return bodyDeclaration;
+				}
+			}
+			return null;
+		}
+		// Return best match based on parameters
+		public static SubprogramType GetBestMatch<SubprogramType>(IEnumerable<SubprogramType> functionList, params VHDLType[] argTypes)
+			where SubprogramType : VHDLSubprogramDeclaration
 		{
 			foreach (var function in functionList)
 			{
@@ -98,7 +151,6 @@ namespace MyCompany.LanguageServices.VHDL
 			if (!(parent is VHDLDesignUnit))
 				yield break;
 
-
 			VHDLDesignUnit designUnit = (VHDLDesignUnit)parent;
 			foreach (string usedName in designUnit.UseClauses.Select(x => x.Name?.GetClassifiedText()?.Text).Prepend("STD.STANDARD.ALL"))
 			{
@@ -133,23 +185,6 @@ namespace MyCompany.LanguageServices.VHDL
 					yield return ar.Declarations[path];
 				for (int i = 1; ar.Declarations.ContainsKey(path + "@" + i.ToString()); ++i)
 					yield return ar.Declarations[path + "@" + i.ToString()];
-			}
-			// Try to look in associated entity if we are in an architecture
-			if (parent is VHDLArchitectureDeclaration)
-			{
-				VHDLArchitectureDeclaration archDecl = parent as VHDLArchitectureDeclaration;
-				foreach (var v in GetAllExternalDeclarations(archDecl.EntityDeclaration, name))
-					yield return v;
-			}
-			// Try to look in package decl if we are in a package body
-			if (parent is VHDLPackageBodyDeclaration)
-			{
-				string declarationPath = parent.TreePath.Substring(0, parent.TreePath.Length - "@body".Length) + "@declaration";
-				if (parent.AnalysisResult.Declarations.ContainsKey(declarationPath))
-				{
-					foreach (var v in GetAllExternalDeclarations(parent.AnalysisResult.Declarations[declarationPath], name))
-						yield return v;
-				}
 			}
 		}
 		// This is less optimized than the name version
@@ -238,21 +273,14 @@ namespace MyCompany.LanguageServices.VHDL
 			if (predicate(enclosingDeclaration))
 				yield return enclosingDeclaration;
 
-			// if we are in package1@body.name we need to look for package1@declaration.name
-			if (enclosingDeclaration.TreePath.ToLower().EndsWith("@body"))
-			{
-				string parentDeclaration = enclosingDeclaration.TreePath.Substring(0, enclosingDeclaration.TreePath.Length - "@body".Length) + "@declaration";
-
-				if (analysisResult.Declarations.ContainsKey(parentDeclaration))
-				{
-					foreach (var v in FindAllImpl(analysisResult.Declarations[parentDeclaration], predicate, visited))
-						yield return v;
-				}
-			}
-
 			if (enclosingDeclaration is VHDLArchitectureDeclaration archDecl && archDecl.EntityDeclaration != null)
 			{
 				foreach (var v in FindAllImpl(archDecl.EntityDeclaration, predicate, visited))
+					yield return v;
+			}
+			if (enclosingDeclaration is VHDLPackageBodyDeclaration packageBodyDecl && packageBodyDecl.Declaration != null)
+			{
+				foreach (var v in FindAllImpl(packageBodyDecl.Declaration, predicate, visited))
 					yield return v;
 			}
 
@@ -300,16 +328,6 @@ namespace MyCompany.LanguageServices.VHDL
 				if (analysisResult.Declarations.ContainsKey(currentPath))
 					yield return analysisResult.Declarations[currentPath];
 
-				// if we are in package1@body.name we need to look for package1@declaration.name
-				if (enclosingDeclaration.TreePath.ToLower().EndsWith("@body"))
-				{
-					string parentDeclaration = enclosingDeclaration.TreePath.Substring(0, enclosingDeclaration.TreePath.Length - "@body".Length) + "@declaration";
-
-					if (analysisResult.Declarations.ContainsKey(parentDeclaration))
-						foreach (var v in FindAllNamesImpl(analysisResult.Declarations[parentDeclaration], name, visited))
-							yield return v;
-				}
-
 				// look for name@declaration and name@body and name@i
 				if (analysisResult.Declarations.ContainsKey(currentPath + "@declaration"))
 					yield return analysisResult.Declarations[currentPath + "@declaration"];
@@ -321,6 +339,11 @@ namespace MyCompany.LanguageServices.VHDL
 				if (enclosingDeclaration is VHDLArchitectureDeclaration archDecl && archDecl.EntityDeclaration != null)
 				{
 					foreach (var v in FindAllNamesImpl(archDecl.EntityDeclaration, name, visited))
+						yield return v;
+				}
+				if (enclosingDeclaration is VHDLPackageBodyDeclaration packageBodyDecl && packageBodyDecl.Declaration != null)
+				{
+					foreach (var v in FindAllNamesImpl(packageBodyDecl.Declaration, name, visited))
 						yield return v;
 				}
 

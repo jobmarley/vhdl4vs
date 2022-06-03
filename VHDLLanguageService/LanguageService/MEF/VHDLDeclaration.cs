@@ -125,10 +125,10 @@ namespace MyCompany.LanguageServices.VHDL
 	}
 
 	// function or procedure
-	abstract class VHDLFunctionnalDeclaration
+	abstract class VHDLSubprogramDeclaration
 		: VHDLModifiableDeclaration
 	{
-		public VHDLFunctionnalDeclaration(AnalysisResult analysisResult, VHDLDeclaration parent)
+		public VHDLSubprogramDeclaration(AnalysisResult analysisResult, VHDLDeclaration parent)
 			: base(analysisResult, parent)
 		{
 			Parameters = new List<VHDLAbstractVariableDeclaration>();
@@ -150,7 +150,7 @@ namespace MyCompany.LanguageServices.VHDL
 		public VHDLExpression InitializationExpression { get; set; } = null;
 		public VHDLType Type { get; set; } = null;
 
-		public bool IsParameter { get { return Parent is VHDLFunctionnalDeclaration fd && fd.Parameters.Contains(this); } }
+		public bool IsParameter { get { return Parent is VHDLSubprogramDeclaration fd && fd.Parameters.Contains(this); } }
 		private VHDLType GetSimpleType(VHDLType t)
 		{
 			if (t is VHDLScalarType)
@@ -350,6 +350,7 @@ namespace MyCompany.LanguageServices.VHDL
 	class VHDLPackageDeclaration
 		: VHDLDesignUnit
 	{
+		public VHDLPackageBodyDeclaration Body => VHDLDeclarationUtilities.GetBody(this) as VHDLPackageBodyDeclaration;
 		public VHDLPackageDeclaration(AnalysisResult analysisResult, ParserRuleContext context, ParserRuleContext nameContext, string name, IEnumerable<VHDLUseClause> useClauses, VHDLDeclaration parent)
 			: base(analysisResult, parent)
 		{
@@ -400,6 +401,16 @@ namespace MyCompany.LanguageServices.VHDL
 	class VHDLPackageBodyDeclaration
 		: VHDLDesignUnit
 	{
+		public VHDLPackageDeclaration Declaration
+		{
+			get
+			{
+				string path = Parent.TreePath + UndecoratedName + "@declaration";
+				if (AnalysisResult.Declarations.ContainsKey(path))
+					return AnalysisResult.Declarations[path] as VHDLPackageDeclaration;
+				return null;
+			}
+		}
 		public VHDLPackageBodyDeclaration(AnalysisResult analysisResult, ParserRuleContext context, ParserRuleContext nameContext, string name, IEnumerable<VHDLUseClause> useClauses, VHDLDeclaration parent)
 			: base(analysisResult, parent)
 		{
@@ -1135,9 +1146,25 @@ namespace MyCompany.LanguageServices.VHDL
 	}
 
 	class VHDLFunctionDeclaration
-		: VHDLFunctionnalDeclaration
+		: VHDLSubprogramDeclaration
 	{
 		public VHDLType ReturnType { get; set; } = null;
+
+		private bool m_bodyInitialized = false;
+		private VHDLFunctionBodyDeclaration m_body = null;
+		public VHDLFunctionBodyDeclaration Body
+		{
+			get
+			{
+				if (!m_bodyInitialized)
+				{
+					m_bodyInitialized = true;
+					m_body = VHDLDeclarationUtilities.GetBody(this) as VHDLFunctionBodyDeclaration;
+				}
+				return m_body;
+			}
+		}
+		
 		public VHDLFunctionDeclaration(AnalysisResult analysisResult,
 			ParserRuleContext context,
 			ParserRuleContext nameContext,
@@ -1243,7 +1270,7 @@ namespace MyCompany.LanguageServices.VHDL
 	class EvaluationContext
 	{
 		private Stack<Dictionary<VHDLDeclaration, VHDLEvaluatedExpression>> m_scopes = new Stack<Dictionary<VHDLDeclaration, VHDLEvaluatedExpression>>();
-		const int MAX_LEVEL = 10;
+		const int MAX_LEVEL = 5;
 		public EvaluationContext()
 		{
 
@@ -1274,106 +1301,24 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 
 	}
+
+	// This is a function declaration... it basically shares all the functionnalities, and can be used in the same way
+	// If you get a VHDLFunctionBodyDeclaration instead of VHDLFunctionDeclaration, it doesn't change anything, it's a valid declaration anyway
 	class VHDLFunctionBodyDeclaration
-		: VHDLFunctionnalDeclaration
+		: VHDLFunctionDeclaration
 	{
 		public List<VHDLStatement> Statements { get; set; } = new List<VHDLStatement>();
-		public VHDLType ReturnType { get; set; } = null;
 		public VHDLFunctionBodyDeclaration(AnalysisResult analysisResult,
 			vhdlParser.Subprogram_bodyContext context,
 			ParserRuleContext nameContext,
 			string name,
 			VHDLDeclaration parent)
-			: base(analysisResult, parent)
+			: base(analysisResult, context, nameContext, name, parent)
 		{
 			Context = context;
 			NameContext = nameContext;
 			Name = name;
 		}
-		public override CompletionItem BuildCompletion(IAsyncCompletionSource source)
-		{
-			CompletionItem item = new CompletionItem(UndecoratedName, source, VHDLQuickInfoHelper.MethodImageElement);
-			item.Properties["declaration"] = this;
-			return item;
-		}
-		public override async Task<object> BuildQuickInfoAsync()
-		{
-			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-			List<Span> parameterSpans = null;
-			System.Windows.Controls.TextBlock textBlock = GetClassifiedDeclaration(out parameterSpans).ToTextBlock();
-
-			textBlock.Inlines.InsertBefore(textBlock.Inlines.FirstInline, VHDLQuickInfoHelper.glyphMethod());
-			textBlock.Inlines.InsertAfter(textBlock.Inlines.FirstInline, VHDLQuickInfoHelper.text(" "));
-			if (!string.IsNullOrWhiteSpace(Comment))
-				textBlock.Inlines.Add(VHDLQuickInfoHelper.text(Environment.NewLine + Comment));
-
-			return textBlock;
-		}
-		private VHDLClassifiedText GetClassifiedDeclaration(out List<Span> parameterSpans)
-		{
-			VHDLClassifiedText declText = new VHDLClassifiedText();
-			declText.Add("function ", "keyword");
-			declText.Add(GetClassifiedName(true));
-			declText.Add("(");
-
-			parameterSpans = new List<Span>();
-			foreach (VHDLDeclaration p in Parameters)
-			{
-				if (parameterSpans.Count > 0)
-					declText.Add(", ");
-
-				VHDLClassifiedText paramText = p.GetClassifiedName(false);
-				paramText.Add(" : ");
-				if (p is VHDLVariableDeclaration)
-					paramText.Add((p as VHDLVariableDeclaration).Type.GetClassifiedText());
-				else if (p is VHDLConstantDeclaration)
-					paramText.Add((p as VHDLConstantDeclaration).Type.GetClassifiedText());
-				else if (p is VHDLSignalDeclaration)
-					paramText.Add((p as VHDLSignalDeclaration).Type.GetClassifiedText());
-				else if (p is VHDLPortDeclaration)
-					paramText.Add((p as VHDLPortDeclaration).Type.GetClassifiedText());
-
-				parameterSpans.Add(new Span(declText.Text.Length, paramText.Text.Length));
-				declText.Add(paramText);
-			}
-
-			declText.Add(") ");
-			declText.Add("return ", "keyword");
-			declText.Add(ReturnType.GetClassifiedText());
-
-			return declText;
-		}
-		public override VHDLSignature BuildSignature(ITextBuffer textBuffer, ITrackingSpan applicableToSpan)
-		{
-			vhdlParser.Function_specificationContext functionSpecificationContext = Context as vhdlParser.Function_specificationContext;
-
-			VHDLSignature signature = new VHDLSignature(textBuffer);
-
-			List<Span> parameterSpans = null;
-			signature.ClassifiedText.Add(GetClassifiedDeclaration(out parameterSpans));
-
-			List<IParameter> parameters = new List<IParameter>();
-			foreach (Tuple<VHDLDeclaration, Span> p in Parameters.Zip(parameterSpans, (x, y) => new Tuple<VHDLDeclaration, Span>(x, y)))
-				parameters.Add(new VHDLParameter(p.Item1.Comment, p.Item2, p.Item1.UndecoratedName, signature));
-
-			signature.ApplicableToSpan = applicableToSpan;
-			signature.Documentation = Comment;
-			signature.Parameters = new System.Collections.ObjectModel.ReadOnlyCollection<IParameter>(parameters);
-			return signature;
-		}
-		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)
-		{
-			if (fullyQualified && Parent != null && !(Parent is VHDLFileDeclaration))
-			{
-				VHDLClassifiedText text = Parent.GetClassifiedName(true);
-				text.Add(".");
-				text.Add(UndecoratedName, "vhdl.function");
-				return text;
-			}
-			return new VHDLClassifiedText(UndecoratedName, "vhdl.function");
-		}
-
 		bool ExecuteStatement(VHDLStatement statement, EvaluationContext evaluationContext, out VHDLEvaluatedExpression returnedValue, ref ulong performanceCounter)
 		{
 			returnedValue = null;
@@ -1535,7 +1480,7 @@ namespace MyCompany.LanguageServices.VHDL
 			{
 				evaluationContext.Push();
 
-				ulong performanceCounter = 100;
+				ulong performanceCounter = 30;
 				foreach (var p in Parameters.Zip(args, (x, y) => Tuple.Create(x, y)))
 				{
 					if (p.Item1.Type.IsCompatible(p.Item2.Type) == VHDLCompatibilityResult.No)
@@ -1565,8 +1510,22 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 	}
 	class VHDLProcedureDeclaration
-		: VHDLFunctionnalDeclaration
+		: VHDLSubprogramDeclaration
 	{
+		private bool m_bodyInitialized = false;
+		private VHDLProcedureBodyDeclaration m_body = null;
+		public VHDLProcedureBodyDeclaration Body
+		{
+			get
+			{
+				if (!m_bodyInitialized)
+				{
+					m_bodyInitialized = true;
+					m_body = VHDLDeclarationUtilities.GetBody(this) as VHDLProcedureBodyDeclaration;
+				}
+				return m_body;
+			}
+		}
 		public VHDLProcedureDeclaration(AnalysisResult analysisResult,
 			ParserRuleContext context,
 			ParserRuleContext nameContext,
@@ -1661,7 +1620,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 	}
 	class VHDLProcedureBodyDeclaration
-		: VHDLFunctionnalDeclaration
+		: VHDLProcedureDeclaration
 	{
 		public List<VHDLStatement> Statements { get; set; } = new List<VHDLStatement>();
 		public VHDLProcedureBodyDeclaration(AnalysisResult analysisResult,
@@ -1669,92 +1628,11 @@ namespace MyCompany.LanguageServices.VHDL
 			ParserRuleContext nameContext,
 			string name,
 			VHDLDeclaration parent)
-			: base(analysisResult, parent)
+			: base(analysisResult, context, nameContext, name, parent)
 		{
 			Context = context;
 			NameContext = nameContext;
 			Name = name;
-		}
-		public override CompletionItem BuildCompletion(IAsyncCompletionSource source)
-		{
-			CompletionItem item = new CompletionItem(UndecoratedName, source, VHDLQuickInfoHelper.MethodImageElement);
-			item.Properties["declaration"] = this;
-			return item;
-		}
-		public override async Task<object> BuildQuickInfoAsync()
-		{
-			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-			List<Span> parameterSpans = null;
-			System.Windows.Controls.TextBlock textBlock = GetClassifiedDeclaration(out parameterSpans).ToTextBlock();
-
-			textBlock.Inlines.InsertBefore(textBlock.Inlines.FirstInline, VHDLQuickInfoHelper.glyphMethod());
-			textBlock.Inlines.InsertAfter(textBlock.Inlines.FirstInline, VHDLQuickInfoHelper.text(" "));
-			if (!string.IsNullOrWhiteSpace(Comment))
-				textBlock.Inlines.Add(VHDLQuickInfoHelper.text(Environment.NewLine + Comment));
-
-			return textBlock;
-		}
-		private VHDLClassifiedText GetClassifiedDeclaration(out List<Span> parameterSpans)
-		{
-			VHDLClassifiedText declText = new VHDLClassifiedText();
-			declText.Add("procedure ", "keyword");
-			declText.Add(GetClassifiedName(true));
-			declText.Add("(");
-
-			parameterSpans = new List<Span>();
-			foreach (VHDLDeclaration p in Parameters)
-			{
-				if (parameterSpans.Count > 0)
-					declText.Add(", ");
-
-				VHDLClassifiedText paramText = p.GetClassifiedName(false);
-				paramText.Add(" : ");
-				if (p is VHDLVariableDeclaration)
-					paramText.Add((p as VHDLVariableDeclaration).Type.GetClassifiedText());
-				else if (p is VHDLConstantDeclaration)
-					paramText.Add((p as VHDLConstantDeclaration).Type.GetClassifiedText());
-				else if (p is VHDLSignalDeclaration)
-					paramText.Add((p as VHDLSignalDeclaration).Type.GetClassifiedText());
-				else if (p is VHDLPortDeclaration)
-					paramText.Add((p as VHDLPortDeclaration).Type.GetClassifiedText());
-
-				parameterSpans.Add(new Span(declText.Text.Length, paramText.Text.Length));
-				declText.Add(paramText);
-			}
-
-			declText.Add(") ");
-
-			return declText;
-		}
-		public override VHDLSignature BuildSignature(ITextBuffer textBuffer, ITrackingSpan applicableToSpan)
-		{
-			vhdlParser.Function_specificationContext functionSpecificationContext = Context as vhdlParser.Function_specificationContext;
-
-			VHDLSignature signature = new VHDLSignature(textBuffer);
-
-			List<Span> parameterSpans = null;
-			signature.ClassifiedText.Add(GetClassifiedDeclaration(out parameterSpans));
-
-			List<IParameter> parameters = new List<IParameter>();
-			foreach (Tuple<VHDLDeclaration, Span> p in Parameters.Zip(parameterSpans, (x, y) => new Tuple<VHDLDeclaration, Span>(x, y)))
-				parameters.Add(new VHDLParameter(p.Item1.Comment, p.Item2, p.Item1.UndecoratedName, signature));
-
-			signature.ApplicableToSpan = applicableToSpan;
-			signature.Documentation = Comment;
-			signature.Parameters = new System.Collections.ObjectModel.ReadOnlyCollection<IParameter>(parameters);
-			return signature;
-		}
-		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)
-		{
-			if (fullyQualified && Parent != null && !(Parent is VHDLFileDeclaration))
-			{
-				VHDLClassifiedText text = Parent.GetClassifiedName(true);
-				text.Add(".");
-				text.Add(UndecoratedName, "vhdl.procedure");
-				return text;
-			}
-			return new VHDLClassifiedText(UndecoratedName, "vhdl.procedure");
 		}
 	}
 	class VHDLAliasDeclaration

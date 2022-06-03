@@ -63,9 +63,9 @@ namespace MyCompany.LanguageServices.VHDL
 			return new VHDLClassifiedText();
 		}
 
-		// Calculate the result of the expression. Might be a constant, or the same expression if it cannot be calculated further
-		// eg. "5 + 4" evaluates to 9, "f(a) + 1" evaluates to "f(a) + 1" unless f(a) evaluates to a constant
-		public abstract VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext);
+		// Calculate the result of the expression. If the result can be calculated it is contained in the result as a literal
+		// ExpectedType is required because in vhdl, function overloading can be done based on return type
+		public abstract VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null);
 
 		public virtual IEnumerable<VHDLExpression> Children { get { return Array.Empty<VHDLExpression>(); } }
 	}
@@ -119,7 +119,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return new VHDLClassifiedText(Text ?? Value.ToString());
 		}
 
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, this);
 		}
@@ -144,7 +144,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return new VHDLClassifiedText(Text ?? Value.ToString());
 		}
 
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			return new VHDLEvaluatedExpression(VHDLBuiltinTypeReal.Instance, this, this);
 		}
@@ -168,7 +168,7 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			return new VHDLClassifiedText(Text ?? Value.ToString());
 		}
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, this);
 		}
@@ -183,7 +183,7 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			return new VHDLClassifiedText("null");
 		}
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			return new VHDLEvaluatedExpression(VHDLBuiltinTypeNull.Instance, this, this);
 		}
@@ -203,7 +203,7 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			return new VHDLClassifiedText("'" + Value + "'", "string");
 		}
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			return new VHDLEvaluatedExpression(new VHDLCharLiteralType(this), this, this);
 		}
@@ -223,7 +223,7 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			return new VHDLClassifiedText('"' + Value + '"', "string");
 		}
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			return new VHDLEvaluatedExpression(new VHDLStringLiteralType(this), this, this);
 		}
@@ -243,7 +243,7 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			return new VHDLClassifiedText("b\"" + Value + '"', "string");
 		}
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			return new VHDLEvaluatedExpression(new VHDLStringLiteralType(this), this, this);
 		}
@@ -264,7 +264,7 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			return new VHDLClassifiedText("o\"" + Value + '"', "string");
 		}
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			return new VHDLEvaluatedExpression(new VHDLStringLiteralType(this), this, this);
 		}
@@ -307,7 +307,7 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			return new VHDLClassifiedText("x\"" + Value + '"', "string");
 		}
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			return new VHDLEvaluatedExpression(new VHDLStringLiteralType(this), this, this);
 		}
@@ -393,7 +393,7 @@ namespace MyCompany.LanguageServices.VHDL
 				return subtyped.Type;
 			return null;
 		}
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			return new VHDLEvaluatedExpression(GetUnitType(), this, null);
 		}
@@ -418,7 +418,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e = Expression.Evaluate(evaluationContext);
 			if (e.Result is VHDLIntegerLiteral il)
@@ -518,25 +518,25 @@ namespace MyCompany.LanguageServices.VHDL
 			VHDLStringLiteral l = new VHDLStringLiteral(null, new Span(), left.Value.ToString() + right.Value);
 			return new VHDLEvaluatedExpression(new VHDLStringLiteralType(l), this, l);
 		}
-		VHDLEvaluatedExpression ConcatCharArray(VHDLCharacterLiteral left, VHDLAbstractArrayType rightType, VHDLLiteral right, bool invert, EvaluationContext evaluationContext)
+		VHDLEvaluatedExpression ConcatArrayElement(VHDLEvaluatedExpression left, VHDLEvaluatedExpression right, bool invert, EvaluationContext evaluationContext)
 		{
-			// '0' & arr
-			if (rightType.ElementType.IsCompatible(new VHDLCharLiteralType(new VHDLCharacterLiteral(null, new Span(), left.Value))) == VHDLCompatibilityResult.No)
+			VHDLAbstractArrayType aat = left.Type.Dereference() as VHDLAbstractArrayType;
+			if (aat.ElementType.IsCompatible(right.Type) == VHDLCompatibilityResult.No)
 				return null;
 
 			// Try to evaluate the size of the concatenation operation
-			VHDLExpression count = rightType.GetIndexRange(0)?.Count(rightType.GetIndexType(0));
+			VHDLExpression count = aat.GetIndexRange(0)?.Count(aat.GetIndexType(0));
 			count = VHDLAddExpression.AddConstant(count, 1);
 			VHDLEvaluatedExpression eval = count?.Evaluate(evaluationContext);
 			if (eval?.Result is VHDLIntegerLiteral il)
 			{
-				VHDLArraySliceType sliceType = new VHDLArraySliceType(rightType.GetBaseType(), new VHDLRange(new VHDLIntegerLiteral(il.Value - 1), VHDLRangeDirection.DownTo, new VHDLIntegerLiteral(null, new Span(), 0, null)));
+				VHDLArraySliceType sliceType = new VHDLArraySliceType(aat.GetBaseType(), new VHDLRange(new VHDLIntegerLiteral(il.Value - 1), VHDLRangeDirection.DownTo, new VHDLIntegerLiteral(null, new Span(), 0, null)));
 				return new VHDLEvaluatedExpression(sliceType, this, null); // should return literal if thats possible
 			}
 			else
 			{
 				// cannot evaluate range, just return a slice without range
-				VHDLArraySliceType sliceType = new VHDLArraySliceType(rightType.GetBaseType(), null);
+				VHDLArraySliceType sliceType = new VHDLArraySliceType(aat.GetBaseType(), null);
 				return new VHDLEvaluatedExpression(sliceType, this, null);
 			}
 		}
@@ -565,7 +565,7 @@ namespace MyCompany.LanguageServices.VHDL
 				return new VHDLEvaluatedExpression(sliceType, this, null);
 			}
 		}
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			// Can concatenate only if e1 and e2 are the same array type
 			// or if e1 is array type and e2 is string/bit literal
@@ -609,23 +609,22 @@ namespace MyCompany.LanguageServices.VHDL
 				}
 				else if (t2 is VHDLAbstractArrayType aat && aat.IndexTypes.Count() == 1) // dont support multidim arrays
 				{
-					return ConcatCharArray(clt.Literal, aat, e2.Result, false, evaluationContext);
+					return ConcatArrayElement(e1, e2, true, evaluationContext);
 				}
 			}
 			else if (t1 is VHDLAbstractArrayType aat && aat.IndexTypes.Count() == 1)
 			{
-				if (t2 is VHDLCharLiteralType clt2)
-				{
-					// "010" & '0'
-					return ConcatCharArray(clt2.Literal, aat, e1.Result, true, evaluationContext);
-				}
-				else if (t2 is VHDLStringLiteralType slt2)
+				if (t2 is VHDLStringLiteralType slt2)
 				{
 					return ConcatStringArray(slt2.Literal, aat, e1.Result, true, evaluationContext);
 				}
 				else if (t2 is VHDLAbstractArrayType aat2 && aat2.IndexTypes.Count() == 1) // dont support multidim arrays
 				{
 					return ConcatArrayArray(aat, e1.Result, aat2, e2.Result, evaluationContext);
+				}
+				else
+				{
+					return ConcatArrayElement(e1, e2, false, evaluationContext);
 				}
 			}
 
@@ -685,8 +684,11 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 			return null;
 		}
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
+			// IDK, since overload is possible by return type, we need to check the return type before evaluating the operands
+			// because the operand might be an overloaded function call depending on expected return value.
+			// But the return type of an operator cannot be deduced before evaluation of the operands
 			VHDLEvaluatedExpression e1 = Expression1?.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2?.Evaluate(evaluationContext);
 			if (e1 == null || e2 == null)
@@ -709,6 +711,10 @@ namespace MyCompany.LanguageServices.VHDL
 			// Look for an operator function with arguments of the correct type
 			VHDLDeclaration enclosingDecl = VHDLDeclarationUtilities.GetEnclosingDeclaration(AnalysisResult, Span.Start);
 			IEnumerable<VHDLFunctionDeclaration> operatorDeclarations = VHDLDeclarationUtilities.FindAllNames(enclosingDecl, "\"+\"").OfType<VHDLFunctionDeclaration>();
+
+			// filter by return type
+			if (expectedType != null)
+				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
@@ -772,7 +778,7 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 			return null;
 		}
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1?.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2?.Evaluate(evaluationContext);
@@ -855,7 +861,7 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 			return null;
 		}
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1?.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2?.Evaluate(evaluationContext);
@@ -937,7 +943,7 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 			return null;
 		}
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1?.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2?.Evaluate(evaluationContext);
@@ -1019,7 +1025,7 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 			return null;
 		}
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1?.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2?.Evaluate(evaluationContext);
@@ -1101,7 +1107,7 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 			return null;
 		}
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1?.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2?.Evaluate(evaluationContext);
@@ -1160,7 +1166,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2.Evaluate(evaluationContext);
@@ -1206,7 +1212,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e = Expression.Evaluate(evaluationContext);
 			if (e.Result is VHDLIntegerLiteral il)
@@ -1237,7 +1243,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e = Expression.Evaluate(evaluationContext);
 			return new VHDLEvaluatedExpression(e.Type, this, null);
@@ -1285,7 +1291,7 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 			return null;
 		}
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1?.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2?.Evaluate(evaluationContext);
@@ -1343,7 +1349,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2.Evaluate(evaluationContext);
@@ -1384,7 +1390,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2.Evaluate(evaluationContext);
@@ -1425,7 +1431,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2.Evaluate(evaluationContext);
@@ -1466,7 +1472,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2.Evaluate(evaluationContext);
@@ -1507,7 +1513,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2.Evaluate(evaluationContext);
@@ -1548,7 +1554,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2.Evaluate(evaluationContext);
@@ -1591,7 +1597,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2.Evaluate(evaluationContext);
@@ -1643,7 +1649,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2.Evaluate(evaluationContext);
@@ -1694,7 +1700,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2.Evaluate(evaluationContext);
@@ -1763,7 +1769,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2.Evaluate(evaluationContext);
@@ -1832,7 +1838,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2.Evaluate(evaluationContext);
@@ -1901,7 +1907,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2.Evaluate(evaluationContext);
@@ -1971,7 +1977,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			return null;
 		}
@@ -1999,7 +2005,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2.Evaluate(evaluationContext);
@@ -2048,7 +2054,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2.Evaluate(evaluationContext);
@@ -2097,7 +2103,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2.Evaluate(evaluationContext);
@@ -2146,7 +2152,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2.Evaluate(evaluationContext);
@@ -2195,7 +2201,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e1 = Expression1.Evaluate(evaluationContext);
 			VHDLEvaluatedExpression e2 = Expression2.Evaluate(evaluationContext);
@@ -2274,7 +2280,7 @@ namespace MyCompany.LanguageServices.VHDL
 			else
 				return new VHDLClassifiedText(Name);
 		}
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			if (evaluationContext?.Contains(Declaration) == true)
 				return evaluationContext[Declaration];
@@ -2318,29 +2324,114 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => Arguments.Prepend(NameExpression);
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+
+
+		private int IndexOf<T>(IEnumerable<T> l, Func<T, bool> predicate)
+		{
+			int i = 0;
+			foreach (T item in l)
+			{
+				if (predicate(item))
+					return i;
+				++i;
+			}
+			return -1;
+		}
+		private IEnumerable<VHDLExpression> ReorderParameters(VHDLFunctionDeclaration declaration, IEnumerable<VHDLExpression> arguments)
+		{
+			if (!arguments.Any())
+				return arguments;
+
+			if (!(arguments.First() is VHDLArgumentAssociationExpression))
+				return arguments;
+
+			VHDLExpression[] args = new VHDLExpression[arguments.Count()];
+			foreach (var a in arguments)
+			{
+				VHDLArgumentAssociationExpression aae = a as VHDLArgumentAssociationExpression;
+				if (aae == null)
+					throw new VHDLCodeException(string.Format("Cannot mix positionnal and named arguments"), Span);
+
+				VHDLNameExpression ne = aae.Argument as VHDLNameExpression;
+				if (ne == null)
+					throw new VHDLCodeException(string.Format("Positionnal argument other than name not supported"), Span);
+
+				int i = IndexOf(declaration.Parameters, x => string.Compare(x.Name, ne.Name, true) == 0);
+				if (i == -1)
+					throw new VHDLCodeException(string.Format("Parameter name not found '{0}'", ne.Name), Span);
+
+				args[i] = aae.Value;
+			}
+			return args;
+		}
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression evaluatedName = NameExpression.Evaluate(evaluationContext);
 			if (NameExpression is VHDLReferenceExpression r)
 			{
 				if (r == null)
 					return null;
-				if (r.Declaration is VHDLFunctionnalDeclaration fd)
+				if (r.Declaration is VHDLSubprogramDeclaration fd)
 				{
-					VHDLFunctionBodyDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(r.GetDeclarations().OfType<VHDLFunctionBodyDeclaration>(), Arguments.Select(x => x.Evaluate(evaluationContext)?.Type).ToArray());
-					try
+					var declarations = r.GetDeclarations().OfType<VHDLFunctionDeclaration>().ToArray();
+					declarations = declarations.Distinct().ToArray();
+					declarations = declarations.Select(x => x.Body ?? x).Distinct().ToArray(); // keep function declaration only when body is not found
+					// filter by return type
+					if (expectedType != null)
+						declarations = declarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No).ToArray();
+
+					if (declarations.Count() == 1)
 					{
-						VHDLEvaluatedExpression ee = bestMatch?.EvaluateCall(Arguments.Select(x => x.Evaluate(evaluationContext)), evaluationContext);
-						if (ee != null)
-							return ee;
+						// There is no alternatives, so we can deduce the expected parameter types.
+						// This can help resolve ambiguities in parameters
+						VHDLFunctionDeclaration d = declarations.First();
+						if (d.Parameters.Count != Arguments.Count)
+							throw new VHDLCodeException(string.Format("'{0}' arguments expected, got '{1}'", d.Parameters.Count, Arguments.Count), Span);
+
+						var evaluatedParameters = ReorderParameters(d, Arguments).Zip(d.Parameters, (x, y) => Tuple.Create(x.Evaluate(evaluationContext, y.Type), y));
+						foreach (var (ev, ex) in evaluatedParameters)
+						{
+							if (ex.Type.IsCompatible(ev.Type) == VHDLCompatibilityResult.No)
+								throw new VHDLCodeException(string.Format("Wrong argument type, '{0}' expected, got '{1}'",
+									ex.Type.GetClassifiedText()?.Text ?? "<error type>",
+									ev.Type.GetClassifiedText()?.Text ?? "<error type>"), ev?.Expression?.Span ?? Span);
+						}
+
+						VHDLEvaluatedExpression result = (d as VHDLFunctionBodyDeclaration)?.EvaluateCall(evaluatedParameters.Select(x => x.Item1), evaluationContext);
+						if (result == null)
+							result = new VHDLEvaluatedExpression(d.ReturnType, this, null);
+						return result;
 					}
-					catch (Exception ex)
+					List<Tuple<VHDLEvaluatedExpression, VHDLFunctionDeclaration>> results = new List<Tuple<VHDLEvaluatedExpression, VHDLFunctionDeclaration>>();
+					foreach (var d in declarations)
 					{
+						try
+						{
+							if (d.Parameters.Count != Arguments.Count)
+								continue;
+
+							var evaluatedParameters = ReorderParameters(d, Arguments).Zip(d.Parameters, (x, y) => Tuple.Create(x.Evaluate(evaluationContext, y.Type), y)).ToArray();
+							if (evaluatedParameters.Any(x => x.Item2.Type.IsCompatible(x.Item1.Type) == VHDLCompatibilityResult.No))
+								continue;
+							VHDLEvaluatedExpression result = (d as VHDLFunctionBodyDeclaration)?.EvaluateCall(evaluatedParameters.Select(x => x.Item1), evaluationContext);
+							if (result == null)
+								result = new VHDLEvaluatedExpression(d.ReturnType, this, null);
+							results.Add(Tuple.Create(result, d));
+						}
+						catch (Exception ex)
+						{ }
 					}
-					if (bestMatch != null)
-						return new VHDLEvaluatedExpression(bestMatch?.ReturnType, this, null);
-					VHDLFunctionDeclaration bestMatch2 = VHDLDeclarationUtilities.GetBestMatch(r.GetDeclarations().OfType<VHDLFunctionDeclaration>(), Arguments.Select(x => x.Evaluate(evaluationContext)?.Type).ToArray());
-					return new VHDLEvaluatedExpression(bestMatch2?.ReturnType, this, null);
+					if (results.Count == 0)
+					{
+						throw new VHDLCodeException(string.Format("No function found that matches the given parameters"), Span);
+					}
+					if (results.Count > 1)
+					{
+						throw new VHDLCodeException(string.Format("Call to {0} is ambiguous. Possibilities are {1}",
+							NameExpression?.GetClassifiedText()?.Text ?? "<error>",
+							string.Join(", ", results.Select(x => "'" + x?.Item2?.GetClassifiedName()?.Text ?? "<error>" + "'"))), Span);
+					}
+					return results[0].Item1;
 				}
 				if (r.Declaration is VHDLTypeDeclaration || r.Declaration is VHDLSubTypeDeclaration)
 				{
@@ -2482,7 +2573,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression ee = Expression?.Evaluate(evaluationContext);
 			if (ee?.Type?.Dereference()?.Declaration != null)
@@ -2523,7 +2614,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Argument, Value };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			return null;
 		}
@@ -2547,7 +2638,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return Range.GetClassifiedText();
 		}
 		public override IEnumerable<VHDLExpression> Children => Range == null ? Array.Empty<VHDLExpression>() : (Range.End != null ? new VHDLExpression[] { Range.Start, Range.End } : new VHDLExpression[] { Range.Start });
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			return null;
 		}
@@ -2575,7 +2666,7 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			if (string.Compare(Attribute, "length", true) == 0)
 			{
@@ -2724,7 +2815,7 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			return new VHDLClassifiedText("others", "keyword");
 		}
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext)
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			return null;
 		}
