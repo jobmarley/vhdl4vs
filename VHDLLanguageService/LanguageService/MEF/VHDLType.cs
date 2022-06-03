@@ -338,8 +338,8 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			VHDLEvaluatedExpression estart = Start?.Evaluate(new EvaluationContext());
 			VHDLEvaluatedExpression eend = End?.Evaluate(new EvaluationContext());
-			long? iStart = Direction == VHDLRangeDirection.To ? (estart.Result as VHDLIntegerLiteral)?.Value : (eend.Result as VHDLIntegerLiteral)?.Value;
-			long? iEnd = Direction == VHDLRangeDirection.To ? (eend.Result as VHDLIntegerLiteral)?.Value : (estart.Result as VHDLIntegerLiteral)?.Value;
+			long? iStart = Direction == VHDLRangeDirection.To ? (estart?.Result as VHDLIntegerLiteral)?.Value : (eend?.Result as VHDLIntegerLiteral)?.Value;
+			long? iEnd = Direction == VHDLRangeDirection.To ? (eend?.Result as VHDLIntegerLiteral)?.Value : (estart?.Result as VHDLIntegerLiteral)?.Value;
 			if (iStart == null || iEnd == null)
 				return VHDLCompatibilityResult.Unsure;
 
@@ -373,6 +373,10 @@ namespace MyCompany.LanguageServices.VHDL
 			else if (t is VHDLUnconstrainedType ut)
 			{
 				return null;
+			}
+			else if (t is VHDLEnumerationType et)
+			{
+				return new VHDLRange(null, VHDLRangeDirection.To, null);
 			}
 			throw new Exception("VHDLAbstractArrayType.GetRange cannot find range");
 		}
