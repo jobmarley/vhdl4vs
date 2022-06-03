@@ -15,7 +15,7 @@ namespace MyCompany.LanguageServices.VHDL
 			{
 				try
 				{
-					VHDLEvaluatedExpression eval = expression.Evaluate(new EvaluationContext());
+					VHDLEvaluatedExpression eval = expression.Evaluate(new EvaluationContext(), expectedType);
 					if (eval?.Type == null)
 						errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Type cannot be evaluated", expression.Span));
 

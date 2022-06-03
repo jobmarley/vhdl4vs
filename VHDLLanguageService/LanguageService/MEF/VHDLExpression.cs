@@ -398,6 +398,53 @@ namespace MyCompany.LanguageServices.VHDL
 			return new VHDLEvaluatedExpression(GetUnitType(), this, null);
 		}
 	}
+
+	class VHDLUnaryPlusExpression
+		: VHDLExpression
+	{
+		public VHDLUnaryPlusExpression(AnalysisResult analysisResult, Span span)
+			: base(analysisResult, span) { }
+		public VHDLUnaryPlusExpression(AnalysisResult analysisResult, Span span, VHDLExpression expr)
+			: base(analysisResult, span)
+		{
+			Expression = expr;
+		}
+		public VHDLExpression Expression { get; set; } = null;
+
+		public override VHDLClassifiedText GetClassifiedText()
+		{
+			VHDLClassifiedText text = new VHDLClassifiedText();
+			text.Add("+");
+			text.Add(Expression.GetClassifiedText());
+			return text;
+		}
+		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression };
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
+		{
+			VHDLEvaluatedExpression e = Expression.Evaluate(evaluationContext, expectedType);
+			if (e.Result is VHDLIntegerLiteral il)
+				return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, new VHDLIntegerLiteral(e.Result.AnalysisResult, new Span(), il.Value, null));
+			if (e.Result is VHDLRealLiteral rl)
+				return new VHDLEvaluatedExpression(VHDLBuiltinTypeReal.Instance, null, new VHDLRealLiteral(e.Result.AnalysisResult, new Span(), rl.Value, null));
+
+			// Look for an operator function with arguments of the correct type
+			VHDLDeclaration enclosingDecl = VHDLDeclarationUtilities.GetEnclosingDeclaration(AnalysisResult, Span.Start);
+			IEnumerable<VHDLFunctionDeclaration> operatorDeclarations = VHDLDeclarationUtilities.FindAllNames(enclosingDecl, "\"+\"").OfType<VHDLFunctionDeclaration>();
+
+			// filter by return type
+			if (expectedType != null)
+				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+
+			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e.Type);
+			if (bestMatch != null)
+				return new VHDLEvaluatedExpression(bestMatch.ReturnType, this, null);
+
+			throw new VHDLTypeEvalationException(
+				string.Format("Operator '+' cannot be applied to operands of type '{0}'",
+					e.Type.GetClassifiedText().Text),
+				Span);
+		}
+	}
 	class VHDLUnaryMinusExpression
 		: VHDLExpression
 	{
@@ -420,14 +467,28 @@ namespace MyCompany.LanguageServices.VHDL
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression };
 		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
-			VHDLEvaluatedExpression e = Expression.Evaluate(evaluationContext);
+			VHDLEvaluatedExpression e = Expression.Evaluate(evaluationContext, expectedType);
 			if (e.Result is VHDLIntegerLiteral il)
 				return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, new VHDLIntegerLiteral(e.Result.AnalysisResult, new Span(), -il.Value, null));
 			if (e.Result is VHDLRealLiteral rl)
 				return new VHDLEvaluatedExpression(VHDLBuiltinTypeReal.Instance, null, new VHDLRealLiteral(e.Result.AnalysisResult, new Span(), -rl.Value, null));
 
-			// Need to check if operator '-' exist
-			return new VHDLEvaluatedExpression(e.Type, this, null);
+			// Look for an operator function with arguments of the correct type
+			VHDLDeclaration enclosingDecl = VHDLDeclarationUtilities.GetEnclosingDeclaration(AnalysisResult, Span.Start);
+			IEnumerable<VHDLFunctionDeclaration> operatorDeclarations = VHDLDeclarationUtilities.FindAllNames(enclosingDecl, "\"-\"").OfType<VHDLFunctionDeclaration>();
+
+			// filter by return type
+			if (expectedType != null)
+				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+
+			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e.Type);
+			if (bestMatch != null)
+				return new VHDLEvaluatedExpression(bestMatch.ReturnType, this, null);
+
+			throw new VHDLTypeEvalationException(
+				string.Format("Operator '-' cannot be applied to operands of type '{0}'",
+					e.Type.GetClassifiedText().Text),
+				Span);
 		}
 	}
 
@@ -803,6 +864,10 @@ namespace MyCompany.LanguageServices.VHDL
 			VHDLDeclaration enclosingDecl = VHDLDeclarationUtilities.GetEnclosingDeclaration(AnalysisResult, Span.Start);
 			IEnumerable<VHDLFunctionDeclaration> operatorDeclarations = VHDLDeclarationUtilities.FindAllNames(enclosingDecl, "\"-\"").OfType<VHDLFunctionDeclaration>();
 
+			// filter by return type
+			if (expectedType != null)
+				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
 				return new VHDLEvaluatedExpression(bestMatch.ReturnType, this, null);
@@ -886,6 +951,10 @@ namespace MyCompany.LanguageServices.VHDL
 			VHDLDeclaration enclosingDecl = VHDLDeclarationUtilities.GetEnclosingDeclaration(AnalysisResult, Span.Start);
 			IEnumerable<VHDLFunctionDeclaration> operatorDeclarations = VHDLDeclarationUtilities.FindAllNames(enclosingDecl, "\"*\"").OfType<VHDLFunctionDeclaration>();
 
+			// filter by return type
+			if (expectedType != null)
+				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
 				return new VHDLEvaluatedExpression(bestMatch.ReturnType, this, null);
@@ -967,6 +1036,10 @@ namespace MyCompany.LanguageServices.VHDL
 			// Look for an operator function with arguments of the correct type
 			VHDLDeclaration enclosingDecl = VHDLDeclarationUtilities.GetEnclosingDeclaration(AnalysisResult, Span.Start);
 			IEnumerable<VHDLFunctionDeclaration> operatorDeclarations = VHDLDeclarationUtilities.FindAllNames(enclosingDecl, "\"/\"").OfType<VHDLFunctionDeclaration>();
+
+			// filter by return type
+			if (expectedType != null)
+				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
@@ -1050,6 +1123,10 @@ namespace MyCompany.LanguageServices.VHDL
 			VHDLDeclaration enclosingDecl = VHDLDeclarationUtilities.GetEnclosingDeclaration(AnalysisResult, Span.Start);
 			IEnumerable<VHDLFunctionDeclaration> operatorDeclarations = VHDLDeclarationUtilities.FindAllNames(enclosingDecl, "\"MOD\"").OfType<VHDLFunctionDeclaration>();
 
+			// filter by return type
+			if (expectedType != null)
+				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
 				return new VHDLEvaluatedExpression(bestMatch.ReturnType, this, null);
@@ -1132,6 +1209,10 @@ namespace MyCompany.LanguageServices.VHDL
 			VHDLDeclaration enclosingDecl = VHDLDeclarationUtilities.GetEnclosingDeclaration(AnalysisResult, Span.Start);
 			IEnumerable<VHDLFunctionDeclaration> operatorDeclarations = VHDLDeclarationUtilities.FindAllNames(enclosingDecl, "\"REM\"").OfType<VHDLFunctionDeclaration>();
 
+			// filter by return type
+			if (expectedType != null)
+				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
 				return new VHDLEvaluatedExpression(bestMatch.ReturnType, this, null);
@@ -1175,6 +1256,10 @@ namespace MyCompany.LanguageServices.VHDL
 
 			VHDLDeclaration enclosingDecl = VHDLDeclarationUtilities.GetEnclosingDeclaration(AnalysisResult, Span.Start);
 			IEnumerable<VHDLFunctionDeclaration> operatorDeclarations = VHDLDeclarationUtilities.FindAllNames(enclosingDecl, "\"and\"").OfType<VHDLFunctionDeclaration>();
+
+			// filter by return type
+			if (expectedType != null)
+				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
@@ -1220,7 +1305,22 @@ namespace MyCompany.LanguageServices.VHDL
 			if (e.Result is VHDLRealLiteral rl)
 				return new VHDLEvaluatedExpression(e.Type, this, new VHDLRealLiteral(Math.Abs(rl.Value)));
 
-			return new VHDLEvaluatedExpression(e.Type, this, null);
+			// Look for an operator function with arguments of the correct type
+			VHDLDeclaration enclosingDecl = VHDLDeclarationUtilities.GetEnclosingDeclaration(AnalysisResult, Span.Start);
+			IEnumerable<VHDLFunctionDeclaration> operatorDeclarations = VHDLDeclarationUtilities.FindAllNames(enclosingDecl, "\"abs\"").OfType<VHDLFunctionDeclaration>();
+
+			// filter by return type
+			if (expectedType != null)
+				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+
+			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e.Type);
+			if (bestMatch != null)
+				return new VHDLEvaluatedExpression(bestMatch.ReturnType, this, null);
+
+			throw new VHDLTypeEvalationException(
+				string.Format("Operator 'abs' cannot be applied to operands of type '{0}'",
+					e.Type.GetClassifiedText().Text),
+				Span);
 		}
 	}
 	class VHDLNotExpression
@@ -1315,6 +1415,10 @@ namespace MyCompany.LanguageServices.VHDL
 			// Look for an operator function with arguments of the correct type
 			VHDLDeclaration enclosingDecl = VHDLDeclarationUtilities.GetEnclosingDeclaration(AnalysisResult, Span.Start);
 			IEnumerable<VHDLFunctionDeclaration> operatorDeclarations = VHDLDeclarationUtilities.FindAllNames(enclosingDecl, "\"**\"").OfType<VHDLFunctionDeclaration>();
+
+			// filter by return type
+			if (expectedType != null)
+				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
@@ -1619,6 +1723,13 @@ namespace MyCompany.LanguageServices.VHDL
 			if (comp1 == VHDLCompatibilityResult.Unsure || comp2 == VHDLCompatibilityResult.Unsure)
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 
+			VHDLDeclaration enclosingDecl = VHDLDeclarationUtilities.GetEnclosingDeclaration(AnalysisResult, Span.Start);
+			IEnumerable<VHDLFunctionDeclaration> operatorDeclarations = VHDLDeclarationUtilities.FindAllNames(enclosingDecl, "\"=\"").OfType<VHDLFunctionDeclaration>();
+
+			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
+			if (bestMatch != null)
+				return new VHDLEvaluatedExpression(bestMatch.ReturnType, this, null);
+
 			throw new VHDLTypeEvalationException(
 				string.Format("Operator '=' cannot be applied to operands of type '{0}' and '{1}'",
 					e1.Type.GetClassifiedText().Text,
@@ -1670,6 +1781,13 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 			if (comp1 == VHDLCompatibilityResult.Unsure || comp2 == VHDLCompatibilityResult.Unsure)
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
+
+			VHDLDeclaration enclosingDecl = VHDLDeclarationUtilities.GetEnclosingDeclaration(AnalysisResult, Span.Start);
+			IEnumerable<VHDLFunctionDeclaration> operatorDeclarations = VHDLDeclarationUtilities.FindAllNames(enclosingDecl, "\"and\"").OfType<VHDLFunctionDeclaration>();
+
+			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
+			if (bestMatch != null)
+				return new VHDLEvaluatedExpression(bestMatch.ReturnType, this, null);
 
 			throw new VHDLTypeEvalationException(
 				string.Format("Operator '/=' cannot be applied to operands of type '{0}' and '{1}'",

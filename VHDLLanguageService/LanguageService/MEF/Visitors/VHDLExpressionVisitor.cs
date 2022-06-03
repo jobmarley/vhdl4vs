@@ -53,6 +53,10 @@ namespace MyCompany.LanguageServices.VHDL.ExpressionVisitors
 			{
 				expr = new VHDLUnaryMinusExpression(m_analysisResult, Span.FromBounds(context.MINUS().Symbol.StartIndex, context.term()[0].Stop.StopIndex), VisitTerm(context.term()[0]));
 			}
+			else if (context.PLUS() != null)
+			{
+				expr = new VHDLUnaryPlusExpression(m_analysisResult, Span.FromBounds(context.PLUS().Symbol.StartIndex, context.term()[0].Stop.StopIndex), VisitTerm(context.term()[0]));
+			}
 			else
 			{
 				expr = VisitTerm(context.term()[0]);
