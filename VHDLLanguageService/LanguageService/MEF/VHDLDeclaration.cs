@@ -119,7 +119,10 @@ namespace MyCompany.LanguageServices.VHDL
 				{
 					clause.Check(errorListener);
 				}
-				catch (Exception) { }
+				catch (Exception e)
+				{
+					VHDLLogger.LogException(e);
+				}
 			}
 		}
 	}
@@ -328,6 +331,7 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 			catch (Exception e)
 			{
+				VHDLLogger.LogException(e);
 			}
 			return null;
 		}
@@ -574,6 +578,7 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 			catch (Exception e)
 			{
+				VHDLLogger.LogException(e);
 			}
 			if (EntityDeclaration == null)
 			{
@@ -615,8 +620,9 @@ namespace MyCompany.LanguageServices.VHDL
 			{
 				declText.Add(Type.GetClassifiedText());
 			}
-			catch (Exception)
+			catch (Exception e)
 			{
+				VHDLLogger.LogException(e);
 				declText.Add("<error type>");
 			}
 
@@ -710,8 +716,9 @@ namespace MyCompany.LanguageServices.VHDL
 			{
 				declText.Add(Type.GetClassifiedText());
 			}
-			catch (Exception)
+			catch (Exception e)
 			{
+				VHDLLogger.LogException(e);
 				declText.Add("<error type>");
 			}
 
@@ -770,8 +777,9 @@ namespace MyCompany.LanguageServices.VHDL
 			{
 				declText.Add(Type.GetClassifiedText());
 			}
-			catch (Exception)
+			catch (Exception e)
 			{
+				VHDLLogger.LogException(e);
 				declText.Add("<error type>");
 			}
 
@@ -839,8 +847,9 @@ namespace MyCompany.LanguageServices.VHDL
 			{
 				declText.Add(Type.GetClassifiedText());
 			}
-			catch (Exception)
+			catch (Exception e)
 			{
+				VHDLLogger.LogException(e);
 				declText.Add("<error type>");
 			}
 
@@ -853,6 +862,16 @@ namespace MyCompany.LanguageServices.VHDL
 
 			textBlock.Inlines.InsertBefore(textBlock.Inlines.FirstInline, VHDLQuickInfoHelper.glyphConstant());
 			textBlock.Inlines.InsertAfter(textBlock.Inlines.FirstInline, VHDLQuickInfoHelper.text(" "));
+			if (InitializationExpression != null)
+			{
+				VHDLEvaluatedExpression ee = InitializationExpression.Evaluate(new EvaluationContext(), Type);
+				if (ee?.Result != null)
+				{
+					textBlock.Inlines.Add(VHDLQuickInfoHelper.text(" := "));
+					textBlock.Inlines.Add(ee.Result.GetClassifiedText().ToTextBlock());
+					textBlock.Inlines.Add(VHDLQuickInfoHelper.text(";"));
+				}
+			}
 			if (!string.IsNullOrWhiteSpace(Comment))
 				textBlock.Inlines.Add(VHDLQuickInfoHelper.text(Environment.NewLine + Comment));
 
@@ -1064,6 +1083,7 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 			catch (Exception ex)
 			{
+				VHDLLogger.LogException(ex);
 				return false;
 			}
 		}
@@ -1428,7 +1448,7 @@ namespace MyCompany.LanguageServices.VHDL
 							break;
 					}
 					else
-						throw new Exception("Unable to evaluate if condition");
+						throw new Exception("Unable to evaluate while condition");
 				}
 			}
 			else if (statement is VHDLForStatement fs)
@@ -1500,9 +1520,9 @@ namespace MyCompany.LanguageServices.VHDL
 				}
 
 			}
-			catch (Exception ex)
+			catch (Exception e)
 			{
-
+				VHDLLogger.LogException(e);
 			}
 
 			evaluationContext.Pop();

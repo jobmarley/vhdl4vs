@@ -178,6 +178,8 @@ namespace MyCompany.LanguageServices.VHDL
 		private ParseResult Parse(TextReader reader)
 		{
 			System.Diagnostics.Debug.WriteLine(string.Format("Parsing file {0}", Document.Filepath));
+			Stopwatch sw = new Stopwatch();
+			sw.Start();
 			vhdlLexer lexer = new vhdlLexer(new Antlr4.Runtime.AntlrInputStream(reader));
 			VHDLLexerErrorListener lexerErrorListener = new VHDLLexerErrorListener();
 			lexer.AddErrorListener(lexerErrorListener);
@@ -202,6 +204,8 @@ namespace MyCompany.LanguageServices.VHDL
 
 			result.Comments = ParseComments(lexer);
 
+			sw.Stop();
+			Debug.WriteLine(string.Format("Parsing of file {0} finished in {1}ms", Document.Filepath, sw.ElapsedMilliseconds));
 			return result;
 		}
 
@@ -220,6 +224,7 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 			catch (Exception e)
 			{
+				VHDLLogger.LogException(e);
 			}
 
 			result.ParseResult = parseResult;
@@ -258,7 +263,7 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 			catch (Exception e)
 			{
-
+				VHDLLogger.LogException(e);
 			}
 			try
 			{
@@ -268,7 +273,7 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 			catch (Exception e)
 			{
-
+				VHDLLogger.LogException(e);
 			}
 
 			DeepAnalysisResult result = new DeepAnalysisResult();
@@ -285,42 +290,58 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 
 
+			ConcurrentBag<VHDLError> errors = new ConcurrentBag<VHDLError>();
+			List<Task> tasks = new List<Task>();
 			// Resolve stuff that needs to be resolved (means looking into other documents)
 			foreach (IVHDLToResolve r in analysisResult.ToResolve)
 			{
 				try
 				{
-					r.Resolve(result, (x) => result.Errors.Add(x));
+					r.Resolve(result, (x) => errors.Add(x));
 				}
 				catch (Exception e)
 				{
-
+					VHDLLogger.LogException(e);
 				}
 			}
 
+			// Wait to resolve because it's necessary for next steps
+			// /!\ Deep analysis should not be synchronously awaited upon because of this. But that should never happen
+			Task.WaitAll(tasks.ToArray());
+			tasks.Clear();
 			foreach (VHDLStatement statement in analysisResult.StatementsByContext.Values)
 			{
-				try
+				tasks.Add(Task.Run(() =>
 				{
-					statement.Check(x => result.Errors.Add(x));
-				}
-				catch (Exception e)
-				{
-
-				}
+					try
+					{
+						statement.Check(x => errors.Add(x));
+					}
+					catch (Exception e)
+					{
+						VHDLLogger.LogException(e);
+					}
+				}));
 			}
 
 			foreach (VHDLDeclaration decl in analysisResult.DeclarationsByContext.Values)
 			{
-				try
+				tasks.Add(Task.Run(() =>
 				{
-					decl.Check(result, x => result.Errors.Add(x));
-				}
-				catch (Exception e)
-				{
+					try
+					{
+						decl.Check(result, x => errors.Add(x));
+					}
+					catch (Exception e)
+					{
+						VHDLLogger.LogException(e);
+					}
+				}));
 
-				}
 			}
+
+			Task.WaitAll(tasks.ToArray());
+			result.Errors.AddRange(errors);
 
 			sw.Stop();
 			Debug.WriteLine(string.Format("Deep analysis of file {0} finished in {1}ms", Document.Filepath, sw.ElapsedMilliseconds));

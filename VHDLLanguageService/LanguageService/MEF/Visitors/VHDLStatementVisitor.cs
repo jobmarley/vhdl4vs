@@ -200,7 +200,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 					VHDLExpression valueExpression = visitor.VisitActual_part(elementContext.actual_part());
 					if (formalPartExpression != null)
-						statement.Arguments.Add(new VHDLArgumentAssociationExpression(m_analysisResult, context.GetSpan(), formalPartExpression, valueExpression));
+						statement.Arguments.Add(new VHDLArgumentAssociationExpression(m_analysisResult, context.GetSpan(), new[] { formalPartExpression }, valueExpression));
 					else
 						statement.Arguments.Add(valueExpression);
 				}
@@ -284,7 +284,7 @@ namespace MyCompany.LanguageServices.VHDL
 						port = portVisitor.Visit(elementContext.formal_part());
 
 					if (port != null)
-						statement.Parameters.Add(new VHDLArgumentAssociationExpression(m_analysisResult, elementContext.GetSpan(), port, v));
+						statement.Parameters.Add(new VHDLArgumentAssociationExpression(m_analysisResult, elementContext.GetSpan(), new[] { port }, v));
 					else
 						statement.Parameters.Add(v);
 				}

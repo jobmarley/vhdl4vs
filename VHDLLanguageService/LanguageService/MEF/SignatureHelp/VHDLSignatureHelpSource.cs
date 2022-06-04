@@ -84,6 +84,11 @@ namespace MyCompany.LanguageServices.VHDL
 			ClassificationSpans.AddRange(spans);
 			Text += classifiedText.Text;
 		}
+		public void AddRange(IEnumerable<VHDLClassifiedText> classifieds)
+		{
+			foreach (var c in classifieds)
+				Add(c);
+		}
 		public void Add(string text, string classificationType)
 		{
 			ClassificationSpans.Add(new VHDLClassifactionSpan(new Span(Text.Length, text.Length), classificationType));

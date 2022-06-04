@@ -2484,8 +2484,9 @@ namespace MyCompany.LanguageServices.VHDL
 				VHDLDeclaration enclosingDeclaration = VHDLDeclarationUtilities.GetEnclosingDeclaration(AnalysisResult, Span.Start);
 				return VHDLDeclarationUtilities.FindAllNames(enclosingDeclaration, Name);
 			}
-			catch (Exception)
+			catch (Exception e)
 			{
+				VHDLLogger.LogException(e);
 			}
 			return Array.Empty<VHDLDeclaration>();
 		}
@@ -2575,7 +2576,7 @@ namespace MyCompany.LanguageServices.VHDL
 					if (aae == null)
 						throw new VHDLCodeException(string.Format("Cannot mix positionnal and named arguments"), Span);
 
-					VHDLNameExpression ne = aae.Argument as VHDLNameExpression;
+					VHDLNameExpression ne = aae.Arguments.Single() as VHDLNameExpression;
 					if (ne == null)
 						throw new VHDLCodeException(string.Format("Positionnal argument other than name not supported"), Span);
 
@@ -2625,7 +2626,7 @@ namespace MyCompany.LanguageServices.VHDL
 									ev.Type.GetClassifiedText()?.Text ?? "<error type>"), ev?.Expression?.Span ?? Span);
 						}
 
-						VHDLEvaluatedExpression result = null;// (d as VHDLFunctionBodyDeclaration)?.EvaluateCall(evaluatedParameters.Select(x => x.Item1), evaluationContext);
+						VHDLEvaluatedExpression result = (d as VHDLFunctionBodyDeclaration)?.EvaluateCall(evaluatedParameters.Select(x => x.Item1), evaluationContext);
 						if (result == null)
 							result = new VHDLEvaluatedExpression(d.ReturnType, this, null);
 						return result;
@@ -2638,13 +2639,15 @@ namespace MyCompany.LanguageServices.VHDL
 							var evaluatedParameters = ReorderParameters(d, Arguments, evaluationContext).Zip(d.Parameters, (x, y) => Tuple.Create(x.Evaluate(evaluationContext, y.Type), y)).ToArray();
 							if (evaluatedParameters.Any(x => VHDLType.AreCompatible(x.Item2.Type, x.Item1.Type) == VHDLCompatibilityResult.No))
 								continue;
-							VHDLEvaluatedExpression result = null;// (d as VHDLFunctionBodyDeclaration)?.EvaluateCall(evaluatedParameters.Select(x => x.Item1), evaluationContext);
+							VHDLEvaluatedExpression result = (d as VHDLFunctionBodyDeclaration)?.EvaluateCall(evaluatedParameters.Select(x => x.Item1), evaluationContext);
 							if (result == null)
 								result = new VHDLEvaluatedExpression(d.ReturnType, this, null);
 							results.Add(Tuple.Create(result, d));
 						}
-						catch (Exception ex)
-						{ }
+						catch (Exception e)
+						{
+							VHDLLogger.LogException(e);
+						}
 					}
 					if (results.Count == 0)
 					{
@@ -2783,8 +2786,9 @@ namespace MyCompany.LanguageServices.VHDL
 						return VHDLDeclarationUtilities.GetAllMemberDeclarations(decl, Name);
 				}
 			}
-			catch (Exception)
+			catch (Exception e)
 			{
+				VHDLLogger.LogException(e);
 			}
 			return Array.Empty<VHDLDeclaration>();
 		}
@@ -2823,24 +2827,24 @@ namespace MyCompany.LanguageServices.VHDL
 	{
 		public VHDLArgumentAssociationExpression(AnalysisResult analysisResult, Span span)
 			: base(analysisResult, span) { }
-		public VHDLArgumentAssociationExpression(AnalysisResult analysisResult, Span span, VHDLExpression argument, VHDLExpression value)
+		public VHDLArgumentAssociationExpression(AnalysisResult analysisResult, Span span, IEnumerable<VHDLExpression> arguments, VHDLExpression value)
 			: base(analysisResult, span)
 		{
-			Argument = argument;
+			Arguments = arguments;
 			Value = value;
 		}
-		public VHDLExpression Argument { get; set; } = null;
+		public IEnumerable<VHDLExpression> Arguments { get; set; } = null;
 		public VHDLExpression Value { get; set; } = null;
 		
 		public override VHDLClassifiedText GetClassifiedText()
 		{
 			VHDLClassifiedText text = new VHDLClassifiedText();
-			text.Add(Argument.GetClassifiedText());
+			text.AddRange(Arguments.SelectMany(x => new[] { new VHDLClassifiedText("|"), x.GetClassifiedText() }).Skip(1));
 			text.Add(" => ");
 			text.Add(Value.GetClassifiedText());
 			return text;
 		}
-		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Argument, Value };
+		public override IEnumerable<VHDLExpression> Children => Arguments.Append(Value);
 		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			return null;
@@ -3041,7 +3045,9 @@ namespace MyCompany.LanguageServices.VHDL
 		: VHDLExpression
 	{
 		public VHDLOthersExpression(AnalysisResult analysisResult, Span span)
-			: base(analysisResult, span) { }
+			: base(analysisResult, span)
+		{
+		}
 
 		
 		public override VHDLClassifiedText GetClassifiedText()
@@ -3075,6 +3081,30 @@ namespace MyCompany.LanguageServices.VHDL
 			// - elements must be assigned only once
 			// - expected type is not required "(9 downto 0 => '0')" is valid
 
+			foreach (var elem in Elements)
+			{
+				if (elem is VHDLArgumentAssociationExpression aae)
+				{
+					if (aae.Arguments.Single() is VHDLOthersExpression o)
+					{
+						VHDLAbstractArrayType aat = expectedType as VHDLAbstractArrayType;
+						if (aat == null || aat.Dimension != 1)
+							throw new VHDLCodeException("'others' is only available for 1 dimension arrays", Span);
+
+						if (!VHDLStatementUtilities.CheckExpressionType(aae.Value, aat.ElementType, e => throw new VHDLCodeException(e.Message, e.Span)))
+							return null;
+
+						VHDLRange r = aat.GetIndexRange(0);
+						VHDLEvaluatedExpression ee = r.Count(aat.GetIndexType(0))?.Evaluate(evaluationContext);
+						VHDLLiteral result = null;
+						if (aae.Value is VHDLCharacterLiteral l1 && ee?.Result is VHDLIntegerLiteral l2)
+							result = new VHDLBinaryStringLiteral(AnalysisResult, new Span(), new string(l1.Value, (int)l2.Value));
+
+						return new VHDLEvaluatedExpression(new VHDLArraySliceType(aat.GetBaseType(), r), this, result);
+					}
+				}
+				return null;
+			}
 			return null;
 		}
 		public IEnumerable<VHDLExpression> Elements { get; set; } = null;

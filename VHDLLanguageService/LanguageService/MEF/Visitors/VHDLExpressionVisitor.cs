@@ -286,6 +286,37 @@ namespace MyCompany.LanguageServices.VHDL.ExpressionVisitors
 			}
 			return new VHDLAggregateExpression(m_analysisResult, context.GetSpan(), elements);
 		}
+		public override VHDLExpression VisitElement_association([NotNull] vhdlParser.Element_associationContext context)
+		{
+			VHDLExpression e = VisitExpression(context.expression());
+			if (context.choices() != null)
+			{
+				List<VHDLExpression> choices = new List<VHDLExpression>();
+				foreach (var choiceContext in context.choices().choice())
+				{
+					if (choiceContext.identifier() != null)
+					{
+						choices.Add(new VHDLNameExpression(m_analysisResult, choiceContext.identifier().GetSpan(), choiceContext.identifier().GetText()));
+					}
+					else if (choiceContext.discrete_range() != null)
+					{
+						choices.Add(VisitDiscrete_range(choiceContext.discrete_range()));
+					}
+					else if (choiceContext.simple_expression() != null)
+					{
+						choices.Add(VisitSimple_expression(choiceContext.simple_expression()));
+					}
+					else if (choiceContext.OTHERS() != null)
+					{
+						choices.Add(new VHDLOthersExpression(m_analysisResult, choiceContext.OTHERS().Symbol.GetSpan()));
+					}
+				}
+				return new VHDLArgumentAssociationExpression(m_analysisResult, context.GetSpan(), choices, e);
+			}
+
+			return e;
+		}
+		
 		public override VHDLExpression VisitName([NotNull] vhdlParser.NameContext context)
 		{
 			VHDLNameExpressionVisitor visitor = new VHDLNameExpressionVisitor(m_analysisResult, m_errorListener, m_resolveOverrider);
@@ -554,7 +585,7 @@ namespace MyCompany.LanguageServices.VHDL.ExpressionVisitors
 
 			VHDLExpression valueExpression = new VHDLNameExpressionVisitor(m_analysisResult, m_errorListener).VisitActual_part(context.actual_part());
 			if (formalPartExpression != null)
-				return new VHDLArgumentAssociationExpression(m_analysisResult, context.GetSpan(), formalPartExpression, valueExpression);
+				return new VHDLArgumentAssociationExpression(m_analysisResult, context.GetSpan(), new[] { formalPartExpression }, valueExpression);
 			else
 				return valueExpression;
 		}

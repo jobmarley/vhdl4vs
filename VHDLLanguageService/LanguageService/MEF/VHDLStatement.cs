@@ -9,33 +9,43 @@ namespace MyCompany.LanguageServices.VHDL
 {
 	class VHDLStatementUtilities
 	{
-		public static void CheckExpressionType(VHDLExpression expression, VHDLType expectedType, Action<VHDLError> errorListener)
+		public static bool CheckExpressionType(VHDLExpression expression, VHDLType expectedType, Action<VHDLError> errorListener)
 		{
-			if (expression != null)
-			{
-				try
-				{
-					VHDLEvaluatedExpression eval = expression.Evaluate(new EvaluationContext(), expectedType);
-					if (eval?.Type == null)
-						errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Type cannot be evaluated", expression.Span));
+			if (expression == null)
+				return false;
 
-					else if (VHDLType.AreCompatible(expectedType, eval.Type) == VHDLCompatibilityResult.No)
-						errorListener?.Invoke(new VHDLError(0,
-									PredefinedErrorTypeNames.SyntaxError,
-									string.Format("Cannot implicitly convert type '{0}' to '{1}'",
-										eval.Type?.GetClassifiedText()?.Text ?? "<error type>",
-										expectedType?.GetClassifiedText()?.Text ?? "<error type>"),
-									expression.Span));
-				}
-				catch (VHDLCodeException e)
+			try
+			{
+				VHDLEvaluatedExpression eval = expression.Evaluate(new EvaluationContext(), expectedType);
+				if (eval?.Type == null)
 				{
-					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, e.Message, e.Span));
+					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Type cannot be evaluated", expression.Span));
+					return false;
 				}
-				catch (Exception e)
+
+				else if (VHDLType.AreCompatible(expectedType, eval.Type) == VHDLCompatibilityResult.No)
 				{
-					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Internal error", expression.Span));
+					errorListener?.Invoke(new VHDLError(0,
+								PredefinedErrorTypeNames.SyntaxError,
+								string.Format("Cannot implicitly convert type '{0}' to '{1}'",
+									eval.Type?.GetClassifiedText()?.Text ?? "<error type>",
+									expectedType?.GetClassifiedText()?.Text ?? "<error type>"),
+								expression.Span));
+					return false;
 				}
 			}
+			catch (VHDLCodeException e)
+			{
+				errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, e.Message, e.Span));
+				return false;
+			}
+			catch (Exception e)
+			{
+				VHDLLogger.LogException(e);
+				errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Internal error", expression.Span));
+				return false;
+			}
+			return true;
 		}
 	}
 	internal class VHDLStatement
@@ -108,6 +118,7 @@ namespace MyCompany.LanguageServices.VHDL
 				}
 				catch (Exception e)
 				{
+					VHDLLogger.LogException(e);
 					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Internal error", NameExpression.Span));
 				}
 			}
@@ -167,6 +178,7 @@ namespace MyCompany.LanguageServices.VHDL
 				}
 				catch (Exception e)
 				{
+					VHDLLogger.LogException(e);
 					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Internal error", NameExpression.Span));
 				}
 			}
@@ -240,6 +252,7 @@ namespace MyCompany.LanguageServices.VHDL
 				}
 				catch (Exception e)
 				{
+					VHDLLogger.LogException(e);
 				}
 			}
 		}
@@ -410,7 +423,8 @@ namespace MyCompany.LanguageServices.VHDL
 				{
 					try
 					{
-						if (parameter.Argument is VHDLNameExpression ne)
+						var arg = parameter.Arguments.Single();
+						if (arg is VHDLNameExpression ne)
 						{
 							string name = ne.Name;
 
@@ -418,7 +432,7 @@ namespace MyCompany.LanguageServices.VHDL
 							VHDLPortDeclaration componentPort = componentDecl.Ports.FirstOrDefault(p => string.Compare(p.Name, name, true) == 0);
 							if (componentPort == null)
 							{
-								errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Port '{0}' doesn't exist in component '{1}'", name, componentDecl.Name), parameter.Argument.Span));
+								errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Port '{0}' doesn't exist in component '{1}'", name, componentDecl.Name), arg.Span));
 								continue;
 							}
 							VHDLType portType = componentPort.Type.Dereference();
@@ -427,7 +441,7 @@ namespace MyCompany.LanguageServices.VHDL
 								// If this the port is an array, we add all the elements
 								if (aat.Dimension != 1)
 								{
-									errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, "Array with dimension != 1 not supported", parameter.Argument.Span));
+									errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, "Array with dimension != 1 not supported", arg.Span));
 									continue;
 								}
 								VHDLRange r = aat.GetIndexRange(0);
@@ -435,7 +449,7 @@ namespace MyCompany.LanguageServices.VHDL
 								long end;
 								if (r?.TryGetIntegerRange(out start, out end) != true)
 								{
-									errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, "Expression cannot be evaluated", parameter.Argument.Span));
+									errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, "Expression cannot be evaluated", arg.Span));
 									continue;
 								}
 								for (long i = start; i <= end; ++i)
@@ -443,7 +457,7 @@ namespace MyCompany.LanguageServices.VHDL
 									string n = name + "(" + i.ToString() + ")";
 									if (!usedPorts.Add(n))
 									{
-										errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Port already associated '{0}'", n), parameter.Argument.Span));
+										errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Port already associated '{0}'", n), arg.Span));
 										continue;
 									}
 								}
@@ -452,7 +466,7 @@ namespace MyCompany.LanguageServices.VHDL
 							{
 								if (!usedPorts.Add(name))
 								{
-									errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Port already associated '{0}'", name), parameter.Argument.Span));
+									errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Port already associated '{0}'", name), arg.Span));
 									continue;
 								}
 							}
@@ -460,7 +474,7 @@ namespace MyCompany.LanguageServices.VHDL
 							VHDLStatementUtilities.CheckExpressionType(parameter.Value, componentPort.Type, errorListener);
 
 						}
-						else if (parameter.Argument is VHDLFunctionCallOrIndexExpression fce)
+						else if (arg is VHDLFunctionCallOrIndexExpression fce)
 						{
 							if (!(fce.NameExpression is VHDLNameExpression))
 							{
@@ -472,7 +486,7 @@ namespace MyCompany.LanguageServices.VHDL
 							VHDLPortDeclaration componentPort = componentDecl.Ports.FirstOrDefault(p => string.Compare(p.Name, name, true) == 0);
 							if (componentPort == null)
 							{
-								errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Port '{0}' doesn't exist in component '{1}'", name, componentDecl.Name), parameter.Argument.Span));
+								errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Port '{0}' doesn't exist in component '{1}'", name, componentDecl.Name), arg.Span));
 								continue;
 							}
 							VHDLRange r = (fce.Arguments.First() as VHDLRangeExpression)?.Range;
@@ -482,7 +496,7 @@ namespace MyCompany.LanguageServices.VHDL
 							long? iEnd = r?.Direction == VHDLRangeDirection.To ? (eend.Result as VHDLIntegerLiteral)?.Value : (estart.Result as VHDLIntegerLiteral)?.Value;
 							if (iStart == null || iEnd == null)
 							{
-								errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Expression cannot be evaluated", parameter.Argument.Span));
+								errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Expression cannot be evaluated", arg.Span));
 								continue;
 							}
 							for (long i = iStart.Value; i <= iEnd.Value; ++i)
@@ -490,35 +504,36 @@ namespace MyCompany.LanguageServices.VHDL
 								string n = name + "(" + i.ToString() + ")";
 								if (!usedPorts.Add(n))
 								{
-									errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Port already associated '{0}'", n), parameter.Argument.Span));
+									errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Port already associated '{0}'", n), arg.Span));
 									continue;
 								}
 							}
 							VHDLType argType = null;
 							try
 							{
-								argType = parameter.Argument.Evaluate(new EvaluationContext())?.Type;
+								argType = arg.Evaluate(new EvaluationContext())?.Type;
 							}
 							catch (VHDLCodeException ce)
 							{
-								errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, ce.Message, parameter.Argument.Span));
+								errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, ce.Message, arg.Span));
 							}
-							catch (Exception ex)
+							catch (Exception e)
 							{
+								VHDLLogger.LogException(e);
 								continue;
 							}
 							VHDLStatementUtilities.CheckExpressionType(parameter.Value, argType, errorListener);
 						}
 						else
 						{
-							errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Expected name or index expression", parameter.Argument.Span));
+							errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Expected name or index expression", arg.Span));
 							continue;
 						}
 
 					}
-					catch (Exception ex)
+					catch (Exception e)
 					{
-
+						VHDLLogger.LogException(e);
 					}
 				}
 

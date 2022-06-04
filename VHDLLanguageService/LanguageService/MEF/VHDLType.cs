@@ -592,6 +592,7 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 			catch (Exception e)
 			{
+				VHDLLogger.LogException(e);
 				return null;
 			}
 		}
