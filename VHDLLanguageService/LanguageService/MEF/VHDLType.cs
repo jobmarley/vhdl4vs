@@ -195,6 +195,22 @@ namespace MyCompany.LanguageServices.VHDL
 					// Cannot make sure that size match
 					return r;
 				}
+				if (t2 is VHDLAggregatedType at)
+				{
+					if (AreCompatible(aat1.ElementType, at.ElementType) == VHDLCompatibilityResult.No)
+						return VHDLCompatibilityResult.No;
+
+					// Try to check if size match
+					VHDLRange r1 = aat1.GetIndexRange(0);
+					VHDLEvaluatedExpression count1 = r1?.Count(aat1.GetIndexType(0))?.Evaluate(new EvaluationContext());
+					VHDLRange r2 = at.Range;
+					VHDLEvaluatedExpression count2 = r2?.Count(at.IndexType)?.Evaluate(new EvaluationContext());
+					if (count1?.Result is VHDLIntegerLiteral l1 && count2?.Result is VHDLIntegerLiteral l2)
+						return (l1.Value == l2.Value) ? VHDLCompatibilityResult.Yes : VHDLCompatibilityResult.No;
+
+					// Cannot make sure that size match
+					return VHDLCompatibilityResult.Unsure;
+				}
 				return VHDLCompatibilityResult.No;
 			}
 			if (t1.GetBaseType() is VHDLEnumerationType et)
@@ -823,6 +839,27 @@ namespace MyCompany.LanguageServices.VHDL
 		public override VHDLType GetIndexType(int i)
 		{
 			return (ArrayType.Dereference() as VHDLArrayType)?.GetIndexType(i);
+		}
+	}
+	// This is necessary, for stuff like eg. "array_signal <= ('1', '0', '1', '0');"
+	// We need a type that represent an array with possible evaluated value, but doesn't have an underlying array type
+	class VHDLAggregatedType
+		: VHDLType
+	{
+		public VHDLAggregatedType(VHDLRange range, VHDLType elementType, VHDLType indexType)
+		{
+			Range = range;
+			ElementType = elementType;
+			IndexType = indexType;
+		}
+		public VHDLRange Range { get; } = null;
+
+		public VHDLType ElementType { get; } = null;
+		public VHDLType IndexType { get; } = null;
+
+		public override VHDLClassifiedText GetClassifiedText()
+		{
+			return new VHDLClassifiedText("<aggregate>");
 		}
 	}
 }

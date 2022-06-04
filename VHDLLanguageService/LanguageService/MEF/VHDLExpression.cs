@@ -3102,6 +3102,13 @@ namespace MyCompany.LanguageServices.VHDL
 
 						return new VHDLEvaluatedExpression(new VHDLArraySliceType(aat.GetBaseType(), r), this, result);
 					}
+					if (aae.Arguments.Single() is VHDLRangeExpression re)
+					{
+						VHDLEvaluatedExpression ee = aae.Value.Evaluate(evaluationContext, null);
+						if (ee.Type == null)
+							return null;
+						return new VHDLEvaluatedExpression(new VHDLAggregatedType(re.Range, ee.Type, re.Range?.DeduceType()), this, null);
+					}
 				}
 				return null;
 			}
