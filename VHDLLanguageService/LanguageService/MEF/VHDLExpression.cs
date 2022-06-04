@@ -433,7 +433,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e.Type);
 			if (bestMatch != null)
@@ -489,7 +489,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e.Type);
 			if (bestMatch != null)
@@ -542,7 +542,7 @@ namespace MyCompany.LanguageServices.VHDL
 				return null;
 
 			// check if elements are compatibles eg. <"abc" & std_logic_vector> is invalid
-			if (s.Any(c => rightType.ElementType.IsCompatible(new VHDLCharLiteralType(new VHDLCharacterLiteral(null, new Span(), c))) == VHDLCompatibilityResult.No))
+			if (s.Any(c => VHDLType.AreCompatible(rightType.ElementType, new VHDLCharLiteralType(new VHDLCharacterLiteral(null, new Span(), c))) == VHDLCompatibilityResult.No))
 				return null;
 
 			// Try to evaluate the size of the concatenation operation
@@ -596,7 +596,7 @@ namespace MyCompany.LanguageServices.VHDL
 			if (aat == null || elemType == null)
 				return null;
 
-			if (aat.ElementType.IsCompatible(elemType) == VHDLCompatibilityResult.No)
+			if (VHDLType.AreCompatible(aat.ElementType, elemType) == VHDLCompatibilityResult.No)
 				return null;
 
 			// Try to evaluate the size of the concatenation operation
@@ -744,7 +744,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 		VHDLEvaluatedExpression AddIntegers(VHDLEvaluatedExpression e1, VHDLEvaluatedExpression e2)
 		{
-			if (VHDLType.IsInteger(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
@@ -756,7 +756,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		VHDLEvaluatedExpression AddReals(VHDLEvaluatedExpression e1, VHDLEvaluatedExpression e2)
 		{
-			if (VHDLType.IsReal(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
@@ -796,7 +796,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
@@ -838,7 +838,7 @@ namespace MyCompany.LanguageServices.VHDL
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
 		VHDLEvaluatedExpression SubtractIntegers(VHDLEvaluatedExpression e1, VHDLEvaluatedExpression e2)
 		{
-			if (VHDLType.IsInteger(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
@@ -850,7 +850,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		VHDLEvaluatedExpression SubtractReals(VHDLEvaluatedExpression e1, VHDLEvaluatedExpression e2)
 		{
-			if (VHDLType.IsReal(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
@@ -887,7 +887,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
@@ -925,7 +925,7 @@ namespace MyCompany.LanguageServices.VHDL
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
 		VHDLEvaluatedExpression MultiplyIntegers(VHDLEvaluatedExpression e1, VHDLEvaluatedExpression e2)
 		{
-			if (VHDLType.IsInteger(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
@@ -937,7 +937,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		VHDLEvaluatedExpression MultiplyReals(VHDLEvaluatedExpression e1, VHDLEvaluatedExpression e2)
 		{
-			if (VHDLType.IsReal(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
@@ -974,7 +974,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
@@ -1011,7 +1011,7 @@ namespace MyCompany.LanguageServices.VHDL
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
 		VHDLEvaluatedExpression DivideIntegers(VHDLEvaluatedExpression e1, VHDLEvaluatedExpression e2)
 		{
-			if (VHDLType.IsInteger(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
@@ -1023,7 +1023,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		VHDLEvaluatedExpression DivideReals(VHDLEvaluatedExpression e1, VHDLEvaluatedExpression e2)
 		{
-			if (VHDLType.IsReal(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
@@ -1060,7 +1060,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
@@ -1097,7 +1097,7 @@ namespace MyCompany.LanguageServices.VHDL
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
 		VHDLEvaluatedExpression ModIntegers(VHDLEvaluatedExpression e1, VHDLEvaluatedExpression e2)
 		{
-			if (VHDLType.IsInteger(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
@@ -1109,7 +1109,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		VHDLEvaluatedExpression ModReals(VHDLEvaluatedExpression e1, VHDLEvaluatedExpression e2)
 		{
-			if (VHDLType.IsReal(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
@@ -1146,7 +1146,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
@@ -1183,7 +1183,7 @@ namespace MyCompany.LanguageServices.VHDL
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
 		VHDLEvaluatedExpression RemIntegers(VHDLEvaluatedExpression e1, VHDLEvaluatedExpression e2)
 		{
-			if (VHDLType.IsInteger(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
@@ -1195,7 +1195,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		VHDLEvaluatedExpression RemReals(VHDLEvaluatedExpression e1, VHDLEvaluatedExpression e2)
 		{
-			if (VHDLType.IsReal(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
@@ -1232,7 +1232,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
@@ -1280,15 +1280,15 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
 				return new VHDLEvaluatedExpression(bestMatch.ReturnType, this, null);
 
 			if (AnalysisResult.BooleanType != null &&
-				e1.Type.IsCompatible(AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes &&
-				e2.Type.IsCompatible(AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes)
+				VHDLType.AreCompatible(e1.Type, AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes &&
+				VHDLType.AreCompatible(e2.Type, AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes)
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 
 			throw new VHDLTypeEvalationException(
@@ -1332,7 +1332,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e.Type);
 			if (bestMatch != null)
@@ -1394,21 +1394,23 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression1, Expression2 };
-		VHDLEvaluatedExpression PowerIntegers(VHDLEvaluatedExpression e1, VHDLEvaluatedExpression e2)
+		VHDLEvaluatedExpression PowerInteger(VHDLEvaluatedExpression e1, VHDLEvaluatedExpression e2)
 		{
-			if (VHDLType.IsInteger(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsInteger(e1.Type) && VHDLType.IsInteger(e2.Type))
 			{
-				VHDLLiteral result = null;
-				return new VHDLEvaluatedExpression(e1.Type, this, result);
+				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
+					return new VHDLEvaluatedExpression(e1.Type, this, new VHDLIntegerLiteral((long)Math.Pow(l1.Value, l2.Value)));
+				return new VHDLEvaluatedExpression(e1.Type, this, null);
 			}
 			return null;
 		}
-		VHDLEvaluatedExpression PowerReals(VHDLEvaluatedExpression e1, VHDLEvaluatedExpression e2)
+		VHDLEvaluatedExpression PowerReal(VHDLEvaluatedExpression e1, VHDLEvaluatedExpression e2)
 		{
-			if (VHDLType.IsReal(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsReal(e1.Type) && VHDLType.IsInteger(e2.Type))
 			{
-				VHDLLiteral result = null;
-				return new VHDLEvaluatedExpression(e1.Type, this, result);
+				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
+					return new VHDLEvaluatedExpression(e1.Type, this, new VHDLIntegerLiteral((long)Math.Pow(l1.Value, l2.Value)));
+				return new VHDLEvaluatedExpression(e1.Type, this, null);
 			}
 			return null;
 		}
@@ -1419,17 +1421,11 @@ namespace MyCompany.LanguageServices.VHDL
 			if (e1 == null || e2 == null)
 				return null;
 
-			VHDLEvaluatedExpression result = PowerIntegers(e1, e2);
-			if (result != null)
-				return result;
-			result = PowerIntegers(e2, e1);
+			VHDLEvaluatedExpression result = PowerInteger(e1, e2);
 			if (result != null)
 				return result;
 
-			result = PowerReals(e1, e2);
-			if (result != null)
-				return result;
-			result = PowerReals(e2, e1);
+			result = PowerReal(e1, e2);
 			if (result != null)
 				return result;
 
@@ -1439,7 +1435,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
@@ -1730,7 +1726,7 @@ namespace MyCompany.LanguageServices.VHDL
 				return null;
 
 
-			if (VHDLType.IsInteger(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
@@ -1738,7 +1734,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (VHDLType.IsReal(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
@@ -1754,7 +1750,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes || e2.Type.IsCompatible(e1.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 			}
@@ -1764,7 +1760,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
@@ -1807,7 +1803,7 @@ namespace MyCompany.LanguageServices.VHDL
 			if (e1 == null || e2 == null)
 				return null;
 
-			if (VHDLType.IsInteger(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
@@ -1815,7 +1811,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (VHDLType.IsReal(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
@@ -1831,7 +1827,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes || e2.Type.IsCompatible(e1.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 			}
@@ -1841,7 +1837,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
@@ -1883,7 +1879,7 @@ namespace MyCompany.LanguageServices.VHDL
 			if (e1 == null || e2 == null)
 				return null;
 
-			if (VHDLType.IsInteger(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
@@ -1891,7 +1887,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (VHDLType.IsReal(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
@@ -1899,12 +1895,12 @@ namespace MyCompany.LanguageServices.VHDL
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (e1.Type.Dereference() is VHDLEnumerationType et1 && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (e1.Type.GetBaseType().Dereference() is VHDLEnumerationType et1 && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 			}
-			if (e2.Type.Dereference() is VHDLEnumerationType et2 && e2.Type.IsCompatible(e1.Type) == VHDLCompatibilityResult.Yes)
+			if (e2.Type.GetBaseType().Dereference() is VHDLEnumerationType et2 && VHDLType.AreCompatible(e2.Type, e1.Type) == VHDLCompatibilityResult.Yes)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
@@ -1916,7 +1912,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
@@ -1958,7 +1954,7 @@ namespace MyCompany.LanguageServices.VHDL
 			if (e1 == null || e2 == null)
 				return null;
 
-			if (VHDLType.IsInteger(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
@@ -1966,7 +1962,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (VHDLType.IsReal(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
@@ -1974,12 +1970,12 @@ namespace MyCompany.LanguageServices.VHDL
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (e1.Type.Dereference() is VHDLEnumerationType et1 && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (e1.Type.GetBaseType().Dereference() is VHDLEnumerationType et1 && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 			}
-			if (e2.Type.Dereference() is VHDLEnumerationType et2 && e2.Type.IsCompatible(e1.Type) == VHDLCompatibilityResult.Yes)
+			if (e2.Type.GetBaseType().Dereference() is VHDLEnumerationType et2 && VHDLType.AreCompatible(e2.Type, e1.Type) == VHDLCompatibilityResult.Yes)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
@@ -1991,7 +1987,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
@@ -2033,7 +2029,7 @@ namespace MyCompany.LanguageServices.VHDL
 			if (e1 == null || e2 == null)
 				return null;
 
-			if (VHDLType.IsInteger(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
@@ -2041,7 +2037,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (VHDLType.IsReal(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
@@ -2049,12 +2045,12 @@ namespace MyCompany.LanguageServices.VHDL
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (e1.Type.Dereference() is VHDLEnumerationType et1 && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (e1.Type.GetBaseType().Dereference() is VHDLEnumerationType et1 && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 			}
-			if (e2.Type.Dereference() is VHDLEnumerationType et2 && e2.Type.IsCompatible(e1.Type) == VHDLCompatibilityResult.Yes)
+			if (e2.Type.GetBaseType().Dereference() is VHDLEnumerationType et2 && VHDLType.AreCompatible(e2.Type, e1.Type) == VHDLCompatibilityResult.Yes)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
@@ -2066,7 +2062,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
@@ -2108,7 +2104,7 @@ namespace MyCompany.LanguageServices.VHDL
 			if (e1 == null || e2 == null)
 				return null;
 
-			if (VHDLType.IsInteger(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
@@ -2116,7 +2112,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (VHDLType.IsReal(e1.Type) && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				VHDLLiteral result = null;
 				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
@@ -2124,12 +2120,12 @@ namespace MyCompany.LanguageServices.VHDL
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (e1.Type.Dereference() is VHDLEnumerationType et1 && e1.Type.IsCompatible(e2.Type) == VHDLCompatibilityResult.Yes)
+			if (e1.Type.GetBaseType().Dereference() is VHDLEnumerationType et1 && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 			}
-			if (e2.Type.Dereference() is VHDLEnumerationType et2 && e2.Type.IsCompatible(e1.Type) == VHDLCompatibilityResult.Yes)
+			if (e2.Type.GetBaseType().Dereference() is VHDLEnumerationType et2 && VHDLType.AreCompatible(e2.Type, e1.Type) == VHDLCompatibilityResult.Yes)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
@@ -2141,7 +2137,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
@@ -2217,15 +2213,15 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
 				return new VHDLEvaluatedExpression(bestMatch.ReturnType, this, null);
 
 			if (AnalysisResult.BooleanType != null &&
-				e1.Type.IsCompatible(AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes &&
-				e2.Type.IsCompatible(AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes)
+				VHDLType.AreCompatible(e1.Type, AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes &&
+				VHDLType.AreCompatible(e2.Type, AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes)
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 
 			throw new VHDLTypeEvalationException(
@@ -2270,15 +2266,15 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
 				return new VHDLEvaluatedExpression(bestMatch.ReturnType, this, null);
 
 			if (AnalysisResult.BooleanType != null &&
-				e1.Type.IsCompatible(AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes &&
-				e2.Type.IsCompatible(AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes)
+				VHDLType.AreCompatible(e1.Type, AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes &&
+				VHDLType.AreCompatible(e2.Type, AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes)
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 
 			throw new VHDLTypeEvalationException(
@@ -2323,15 +2319,15 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
 				return new VHDLEvaluatedExpression(bestMatch.ReturnType, this, null);
 
 			if (AnalysisResult.BooleanType != null &&
-				e1.Type.IsCompatible(AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes &&
-				e2.Type.IsCompatible(AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes)
+				VHDLType.AreCompatible(e1.Type, AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes &&
+				VHDLType.AreCompatible(e2.Type, AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes)
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 
 			throw new VHDLTypeEvalationException(
@@ -2376,15 +2372,15 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
 				return new VHDLEvaluatedExpression(bestMatch.ReturnType, this, null);
 
 			if (AnalysisResult.BooleanType != null &&
-				e1.Type.IsCompatible(AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes &&
-				e2.Type.IsCompatible(AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes)
+				VHDLType.AreCompatible(e1.Type, AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes &&
+				VHDLType.AreCompatible(e2.Type, AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes)
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 
 			throw new VHDLTypeEvalationException(
@@ -2429,15 +2425,15 @@ namespace MyCompany.LanguageServices.VHDL
 
 			// filter by return type
 			if (expectedType != null)
-				operatorDeclarations = operatorDeclarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No);
+				operatorDeclarations = operatorDeclarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No);
 
 			VHDLFunctionDeclaration bestMatch = VHDLDeclarationUtilities.GetBestMatch(operatorDeclarations, e1.Type, e2.Type);
 			if (bestMatch != null)
 				return new VHDLEvaluatedExpression(bestMatch.ReturnType, this, null);
 
 			if (AnalysisResult.BooleanType != null &&
-				e1.Type.IsCompatible(AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes &&
-				e2.Type.IsCompatible(AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes)
+				VHDLType.AreCompatible(e1.Type, AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes &&
+				VHDLType.AreCompatible(e2.Type, AnalysisResult.BooleanType) == VHDLCompatibilityResult.Yes)
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 
 			throw new VHDLTypeEvalationException(
@@ -2612,7 +2608,7 @@ namespace MyCompany.LanguageServices.VHDL
 					declarations = declarations.Select(x => x.Body ?? x).Distinct().ToArray(); // keep function declaration only when body is not found
 					// filter by return type
 					if (expectedType != null)
-						declarations = declarations.Where(x => x.ReturnType.IsCompatible(expectedType) != VHDLCompatibilityResult.No).ToArray();
+						declarations = declarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No).ToArray();
 
 					if (declarations.Count() == 1)
 					{
@@ -2623,13 +2619,13 @@ namespace MyCompany.LanguageServices.VHDL
 						var evaluatedParameters = ReorderParameters(d, Arguments, evaluationContext).Zip(d.Parameters, (x, y) => Tuple.Create(x.Evaluate(evaluationContext, y.Type), y));
 						foreach (var (ev, ex) in evaluatedParameters)
 						{
-							if (ex.Type.IsCompatible(ev.Type) == VHDLCompatibilityResult.No)
+							if (VHDLType.AreCompatible(ex.Type, ev.Type) == VHDLCompatibilityResult.No)
 								throw new VHDLCodeException(string.Format("Wrong argument type, '{0}' expected, got '{1}'",
 									ex.Type.GetClassifiedText()?.Text ?? "<error type>",
 									ev.Type.GetClassifiedText()?.Text ?? "<error type>"), ev?.Expression?.Span ?? Span);
 						}
 
-						VHDLEvaluatedExpression result = (d as VHDLFunctionBodyDeclaration)?.EvaluateCall(evaluatedParameters.Select(x => x.Item1), evaluationContext);
+						VHDLEvaluatedExpression result = null;// (d as VHDLFunctionBodyDeclaration)?.EvaluateCall(evaluatedParameters.Select(x => x.Item1), evaluationContext);
 						if (result == null)
 							result = new VHDLEvaluatedExpression(d.ReturnType, this, null);
 						return result;
@@ -2640,9 +2636,9 @@ namespace MyCompany.LanguageServices.VHDL
 						try
 						{
 							var evaluatedParameters = ReorderParameters(d, Arguments, evaluationContext).Zip(d.Parameters, (x, y) => Tuple.Create(x.Evaluate(evaluationContext, y.Type), y)).ToArray();
-							if (evaluatedParameters.Any(x => x.Item2.Type.IsCompatible(x.Item1.Type) == VHDLCompatibilityResult.No))
+							if (evaluatedParameters.Any(x => VHDLType.AreCompatible(x.Item2.Type, x.Item1.Type) == VHDLCompatibilityResult.No))
 								continue;
-							VHDLEvaluatedExpression result = (d as VHDLFunctionBodyDeclaration)?.EvaluateCall(evaluatedParameters.Select(x => x.Item1), evaluationContext);
+							VHDLEvaluatedExpression result = null;// (d as VHDLFunctionBodyDeclaration)?.EvaluateCall(evaluatedParameters.Select(x => x.Item1), evaluationContext);
 							if (result == null)
 								result = new VHDLEvaluatedExpression(d.ReturnType, this, null);
 							results.Add(Tuple.Create(result, d));
@@ -2703,7 +2699,7 @@ namespace MyCompany.LanguageServices.VHDL
 					else
 					{
 						VHDLEvaluatedExpression evaluatedArg = Arguments.First().Evaluate(evaluationContext);
-						if (aat.GetIndexType(0).IsCompatible(evaluatedArg.Type) == VHDLCompatibilityResult.No)
+						if (VHDLType.AreCompatible(aat.GetIndexType(0), evaluatedArg.Type) == VHDLCompatibilityResult.No)
 							throw new VHDLCodeException(string.Format("Wrong argument type, '{0}' expected, got '{1}'",
 								aat.IndexTypes.First()?.GetClassifiedText()?.Text ?? "<error type>",
 								evaluatedArg.Type?.GetClassifiedText()?.Text ?? "<error type>"), Span);
@@ -2720,7 +2716,7 @@ namespace MyCompany.LanguageServices.VHDL
 					foreach (var (x, y) in aat.IndexTypes.Zip(Arguments, (x, y) => Tuple.Create(x, y)))
 					{
 						VHDLEvaluatedExpression evaluatedArg = y.Evaluate(evaluationContext);
-						if (evaluatedArg.Type.IsCompatible(x) == VHDLCompatibilityResult.No)
+						if (VHDLType.AreCompatible(evaluatedArg.Type, x) == VHDLCompatibilityResult.No)
 							throw new VHDLCodeException(string.Format("Wrong argument type, '{0}' expected, got '{1}'",
 								aat.IndexTypes.First()?.GetClassifiedText()?.Text ?? "<error type>",
 								evaluatedArg.Type?.GetClassifiedText()?.Text ?? "<error type>"), Span);

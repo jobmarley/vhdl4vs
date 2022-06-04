@@ -19,7 +19,7 @@ namespace MyCompany.LanguageServices.VHDL
 					if (eval?.Type == null)
 						errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Type cannot be evaluated", expression.Span));
 
-					else if (expectedType.IsCompatible(eval.Type) == VHDLCompatibilityResult.No)
+					else if (VHDLType.AreCompatible(expectedType, eval.Type) == VHDLCompatibilityResult.No)
 						errorListener?.Invoke(new VHDLError(0,
 									PredefinedErrorTypeNames.SyntaxError,
 									string.Format("Cannot implicitly convert type '{0}' to '{1}'",

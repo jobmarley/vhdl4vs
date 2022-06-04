@@ -1483,7 +1483,7 @@ namespace MyCompany.LanguageServices.VHDL
 				ulong performanceCounter = 30;
 				foreach (var p in Parameters.Zip(args, (x, y) => Tuple.Create(x, y)))
 				{
-					if (p.Item1.Type.IsCompatible(p.Item2.Type) == VHDLCompatibilityResult.No)
+					if (VHDLType.AreCompatible(p.Item1.Type, p.Item2.Type) == VHDLCompatibilityResult.No)
 						return null;
 					evaluationContext[p.Item1] = p.Item2;
 				}
@@ -1862,7 +1862,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 				VHDLType t1 = p1.Type;
 				VHDLType t2 = p2.Type;
-				if (t2.IsCompatible(t1) == VHDLCompatibilityResult.No)
+				if (VHDLType.AreCompatible(t2, t1) == VHDLCompatibilityResult.No)
 					errorListener?.Invoke(new VHDLError(0,
 								PredefinedErrorTypeNames.SyntaxError,
 								string.Format("Cannot implicitly convert type '{0}' to '{1}'",

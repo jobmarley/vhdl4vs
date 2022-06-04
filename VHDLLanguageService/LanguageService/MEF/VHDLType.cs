@@ -10,11 +10,49 @@ using System.Threading.Tasks;
 
 namespace MyCompany.LanguageServices.VHDL
 {
-	enum VHDLCompatibilityResult
+	struct VHDLCompatibilityResult
 	{
-		Yes,
-		No,
-		Unsure,
+		VHDLCompatibilityResult(int v)
+		{
+			value = v;
+		}
+		private int value;
+		public static readonly VHDLCompatibilityResult No = new VHDLCompatibilityResult(0);
+		public static readonly VHDLCompatibilityResult Yes = new VHDLCompatibilityResult(1);
+		public static readonly VHDLCompatibilityResult Unsure = new VHDLCompatibilityResult(2);
+
+		public static bool operator ==(VHDLCompatibilityResult r1, VHDLCompatibilityResult r2)
+		{
+			return r1.value == r2.value;
+		}
+		public static bool operator !=(VHDLCompatibilityResult r1, VHDLCompatibilityResult r2)
+		{
+			return r1.value != r2.value;
+		}
+		public static VHDLCompatibilityResult operator&(VHDLCompatibilityResult r1, VHDLCompatibilityResult r2)
+		{
+			if (r1 == No || r2 == No)
+				return No;
+			if (r1 == Unsure || r2 == Unsure)
+				return Unsure;
+			return Yes;
+		}
+		public static VHDLCompatibilityResult operator|(VHDLCompatibilityResult r1, VHDLCompatibilityResult r2)
+		{
+			if (r1 == Yes || r2 == Yes)
+				return Yes;
+			if (r1 == Unsure || r2 == Unsure)
+				return Unsure;
+			return No;
+		}
+		public static bool operator false(VHDLCompatibilityResult r1)
+		{
+			return r1 == No;
+		}
+		public static bool operator true(VHDLCompatibilityResult r1)
+		{
+			return r1 == Yes;
+		}
 	}
 	//// # <typedef>, subtype_indication
 	//<typename> RANGE <name>
@@ -42,12 +80,6 @@ namespace MyCompany.LanguageServices.VHDL
 		public virtual VHDLClassifiedText GetClassifiedText()
 		{
 			return new VHDLClassifiedText();
-		}
-
-		// Return true if a variable of this type can be assigned a value of the given type
-		public virtual VHDLCompatibilityResult IsCompatible(VHDLType type)
-		{
-			return VHDLCompatibilityResult.No;
 		}
 
 		public virtual VHDLType Dereference()
@@ -95,6 +127,104 @@ namespace MyCompany.LanguageServices.VHDL
 
 		// Is non null only when the type is the result of a code declaration, type or subtype
 		public VHDLDeclaration Declaration { get; set; } = null;
+
+		private static VHDLCompatibilityResult AreCompatibleImpl(VHDLType t1, VHDLType t2)
+		{
+			t1 = t1?.Dereference();
+			t2 = t2?.Dereference();
+
+			if (t1 == null || t2 == null)
+				return VHDLCompatibilityResult.No;
+
+			if (t1 == t2)
+				return VHDLCompatibilityResult.Yes;
+
+			if (IsInteger(t1) && t1.GetBaseType() != null && t1.GetBaseType() == t2.GetBaseType())
+				return VHDLCompatibilityResult.Yes;
+			if (IsInteger(t1) && t2 == VHDLBuiltinTypeInteger.Instance)
+				return VHDLCompatibilityResult.Yes;
+
+			if (IsReal(t1) && t1.GetBaseType() != null && t1.GetBaseType() == t2.GetBaseType())
+				return VHDLCompatibilityResult.Yes;
+			if (IsReal(t1) && t2 == VHDLBuiltinTypeReal.Instance)
+				return VHDLCompatibilityResult.Yes;
+
+			if (t1 is VHDLAbstractArrayType aat1)
+			{
+				if (aat1.Dimension == 1 && t2 is VHDLStringLiteralType slt)
+				{
+					string s = (slt.Literal as VHDLStringLiteral)?.Value ??
+						(slt.Literal as VHDLHexStringLiteral)?.ToStringLiteral()?.Value ??
+						(slt.Literal as VHDLOctalStringLiteral)?.ToStringLiteral()?.Value ??
+						(slt.Literal as VHDLBinaryStringLiteral)?.Value;
+
+					if (s == null)
+						return VHDLCompatibilityResult.No;
+
+					foreach (char c in s)
+						if (AreCompatible(aat1.ElementType, new VHDLCharLiteralType(new VHDLCharacterLiteral(null, new Span(), c))) == VHDLCompatibilityResult.No)
+							return VHDLCompatibilityResult.No;
+
+					// Try to check if size match
+					VHDLRange r1 = aat1.GetIndexRange(0);
+					VHDLEvaluatedExpression count1 = r1?.Count(aat1.GetIndexType(0))?.Evaluate(new EvaluationContext());
+					if (count1?.Result is VHDLIntegerLiteral l1)
+						return (l1.Value == s.Length) ? VHDLCompatibilityResult.Yes : VHDLCompatibilityResult.No;
+
+					// Cannot make sure that size match
+					return VHDLCompatibilityResult.Unsure;
+				}
+				if (t2 is VHDLAbstractArrayType aat2 && aat1.GetBaseType() != null && aat1.GetBaseType() == aat2.GetBaseType())
+				{
+					if (aat1.Dimension != aat2.Dimension)
+						return VHDLCompatibilityResult.No;
+
+					// Try to check if size match
+					VHDLCompatibilityResult r = VHDLCompatibilityResult.Yes;
+					for (int i = 0; i < aat2.Dimension; i++)
+					{
+						VHDLRange r1 = aat1.GetIndexRange(0);
+						VHDLEvaluatedExpression count1 = r1?.Count(aat1.GetIndexType(0))?.Evaluate(new EvaluationContext());
+						VHDLRange r2 = aat2.GetIndexRange(0);
+						VHDLEvaluatedExpression count2 = r2?.Count(aat2.GetIndexType(0))?.Evaluate(new EvaluationContext());
+						if (count1?.Result is VHDLIntegerLiteral l1 && count2?.Result is VHDLIntegerLiteral l2)
+							r = r && ((l1.Value == l2.Value) ? VHDLCompatibilityResult.Yes : VHDLCompatibilityResult.No);
+
+						r = r && VHDLCompatibilityResult.Unsure;
+					}
+					// Cannot make sure that size match
+					return r;
+				}
+				return VHDLCompatibilityResult.No;
+			}
+			if (t1.GetBaseType() is VHDLEnumerationType et)
+			{
+				if (t2.GetBaseType() == t1)
+					return VHDLCompatibilityResult.Yes;
+
+				if (t2 is VHDLCharLiteralType clt && et.Values.Contains("'" + clt.Literal.Value + "'"))
+					return VHDLCompatibilityResult.Yes;
+
+				return VHDLCompatibilityResult.No;
+			}
+			//if (t1 is VHDLScalarType st)
+			//{
+			//	if (t1.GetBaseType() != null && t1.GetBaseType() == t2.GetBaseType())
+			//		return VHDLCompatibilityResult.Yes;
+			//	if (t1.GetBaseType() != t1)
+			//	return AreCompatible(t1.GetBaseType(), t2.GetBaseType());
+			//}
+			return VHDLCompatibilityResult.No;
+		}
+		// Returns true if types are compatibles with eachother
+		// AreCompatible(a,b) is always equal to AreCompatible(b, a)
+		// Compatiblity is an abstract thing. To some extent it represent assignability.
+		// For instance 0 is compatible with NATURAL, because 0 can be assigned to NATURAL.
+		// But 0 is also compatible with 1, even though assigning 0 to 1 is impossible.
+		public static VHDLCompatibilityResult AreCompatible(VHDLType t1, VHDLType t2)
+		{
+			return AreCompatibleImpl(t1, t2) || AreCompatibleImpl(t2, t1);
+		}
 	}
 	class VHDLBuiltinTypeInteger
 		: VHDLType
@@ -108,12 +238,6 @@ namespace MyCompany.LanguageServices.VHDL
 			return new VHDLClassifiedText("integer", "vhdl.type");
 		}
 
-		public override VHDLCompatibilityResult IsCompatible(VHDLType type)
-		{
-			if (type == Instance)
-				return VHDLCompatibilityResult.Yes;
-			return VHDLCompatibilityResult.No;
-		}
 		public override VHDLType GetBaseType()
 		{
 			return this;
@@ -131,12 +255,6 @@ namespace MyCompany.LanguageServices.VHDL
 			return new VHDLClassifiedText("real", "vhdl.type");
 		}
 
-		public override VHDLCompatibilityResult IsCompatible(VHDLType type)
-		{
-			if (type == Instance)
-				return VHDLCompatibilityResult.Yes;
-			return VHDLCompatibilityResult.No;
-		}
 		public override VHDLType GetBaseType()
 		{
 			return this;
@@ -153,10 +271,6 @@ namespace MyCompany.LanguageServices.VHDL
 			return new VHDLClassifiedText("null", "keyword");
 		}
 
-		public override VHDLCompatibilityResult IsCompatible(VHDLType type)
-		{
-			return VHDLCompatibilityResult.No;
-		}
 		public override VHDLType GetBaseType()
 		{
 			return this;
@@ -173,10 +287,6 @@ namespace MyCompany.LanguageServices.VHDL
 
 		public VHDLCharacterLiteral Literal { get; set; } = null;
 
-		public override VHDLCompatibilityResult IsCompatible(VHDLType type)
-		{
-			return VHDLCompatibilityResult.No;
-		}
 		public override VHDLType GetBaseType()
 		{
 			return this;
@@ -202,10 +312,6 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			return Literal.GetClassifiedText();
 		}
-		public override VHDLCompatibilityResult IsCompatible(VHDLType type)
-		{
-			return VHDLCompatibilityResult.No;
-		}
 		public override VHDLType GetBaseType()
 		{
 			return this;
@@ -223,22 +329,6 @@ namespace MyCompany.LanguageServices.VHDL
 			return new VHDLClassifiedText(Declaration.Name, "vhdl.type");
 		}
 
-		// That is really complicated.
-		// Lets say we have e1 <= 'x', then if we use the expression we can detect if its valid
-		// But if we have "<array of e> <= a & b & func1(c)" then it gets pretty complicated
-		public override VHDLCompatibilityResult IsCompatible(VHDLType type)
-		{
-			if (type.GetBaseType() == this)
-				return VHDLCompatibilityResult.Yes;
-
-			//if (Values.Any(x => x.StartsWith("'")) && type == VHDLBuiltinTypeChar.Instance)
-			//	return true;
-
-			if (type is VHDLCharLiteralType clt && Values.Contains("'" + clt.Literal.Value + "'"))
-				return VHDLCompatibilityResult.Yes;
-
-			return VHDLCompatibilityResult.No;
-		}
 		public override VHDLType GetBaseType()
 		{
 			return this;
@@ -376,102 +466,6 @@ namespace MyCompany.LanguageServices.VHDL
 
 			return null;
 		}
-		public override VHDLCompatibilityResult IsCompatible(VHDLType type)
-		{
-			type = type.Dereference();
-			// type a is array (NATURAL range <>) of std_logic;
-			// std_logic_vector(1 downto 0) <= std_logic_vector(2 downto 0) // bad
-			// std_logic_vector(1 downto 0) <= std_logic_vector(1 downto 0) // good
-			// 
-			VHDLArrayType baseType1 = GetBaseType() as VHDLArrayType;
-
-			if (type is VHDLStringLiteralType slt)
-			{
-				if (IndexTypes.Count() != 1)
-					return VHDLCompatibilityResult.No;
-
-				string s = (slt.Literal as VHDLStringLiteral)?.Value ??
-					(slt.Literal as VHDLHexStringLiteral)?.ToStringLiteral()?.Value ??
-					(slt.Literal as VHDLOctalStringLiteral)?.ToStringLiteral()?.Value ??
-					(slt.Literal as VHDLBinaryStringLiteral)?.Value;
-
-				if (s == null)
-					return VHDLCompatibilityResult.No;
-
-				foreach (char c in s)
-					if (baseType1.ElementType.IsCompatible(new VHDLCharLiteralType(new VHDLCharacterLiteral(null, new Span(), c))) == VHDLCompatibilityResult.No)
-						return VHDLCompatibilityResult.No;
-
-				// Try to check if size match
-				VHDLType t1 = IndexTypes.First();
-				VHDLRange r1 = GetRange(t1);
-				VHDLEvaluatedExpression count1 = r1?.Count(t1)?.Evaluate(new EvaluationContext());
-				if (count1?.Result is VHDLIntegerLiteral l1 && l1.Value != s.Length)
-					return VHDLCompatibilityResult.No;
-
-				return VHDLCompatibilityResult.Yes;
-			}
-
-			VHDLArrayType baseType2 = type.GetBaseType() as VHDLArrayType;
-
-			if (baseType1 == null || baseType2 == null)
-				return VHDLCompatibilityResult.No;
-
-			// Will do for now
-			// In fact we should evaluate function return values, and it should match the size of this
-			if (baseType2 != baseType1)
-				return VHDLCompatibilityResult.No;
-
-
-			if (type is VHDLAbstractArrayType aat && baseType2 == baseType1)
-			{
-				// Same array type, need to check the size is the same
-				if (aat.IndexTypes.Count() == 1)
-				{
-					VHDLType t1 = IndexTypes.First();
-					VHDLType t2 = aat.IndexTypes.First();
-
-					// Can happen in function eg. function "and" (l, r : std_logic_vector) alias lv : std_logic_vector( 1 to l'LENGTH ) is l;
-					if (aat is VHDLArrayType)
-						return VHDLCompatibilityResult.Unsure;
-
-					VHDLRange r1 = GetRange(t1);
-					VHDLRange r2 = GetRange(t2);
-					if (r1 == null || r2 == null)
-						return VHDLCompatibilityResult.Unsure;
-
-					VHDLEvaluatedExpression count1 = r1.Count(t1)?.Evaluate(new EvaluationContext());
-					VHDLEvaluatedExpression count2 = r2.Count(t2)?.Evaluate(new EvaluationContext());
-					if (count1.Result is VHDLIntegerLiteral l1 && count2.Result is VHDLIntegerLiteral l2)
-						return l1.Value == l2.Value ? VHDLCompatibilityResult.Yes : VHDLCompatibilityResult.No;
-
-					// else we don't know, these are complex expressions
-				}
-			}
-			else if (type is VHDLArraySliceType ast && baseType2 == baseType1)
-			{
-				// Same array type, need to check the size is the same
-				if (baseType1.IndexTypes.Count() == 1)
-				{
-					VHDLType t1 = IndexTypes.First();
-					VHDLType t2 = (ast.ArrayType as VHDLAbstractArrayType).IndexTypes.First();
-
-					VHDLRange r1 = GetRange(t1);
-					VHDLRange r2 = ast.Range;
-					if (r1 == null || r2 == null)
-						return VHDLCompatibilityResult.No;
-
-					VHDLEvaluatedExpression count1 = r1.Count(t1)?.Evaluate(new EvaluationContext());
-					VHDLEvaluatedExpression count2 = r2.Count(t2)?.Evaluate(new EvaluationContext());
-					if (count1.Result is VHDLIntegerLiteral l1 && count2.Result is VHDLIntegerLiteral l2)
-						return l1.Value == l2.Value ? VHDLCompatibilityResult.Yes : VHDLCompatibilityResult.No;
-
-					// else we don't know, these are complex expressions
-				}
-			}
-
-			return VHDLCompatibilityResult.Unsure;
-		}
 		public override bool IsCastable(VHDLType t)
 		{
 			VHDLArrayType arrayType1 = GetBaseType() as VHDLArrayType;
@@ -479,7 +473,7 @@ namespace MyCompany.LanguageServices.VHDL
 			if (arrayType1 == null || arrayType2 == null)
 				return false;
 
-			if (arrayType1.ElementType.IsCompatible(arrayType2.ElementType) == VHDLCompatibilityResult.Yes)
+			if (AreCompatible(arrayType1.ElementType, arrayType2.ElementType) == VHDLCompatibilityResult.Yes)
 				return true;
 
 			return false;
@@ -661,23 +655,6 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 
-		public override VHDLCompatibilityResult IsCompatible(VHDLType type)
-		{
-			VHDLType baseType = GetBaseType();
-			VHDLType baseType2 = type.GetBaseType();
-			if (baseType == null) // only happen if name resolve error or...
-				return VHDLCompatibilityResult.No;
-
-			if (baseType == baseType2)
-				return VHDLCompatibilityResult.Yes;
-
-			if (VHDLType.IsInteger(baseType) && baseType2 == VHDLBuiltinTypeInteger.Instance)
-				return VHDLCompatibilityResult.Yes;
-			if (VHDLType.IsReal(baseType) && baseType2 == VHDLBuiltinTypeReal.Instance)
-				return VHDLCompatibilityResult.Yes;
-
-			return VHDLCompatibilityResult.No;
-		}
 		public override VHDLType GetBaseType()
 		{
 			if (IsStrong)
@@ -720,11 +697,6 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 
-		public override VHDLCompatibilityResult IsCompatible(VHDLType type)
-		{
-			// This happens in functions eg. "FUNCTION resolved ( s : std_ulogic_vector ) ... s(i) ..." (std_ulogic_vector is unconstrained)
-			return Type.IsCompatible(type);
-		}
 		public override VHDLType GetBaseType()
 		{
 			return Type?.GetBaseType();
@@ -774,14 +746,6 @@ namespace MyCompany.LanguageServices.VHDL
 			return (Declaration ?? ToDeclaration).GetClassifiedName();
 		}
 
-		public override VHDLCompatibilityResult IsCompatible(VHDLType type)
-		{
-			if (ResolvedType == null)
-				return VHDLCompatibilityResult.No;
-
-			return ResolvedType.IsCompatible(type);
-		}
-
 		public override VHDLType Dereference()
 		{
 			return ResolvedType.Dereference();
@@ -809,10 +773,6 @@ namespace MyCompany.LanguageServices.VHDL
 			return text;
 		}
 
-		public override VHDLCompatibilityResult IsCompatible(VHDLType type)
-		{
-			return type.GetBaseType() == this ? VHDLCompatibilityResult.Yes : VHDLCompatibilityResult.No;
-		}
 		public override VHDLType GetBaseType()
 		{
 			return this;

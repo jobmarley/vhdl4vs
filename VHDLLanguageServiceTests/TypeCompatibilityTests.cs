@@ -34,12 +34,12 @@ namespace VHDLLanguageServiceTests
 
 		private void AssertCompatible(VHDLType t1, VHDLType t2)
 		{
-			Assert.IsTrue(t1.IsCompatible(t2) == VHDLCompatibilityResult.Yes,
+			Assert.IsTrue(VHDLType.AreCompatible(t1, t2) == VHDLCompatibilityResult.Yes,
 				$"'{t1.GetClassifiedText().Text}' should be compatible with '{t2.GetClassifiedText().Text}'");
 		}
 		private void AssertNotCompatible(VHDLType t1, VHDLType t2)
 		{
-			Assert.IsFalse(t1.IsCompatible(t2) == VHDLCompatibilityResult.Yes,
+			Assert.IsFalse(VHDLType.AreCompatible(t1, t2) == VHDLCompatibilityResult.Yes,
 				$"'{t1.GetClassifiedText().Text}' should not be compatible with '{t2.GetClassifiedText().Text}'");
 		}
 		[TestMethod]

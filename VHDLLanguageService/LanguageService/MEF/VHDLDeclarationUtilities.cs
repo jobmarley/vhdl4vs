@@ -80,7 +80,7 @@ namespace MyCompany.LanguageServices.VHDL
 				if (function.Parameters.Count != argTypes.Count())
 					continue;
 
-				if (function.Parameters.Zip(argTypes, (x, y) => { var comp = x.Type.IsCompatible(y); return comp == VHDLCompatibilityResult.Yes || comp == VHDLCompatibilityResult.Unsure; }).All(b => b))
+				if (function.Parameters.Zip(argTypes, (x, y) => { var comp = VHDLType.AreCompatible(x.Type, y); return comp == VHDLCompatibilityResult.Yes || comp == VHDLCompatibilityResult.Unsure; }).All(b => b))
 					return function;
 			}
 
