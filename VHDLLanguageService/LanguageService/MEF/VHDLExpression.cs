@@ -2956,17 +2956,20 @@ namespace MyCompany.LanguageServices.VHDL
 				{
 					return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, null);
 				}
-				else if (Expression is VHDLReferenceExpression r && r.Declaration is VHDLTypeDeclaration td)
+				else if (Expression is VHDLReferenceExpression r)
 				{
-					if (td.Type is VHDLEnumerationType et)
+					t = (r.Declaration as VHDLTypeDeclaration)?.Type;
+					t = t ?? (r.Declaration as VHDLSubTypeDeclaration)?.Type;
+
+					if (t is VHDLEnumerationType et)
 					{
 						return new VHDLEvaluatedExpression(et, this, null);
 					}
-					else if (td.Type is VHDLAbstractArrayType aat2 && aat2.Dimension == 1 && aat2.IsConstrained)
+					else if (t is VHDLAbstractArrayType aat2 && aat2.Dimension == 1 && aat2.IsConstrained)
 					{
 						return new VHDLEvaluatedExpression(aat2.GetIndexType(0), this, null);
 					}
-					else if (td.Type is VHDLScalarType st)
+					else if (t is VHDLScalarType st)
 					{
 						VHDLRange range = st.GetRange();
 						if (range.Direction == VHDLRangeDirection.DownTo)
@@ -2990,17 +2993,20 @@ namespace MyCompany.LanguageServices.VHDL
 				{
 					return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, null);
 				}
-				else if (Expression is VHDLReferenceExpression r && r.Declaration is VHDLTypeDeclaration td)
+				else if (Expression is VHDLReferenceExpression r)
 				{
-					if (td.Type is VHDLEnumerationType et)
+					t = (r.Declaration as VHDLTypeDeclaration)?.Type;
+					t = t ?? (r.Declaration as VHDLSubTypeDeclaration)?.Type;
+
+					if (t is VHDLEnumerationType et)
 					{
 						return new VHDLEvaluatedExpression(et, this, null);
 					}
-					else if (td.Type is VHDLAbstractArrayType aat2 && aat2.Dimension == 1 && aat2.IsConstrained)
+					else if (t is VHDLAbstractArrayType aat2 && aat2.Dimension == 1 && aat2.IsConstrained)
 					{
 						return new VHDLEvaluatedExpression(aat2.GetIndexType(0), this, null);
 					}
-					else if (td.Type is VHDLScalarType st)
+					else if (t is VHDLScalarType st)
 					{
 						VHDLRange range = st.GetRange();
 						if (range.Direction == VHDLRangeDirection.DownTo)
