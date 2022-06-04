@@ -218,25 +218,9 @@ namespace MyCompany.LanguageServices.VHDL
 
 		public override VHDLClassifiedText GetClassifiedText()
 		{
-			if (Values.Count == 0)
-				return new VHDLClassifiedText("()");
-
-			VHDLClassifiedText text = new VHDLClassifiedText();
-			text.Add("( ");
-			for (int i = 0; i < Values.Count; ++i)
-			{
-				string v = Values[i];
-				if (v.StartsWith("'"))
-					text.Add(v, "string");
-				else
-					text.Add(v, "vhdl.constant");
-
-				if (i < Values.Count - 1)
-					text.Add(", ");
-			}
-
-			text.Add(" )");
-			return text;
+			if (Declaration.Name == null)
+				return new VHDLClassifiedText("<error type>");
+			return new VHDLClassifiedText(Declaration.Name, "vhdl.type");
 		}
 
 		// That is really complicated.

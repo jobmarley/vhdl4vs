@@ -591,8 +591,12 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		VHDLEvaluatedExpression ConcatArrayElement(VHDLEvaluatedExpression left, VHDLEvaluatedExpression right, bool invert, EvaluationContext evaluationContext)
 		{
-			VHDLAbstractArrayType aat = left.Type.Dereference() as VHDLAbstractArrayType;
-			if (aat.ElementType.IsCompatible(right.Type) == VHDLCompatibilityResult.No)
+			VHDLAbstractArrayType aat = (invert ? right : left)?.Type.Dereference() as VHDLAbstractArrayType;
+			VHDLType elemType = invert ? left?.Type : right?.Type;
+			if (aat == null || elemType == null)
+				return null;
+
+			if (aat.ElementType.IsCompatible(elemType) == VHDLCompatibilityResult.No)
 				return null;
 
 			// Try to evaluate the size of the concatenation operation
@@ -661,7 +665,7 @@ namespace MyCompany.LanguageServices.VHDL
 					// "010" & "101"
 					return ConcatStringString(slt.Literal, slt2.Literal);
 				}
-				else if (t2 is VHDLAbstractArrayType aat && aat.IndexTypes.Count() == 1) // dont support multidim arrays
+				else if (t2 is VHDLAbstractArrayType aat && aat.Dimension == 1) // dont support multidim arrays
 				{
 					// "010" & arr
 					return ConcatStringArray(slt.Literal, aat, e2.Result, false, evaluationContext);
@@ -678,12 +682,12 @@ namespace MyCompany.LanguageServices.VHDL
 				{
 					return ConcatCharString(clt.Literal, slt2.Literal, false);
 				}
-				else if (t2 is VHDLAbstractArrayType aat && aat.IndexTypes.Count() == 1) // dont support multidim arrays
+				else if (t2 is VHDLAbstractArrayType aat && aat.Dimension == 1) // dont support multidim arrays
 				{
 					return ConcatArrayElement(e1, e2, true, evaluationContext);
 				}
 			}
-			else if (t1 is VHDLAbstractArrayType aat && aat.IndexTypes.Count() == 1)
+			else if (t1 is VHDLAbstractArrayType aat && aat.Dimension == 1)
 			{
 				if (t2 is VHDLStringLiteralType slt2)
 				{
@@ -696,6 +700,13 @@ namespace MyCompany.LanguageServices.VHDL
 				else
 				{
 					return ConcatArrayElement(e1, e2, false, evaluationContext);
+				}
+			}
+			else
+			{
+				if (t2 is VHDLAbstractArrayType aat2 && aat2.Dimension == 1)
+				{
+					return ConcatArrayElement(e1, e2, true, evaluationContext);
 				}
 			}
 
