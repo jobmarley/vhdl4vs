@@ -3053,4 +3053,30 @@ namespace MyCompany.LanguageServices.VHDL
 			return null;
 		}
 	}
+
+
+	class VHDLAggregateExpression
+		: VHDLExpression
+	{
+		public VHDLAggregateExpression(AnalysisResult analysisResult, Span span, IEnumerable<VHDLExpression> elements)
+			: base(analysisResult, span)
+		{
+			Elements = elements;
+		}
+
+		public override VHDLClassifiedText GetClassifiedText()
+		{
+			return new VHDLClassifiedText();
+		}
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
+		{
+			// - elements must all be named, or all positional
+			// - every element must be assigned
+			// - elements must be assigned only once
+			// - expected type is not required "(9 downto 0 => '0')" is valid
+
+			return null;
+		}
+		public IEnumerable<VHDLExpression> Elements { get; set; } = null;
+	}
 }

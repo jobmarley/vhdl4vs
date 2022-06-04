@@ -269,13 +269,22 @@ namespace MyCompany.LanguageServices.VHDL.ExpressionVisitors
 			}
 			else if (context.aggregate() != null)
 			{
-				return null;
+				return VisitAggregate(context.aggregate());
 			}
 			else if (context.name() != null)
 			{
 				return VisitName(context.name());
 			}
 			return null;
+		}
+		public override VHDLExpression VisitAggregate([NotNull] vhdlParser.AggregateContext context)
+		{
+			List<VHDLExpression> elements = new List<VHDLExpression>();
+			foreach (var elemContext in context.element_association())
+			{
+				elements.Add(VisitElement_association(elemContext));
+			}
+			return new VHDLAggregateExpression(m_analysisResult, context.GetSpan(), elements);
 		}
 		public override VHDLExpression VisitName([NotNull] vhdlParser.NameContext context)
 		{
