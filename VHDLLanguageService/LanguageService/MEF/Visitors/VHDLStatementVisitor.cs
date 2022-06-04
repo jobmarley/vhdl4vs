@@ -37,12 +37,10 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 			else if (context.assertion_statement() != null)
 			{
-				m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, "'assertion_statement' not supported", context.assertion_statement().GetSpan()));
 				return Visit(context.assertion_statement());
 			}
 			else if (context.report_statement() != null)
 			{
-				m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, "'report_statement' in case not supported", context.report_statement().GetSpan()));
 				return Visit(context.report_statement());
 			}
 			else if (context.signal_assignment_statement() != null)
