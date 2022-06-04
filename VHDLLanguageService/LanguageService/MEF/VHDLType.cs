@@ -122,7 +122,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 		public virtual bool IsCastable(VHDLType t)
 		{
-			return false;
+			return this == t;
 		}
 
 		// Is non null only when the type is the result of a code declaration, type or subtype
