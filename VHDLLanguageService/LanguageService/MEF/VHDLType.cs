@@ -760,7 +760,8 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public VHDLReferenceExpression Expression { get; set; } = null;
 		private VHDLDeclaration m_declaration = null;
-		public VHDLDeclaration Declaration
+		// The declaration this reference is pointing to
+		public VHDLDeclaration ToDeclaration
 		{
 			get
 			{
@@ -769,23 +770,24 @@ namespace MyCompany.LanguageServices.VHDL
 				return m_declaration;
 			}
 		}
+
 		public VHDLType ResolvedType
 		{
 			get
 			{
-				if (Declaration == null)
+				if (ToDeclaration == null)
 					return null;
-				if (Declaration is VHDLTypeDeclaration)
-					return (Declaration as VHDLTypeDeclaration).Type;
-				if (Declaration is VHDLSubTypeDeclaration)
-					return (Declaration as VHDLSubTypeDeclaration).Type;
+				if (ToDeclaration is VHDLTypeDeclaration)
+					return (ToDeclaration as VHDLTypeDeclaration).Type;
+				if (ToDeclaration is VHDLSubTypeDeclaration)
+					return (ToDeclaration as VHDLSubTypeDeclaration).Type;
 				return null;
 			}
 		}
 
 		public override VHDLClassifiedText GetClassifiedText()
 		{
-			return Declaration?.GetClassifiedName();
+			return (Declaration ?? ToDeclaration).GetClassifiedName();
 		}
 
 		public override VHDLCompatibilityResult IsCompatible(VHDLType type)
@@ -798,7 +800,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 		public override VHDLType Dereference()
 		{
-			return ResolvedType;
+			return ResolvedType.Dereference();
 		}
 		public override VHDLType GetBaseType()
 		{
