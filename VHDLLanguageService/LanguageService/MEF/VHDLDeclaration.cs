@@ -1157,7 +1157,7 @@ namespace MyCompany.LanguageServices.VHDL
 				{
 					if (r?.Declaration is VHDLSignalDeclaration && sensitivity.All(x => x.Declaration != r.Declaration))
 					{
-						errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, String.Format("Signal '{0}' in is not in the sensitivity list", r.Declaration.Name), r.Span));
+						errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, String.Format("Signal '{0}' is not in the sensitivity list", r.Declaration.Name), r.Span));
 					}
 				}
 			}

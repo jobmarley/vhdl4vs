@@ -1719,7 +1719,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (VHDLType.AreCompatible(e1.Type, e2.Type, e1?.Result, e2?.Result) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.AreCompatible(e1.Type, e2.Type, e1?.Result, e2?.Result) != VHDLCompatibilityResult.No)
 			{
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 			}
@@ -1796,7 +1796,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (VHDLType.AreCompatible(e1.Type, e2.Type, e1?.Result, e2?.Result) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.AreCompatible(e1.Type, e2.Type, e1?.Result, e2?.Result) != VHDLCompatibilityResult.No)
 			{
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 			}
@@ -1864,12 +1864,12 @@ namespace MyCompany.LanguageServices.VHDL
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (e1.Type.GetBaseType().Dereference() is VHDLEnumerationType et1 && VHDLType.AreCompatible(e1.Type, e2.Type, e1?.Result, e2?.Result) == VHDLCompatibilityResult.Yes)
+			if (e1.Type.GetBaseType().Dereference() is VHDLEnumerationType et1 && VHDLType.AreCompatible(e1.Type, e2.Type, e1?.Result, e2?.Result) != VHDLCompatibilityResult.No)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 			}
-			if (e2.Type.GetBaseType().Dereference() is VHDLEnumerationType et2 && VHDLType.AreCompatible(e2.Type, e1.Type, e2?.Result, e1?.Result) == VHDLCompatibilityResult.Yes)
+			if (e2.Type.GetBaseType().Dereference() is VHDLEnumerationType et2 && VHDLType.AreCompatible(e2.Type, e1.Type, e2?.Result, e1?.Result) != VHDLCompatibilityResult.No)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
@@ -1939,12 +1939,12 @@ namespace MyCompany.LanguageServices.VHDL
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (e1.Type.GetBaseType().Dereference() is VHDLEnumerationType et1 && VHDLType.AreCompatible(e1.Type, e2.Type, e1?.Result, e2?.Result) == VHDLCompatibilityResult.Yes)
+			if (e1.Type.GetBaseType().Dereference() is VHDLEnumerationType et1 && VHDLType.AreCompatible(e1.Type, e2.Type, e1?.Result, e2?.Result) != VHDLCompatibilityResult.No)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 			}
-			if (e2.Type.GetBaseType().Dereference() is VHDLEnumerationType et2 && VHDLType.AreCompatible(e2.Type, e1.Type, e2?.Result, e1?.Result) == VHDLCompatibilityResult.Yes)
+			if (e2.Type.GetBaseType().Dereference() is VHDLEnumerationType et2 && VHDLType.AreCompatible(e2.Type, e1.Type, e2?.Result, e1?.Result) != VHDLCompatibilityResult.No)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
@@ -2014,12 +2014,12 @@ namespace MyCompany.LanguageServices.VHDL
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (e1.Type.GetBaseType().Dereference() is VHDLEnumerationType et1 && VHDLType.AreCompatible(e1.Type, e2.Type, e1?.Result, e2?.Result) == VHDLCompatibilityResult.Yes)
+			if (e1.Type.GetBaseType().Dereference() is VHDLEnumerationType et1 && VHDLType.AreCompatible(e1.Type, e2.Type, e1?.Result, e2?.Result) != VHDLCompatibilityResult.No)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 			}
-			if (e2.Type.GetBaseType().Dereference() is VHDLEnumerationType et2 && VHDLType.AreCompatible(e2.Type, e1.Type, e2?.Result, e1?.Result) == VHDLCompatibilityResult.Yes)
+			if (e2.Type.GetBaseType().Dereference() is VHDLEnumerationType et2 && VHDLType.AreCompatible(e2.Type, e1.Type, e2?.Result, e1?.Result) != VHDLCompatibilityResult.No)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
@@ -2089,12 +2089,12 @@ namespace MyCompany.LanguageServices.VHDL
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (e1.Type.GetBaseType().Dereference() is VHDLEnumerationType et1 && VHDLType.AreCompatible(e1.Type, e2.Type, e1?.Result, e2?.Result) == VHDLCompatibilityResult.Yes)
+			if (e1.Type.GetBaseType().Dereference() is VHDLEnumerationType et1 && VHDLType.AreCompatible(e1.Type, e2.Type, e1?.Result, e2?.Result) != VHDLCompatibilityResult.No)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 			}
-			if (e2.Type.GetBaseType().Dereference() is VHDLEnumerationType et2 && VHDLType.AreCompatible(e2.Type, e1.Type, e2?.Result, e1?.Result) == VHDLCompatibilityResult.Yes)
+			if (e2.Type.GetBaseType().Dereference() is VHDLEnumerationType et2 && VHDLType.AreCompatible(e2.Type, e1.Type, e2?.Result, e1?.Result) != VHDLCompatibilityResult.No)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
