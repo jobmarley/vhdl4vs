@@ -870,6 +870,9 @@ namespace MyCompany.LanguageServices.VHDL
 				m_declarationStack.FirstOrDefault());
 			PushScope(decl);
 
+			if (context.ALL() != null)
+				decl.SensitivityList.Add(new VHDLAllExpression(m_analysisResult, context.ALL().Symbol.GetSpan()));
+
 			foreach (var nameContext in context.sensitivity_list()?.name() ?? Array.Empty<vhdlParser.NameContext>())
 			{
 				try

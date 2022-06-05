@@ -2132,7 +2132,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public VHDLExpression Expression1 { get; set; } = null;
 		public VHDLExpression Expression2 { get; set; } = null;
-		
+
 		public override VHDLClassifiedText GetClassifiedText()
 		{
 			VHDLClassifiedText text = new VHDLClassifiedText();
@@ -2160,7 +2160,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public VHDLExpression Expression1 { get; set; } = null;
 		public VHDLExpression Expression2 { get; set; } = null;
-		
+
 		public override VHDLClassifiedText GetClassifiedText()
 		{
 			VHDLClassifiedText text = new VHDLClassifiedText();
@@ -2213,7 +2213,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public VHDLExpression Expression1 { get; set; } = null;
 		public VHDLExpression Expression2 { get; set; } = null;
-		
+
 		public override VHDLClassifiedText GetClassifiedText()
 		{
 			VHDLClassifiedText text = new VHDLClassifiedText();
@@ -2266,7 +2266,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public VHDLExpression Expression1 { get; set; } = null;
 		public VHDLExpression Expression2 { get; set; } = null;
-		
+
 		public override VHDLClassifiedText GetClassifiedText()
 		{
 			VHDLClassifiedText text = new VHDLClassifiedText();
@@ -2319,7 +2319,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public VHDLExpression Expression1 { get; set; } = null;
 		public VHDLExpression Expression2 { get; set; } = null;
-		
+
 		public override VHDLClassifiedText GetClassifiedText()
 		{
 			VHDLClassifiedText text = new VHDLClassifiedText();
@@ -2372,7 +2372,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public VHDLExpression Expression1 { get; set; } = null;
 		public VHDLExpression Expression2 { get; set; } = null;
-		
+
 		public override VHDLClassifiedText GetClassifiedText()
 		{
 			VHDLClassifiedText text = new VHDLClassifiedText();
@@ -2494,7 +2494,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public VHDLExpression NameExpression { get; set; } = null;
 		public IEnumerable<VHDLExpression> Arguments { get; set; } = null;
-				
+
 		public override VHDLClassifiedText GetClassifiedText()
 		{
 			VHDLClassifiedText text = new VHDLClassifiedText();
@@ -2576,7 +2576,7 @@ namespace MyCompany.LanguageServices.VHDL
 					var declarations = r.GetDeclarations().OfType<VHDLFunctionDeclaration>().ToArray();
 					declarations = declarations.Distinct().ToArray();
 					declarations = declarations.Select(x => x.Body ?? x).Distinct().ToArray(); // keep function declaration only when body is not found
-					// filter by return type
+																							   // filter by return type
 					if (expectedType != null)
 						declarations = declarations.Where(x => VHDLType.AreCompatible(x.ReturnType, expectedType) != VHDLCompatibilityResult.No).ToArray();
 
@@ -2626,7 +2626,7 @@ namespace MyCompany.LanguageServices.VHDL
 					{
 						throw new VHDLCodeException(string.Format("Call to {0} is ambiguous. Possibilities are {1}",
 							NameExpression?.GetClassifiedText()?.Text ?? "<error>",
-							string.Join(", ", results.Select(x => "'" + x?.Item2?.GetClassifiedName()?.Text + "(" + 
+							string.Join(", ", results.Select(x => "'" + x?.Item2?.GetClassifiedName()?.Text + "(" +
 								string.Join(", ", x.Item2.Parameters.Select(y => y.Type.GetClassifiedText()?.Text ?? "<error>")) +
 								")" + " return " + x.Item2.ReturnType.GetClassifiedText()?.Text ?? "<error>" + "'"))), Span);
 					}
@@ -2722,7 +2722,7 @@ namespace MyCompany.LanguageServices.VHDL
 		public override void Resolve(DeepAnalysisResult deepAnalysisResult, Action<VHDLError> errorListener)
 		{
 			try
-			{ 
+			{
 				if (Expression is VHDLReferenceExpression)
 				{
 					VHDLDeclaration decl = (Expression as VHDLReferenceExpression)?.Declaration;
@@ -2804,7 +2804,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public IEnumerable<VHDLExpression> Arguments { get; set; } = null;
 		public VHDLExpression Value { get; set; } = null;
-		
+
 		public override VHDLClassifiedText GetClassifiedText()
 		{
 			VHDLClassifiedText text = new VHDLClassifiedText();
@@ -2829,10 +2829,10 @@ namespace MyCompany.LanguageServices.VHDL
 		public VHDLRangeExpression(AnalysisResult analysisResult, Span span, VHDLExpression expression1, VHDLExpression expression2, VHDLRangeDirection direction)
 			: base(analysisResult, span)
 		{
-			Range = new VHDLRange() {  Start = expression1, End = expression2, Direction = direction };
+			Range = new VHDLRange() { Start = expression1, End = expression2, Direction = direction };
 		}
 		public VHDLRange Range { get; set; } = null;
-		
+
 		public override VHDLClassifiedText GetClassifiedText()
 		{
 			return Range.GetClassifiedText();
@@ -2857,7 +2857,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public VHDLExpression Expression { get; set; } = null;
 		public string Attribute { get; set; } = null;
-		
+
 		public override VHDLClassifiedText GetClassifiedText()
 		{
 			VHDLClassifiedText text = new VHDLClassifiedText();
@@ -2878,7 +2878,7 @@ namespace MyCompany.LanguageServices.VHDL
 					VHDLEvaluatedExpression l = r?.Count(aat.GetIndexType(0)).Evaluate(evaluationContext);
 					return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, l?.Result);
 				}
-				else if(t is VHDLArraySliceType ast)
+				else if (t is VHDLArraySliceType ast)
 				{
 					VHDLRange r = ast.Range;
 					VHDLEvaluatedExpression l = r?.Count((ast.GetBaseType() as VHDLArrayType)?.GetIndexType(0)).Evaluate(evaluationContext);
@@ -3018,7 +3018,7 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 		}
 
-		
+
 		public override VHDLClassifiedText GetClassifiedText()
 		{
 			return new VHDLClassifiedText("others", "keyword");
@@ -3105,5 +3105,17 @@ namespace MyCompany.LanguageServices.VHDL
 			return null;
 		}
 		public IEnumerable<VHDLExpression> Elements { get; set; } = null;
+	}
+	class VHDLAllExpression
+		: VHDLExpression
+	{
+		public VHDLAllExpression(AnalysisResult analysisResult, Span span)
+			: base(analysisResult, span)
+		{
+		}
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
+		{
+			return null;
+		}
 	}
 }

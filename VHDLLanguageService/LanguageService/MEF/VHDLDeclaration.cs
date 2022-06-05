@@ -1107,6 +1107,7 @@ namespace MyCompany.LanguageServices.VHDL
 		public override void Check(DeepAnalysisResult deepAnalysisResult, Action<VHDLError> errorListener)
 		{
 			HashSet<VHDLReferenceExpression> sensitivity = new HashSet<VHDLReferenceExpression>();
+			bool hasAll = SensitivityList.Any(x => x is VHDLAllExpression n);
 			foreach (VHDLReferenceExpression expression in SensitivityList.OfType<VHDLReferenceExpression>())
 			{
 				if (expression.Declaration == null)
@@ -1155,7 +1156,7 @@ namespace MyCompany.LanguageServices.VHDL
 				var allReferences = expressionList.Where(x => x != null).SelectMany(x => CollectAllReferences(x));
 				foreach (var r in allReferences)
 				{
-					if (r?.Declaration is VHDLSignalDeclaration && sensitivity.All(x => x.Declaration != r.Declaration))
+					if (r?.Declaration is VHDLSignalDeclaration && sensitivity.All(x => x.Declaration != r.Declaration) && !hasAll)
 					{
 						errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, String.Format("Signal '{0}' is not in the sensitivity list", r.Declaration.Name), r.Span));
 					}
