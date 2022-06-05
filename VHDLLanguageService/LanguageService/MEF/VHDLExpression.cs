@@ -3045,6 +3045,8 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
+			expectedType = expectedType?.Dereference();
+
 			// - elements must all be named, or all positional
 			// - every element must be assigned
 			// - elements must be assigned only once
