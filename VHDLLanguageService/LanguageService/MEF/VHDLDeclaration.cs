@@ -63,7 +63,7 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 		}
 
-		public VHDLDeclaration Parent { get; protected set; } = null;
+		public virtual VHDLDeclaration Parent { get; } = null;
 
 		// Build a QuickInfo content, used for QuickInfo and Completion
 		public virtual async Task<object> BuildQuickInfoAsync()
@@ -591,13 +591,12 @@ namespace MyCompany.LanguageServices.VHDL
 	class VHDLEnumerationValueDeclaration
 		: VHDLConstantDeclaration
 	{
-		public VHDLEnumerationValueDeclaration(AnalysisResult analysisResult, ParserRuleContext context, string name, VHDLTypeDeclaration enumerationDeclaration)
-			: base(analysisResult, context, context, name, enumerationDeclaration.Parent)
+		public VHDLEnumerationValueDeclaration(AnalysisResult analysisResult, ParserRuleContext context, string name, VHDLEnumerationType type)
+			: base(analysisResult, context, context, name, null)
 		{
-			EnumerationDeclaration = enumerationDeclaration;
-			Type = new VHDLReferenceType(enumerationDeclaration);
+			Type = type;
 		}
-		public VHDLTypeDeclaration EnumerationDeclaration { get; set; } = null;
+		public override VHDLDeclaration Parent => Type?.Declaration?.Parent;
 	}
 	class VHDLSignalDeclaration
 		: VHDLAbstractVariableDeclaration
@@ -1362,7 +1361,7 @@ namespace MyCompany.LanguageServices.VHDL
 						if (v.ConditionExpression != null)
 						{
 							VHDLEvaluatedExpression ee = v.ConditionExpression.Evaluate(evaluationContext);
-							if (ee?.Result is VHDLBooleanLiteral l)
+							if (ee?.Result is VHDLBooleanValue l)
 							{
 								condition = l.Value;
 							}
@@ -1390,7 +1389,7 @@ namespace MyCompany.LanguageServices.VHDL
 						if (v.ConditionExpression != null)
 						{
 							VHDLEvaluatedExpression ee = v.ConditionExpression.Evaluate(evaluationContext);
-							if (ee?.Result is VHDLBooleanLiteral l)
+							if (ee?.Result is VHDLBooleanValue l)
 							{
 								condition = l.Value;
 							}
@@ -1410,7 +1409,7 @@ namespace MyCompany.LanguageServices.VHDL
 			else if (statement is VHDLIfStatement ifs)
 			{
 				VHDLEvaluatedExpression ee = ifs.Condition.Evaluate(evaluationContext);
-				if (ee?.Result is VHDLBooleanLiteral l)
+				if (ee?.Result is VHDLBooleanValue l)
 				{
 					if (l.Value == true)
 					{
@@ -1434,7 +1433,7 @@ namespace MyCompany.LanguageServices.VHDL
 						throw new Exception("Performance counter reached 0");
 
 					VHDLEvaluatedExpression ee = ws.Condition.Evaluate(evaluationContext);
-					if (ee?.Result is VHDLBooleanLiteral l)
+					if (ee?.Result is VHDLBooleanValue l)
 					{
 						if (l.Value == true)
 						{

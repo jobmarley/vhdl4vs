@@ -23,7 +23,7 @@ namespace MyCompany.LanguageServices.VHDL
 					return false;
 				}
 
-				else if (VHDLType.AreCompatible(expectedType, eval.Type) == VHDLCompatibilityResult.No)
+				else if (VHDLType.AreCompatible(expectedType, eval.Type, null, eval?.Result) == VHDLCompatibilityResult.No)
 				{
 					errorListener?.Invoke(new VHDLError(0,
 								PredefinedErrorTypeNames.SyntaxError,
@@ -492,8 +492,8 @@ namespace MyCompany.LanguageServices.VHDL
 							VHDLRange r = (fce.Arguments.First() as VHDLRangeExpression)?.Range;
 							VHDLEvaluatedExpression estart = (r?.Start ?? fce.Arguments.First())?.Evaluate(new EvaluationContext());
 							VHDLEvaluatedExpression eend = (r?.End ?? fce.Arguments.First())?.Evaluate(new EvaluationContext());
-							long? iStart = r?.Direction == VHDLRangeDirection.To ? (estart.Result as VHDLIntegerLiteral)?.Value : (eend.Result as VHDLIntegerLiteral)?.Value;
-							long? iEnd = r?.Direction == VHDLRangeDirection.To ? (eend.Result as VHDLIntegerLiteral)?.Value : (estart.Result as VHDLIntegerLiteral)?.Value;
+							long? iStart = r?.Direction == VHDLRangeDirection.To ? (estart.Result as VHDLIntegerValue)?.Value : (eend.Result as VHDLIntegerValue)?.Value;
+							long? iEnd = r?.Direction == VHDLRangeDirection.To ? (eend.Result as VHDLIntegerValue)?.Value : (estart.Result as VHDLIntegerValue)?.Value;
 							if (iStart == null || iEnd == null)
 							{
 								errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Expression cannot be evaluated", arg.Span));
@@ -550,8 +550,8 @@ namespace MyCompany.LanguageServices.VHDL
 						VHDLRange r = aat.GetIndexRange(0);
 						VHDLEvaluatedExpression estart = r.Start.Evaluate(new EvaluationContext());
 						VHDLEvaluatedExpression eend = r.End.Evaluate(new EvaluationContext());
-						long? iStart = r.Direction == VHDLRangeDirection.To ? (estart.Result as VHDLIntegerLiteral)?.Value : (eend.Result as VHDLIntegerLiteral)?.Value;
-						long? iEnd = r.Direction == VHDLRangeDirection.To ? (eend.Result as VHDLIntegerLiteral)?.Value : (estart.Result as VHDLIntegerLiteral)?.Value;
+						long? iStart = r.Direction == VHDLRangeDirection.To ? (estart.Result as VHDLIntegerValue)?.Value : (eend.Result as VHDLIntegerValue)?.Value;
+						long? iEnd = r.Direction == VHDLRangeDirection.To ? (eend.Result as VHDLIntegerValue)?.Value : (estart.Result as VHDLIntegerValue)?.Value;
 						if (iStart == null || iEnd == null)
 							continue;
 

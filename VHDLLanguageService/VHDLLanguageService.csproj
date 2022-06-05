@@ -102,6 +102,7 @@
     <Compile Include="LanguageService\TreeUtilities.cs" />
     <Compile Include="LanguageService\MEF\VHDLDeclarationUtilities.cs" />
     <Compile Include="LanguageService\MEF\VHDLExpression.cs" />
+    <Compile Include="LanguageService\VHDLElementaryValue.cs" />
     <Compile Include="LanguageService\VHDLLanguageService.cs" />
     <None Include="ProjectSystem\VHDLFileNode.cs" />
     <None Include="ProjectSystem\VHDLGeneralPropertyPage.cs" />

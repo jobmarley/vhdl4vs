@@ -10,11 +10,25 @@ namespace VHDLLanguageServiceTests
 	[TestClass]
 	public class TypeCompatibilityTests
 	{
+		static VHDLEnumerationType CreateEnum(IEnumerable<string> values)
+		{
+			VHDLEnumerationType type = new VHDLEnumerationType();
+			List<VHDLEnumerationElement> elements = new List<VHDLEnumerationElement>();
+			foreach (string s in values)
+			{
+				if (s.StartsWith("'"))
+					elements.Add(new VHDLCharEnumerationValue(type, new VHDLCharacterLiteral(null, new Span(), s[1])));
+				else
+					elements.Add(new VHDLNameEnumerationValue(type, new VHDLEnumerationValueDeclaration(null, null, "TRUE", type)));
+			}
+			type.Values = elements;
+			return type;
+		}
 		[ClassInitialize]
 		public static void TestInit(TestContext context)
 		{
 			AnalysisResult = new AnalysisResult();
-			AnalysisResult.BooleanType = new VHDLEnumerationType() { Values = { "TRUE", "FALSE" } };
+			AnalysisResult.BooleanType = CreateEnum(new string[]{ "TRUE", "FALSE" });
 		}
 
 		private static AnalysisResult AnalysisResult { get; set; } = null;
@@ -132,16 +146,12 @@ namespace VHDLLanguageServiceTests
 		[TestMethod]
 		public void EnumCompatibilityTests()
 		{
-			VHDLEnumerationType enum_type_1 = new VHDLEnumerationType();
-			enum_type_1.Values = new List<string>() { "'0'", "'1'", "'x'", "baba", "bobo" };
-			VHDLEnumerationType enum_type_2 = new VHDLEnumerationType();
-			enum_type_2.Values = new List<string>() { "'0'", "'1'", "'x'", "baba", "bobo" };
+			VHDLEnumerationType enum_type_1 = CreateEnum(new string[] { "'0'", "'1'", "'x'", "baba", "bobo" });
+			VHDLEnumerationType enum_type_2 = CreateEnum(new string[] { "'0'", "'1'", "'x'", "baba", "bobo" });
 
 			VHDLTypeDeclaration enum_type_1_decl = new VHDLTypeDeclaration(AnalysisResult, null, null, "enum_type_1", null);
 			enum_type_1_decl.Type = enum_type_1;
-			VHDLEnumerationValueDeclaration enum_type_1_value_decl = new VHDLEnumerationValueDeclaration(AnalysisResult, null, "baba", enum_type_1_decl);
-
-
+			VHDLEnumerationValueDeclaration enum_type_1_value_decl = (enum_type_1.Values[3] as VHDLNameEnumerationValue).Declaration;
 
 			// no
 			AssertNotCompatible(enum_type_1, VHDLBuiltinTypeInteger.Instance);

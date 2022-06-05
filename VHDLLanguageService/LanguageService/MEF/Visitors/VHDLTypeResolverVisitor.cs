@@ -228,7 +228,7 @@ namespace MyCompany.LanguageServices.VHDL.TypeVisitors
 		{
 			if (context.enumeration_type_definition() != null)
 			{
-				VHDLEnumerationResolverVisitor visitor = new VHDLEnumerationResolverVisitor();
+				VHDLEnumerationResolverVisitor visitor = new VHDLEnumerationResolverVisitor(m_analysisResult, m_errorListener);
 				return visitor.Visit(context.enumeration_type_definition());
 			}
 			else if(context.range_constraint() != null)
@@ -258,8 +258,12 @@ namespace MyCompany.LanguageServices.VHDL.TypeVisitors
 	class VHDLEnumerationResolverVisitor
 		: vhdlBaseVisitor<VHDLEnumerationType>
 	{
-		public VHDLEnumerationResolverVisitor()
+		private AnalysisResult m_analysisResult = null;
+		private Action<VHDLError> m_errorListener = null;
+		public VHDLEnumerationResolverVisitor(AnalysisResult analysisResult, Action<VHDLError> errorListener)
 		{
+			m_analysisResult = analysisResult;
+			m_errorListener = errorListener;
 		}
 		protected override bool ShouldVisitNextChild(IRuleNode node, VHDLEnumerationType currentResult)
 		{
@@ -275,7 +279,14 @@ namespace MyCompany.LanguageServices.VHDL.TypeVisitors
 			VHDLEnumerationType type = new VHDLEnumerationType();
 			foreach(var x in context.enumeration_literal())
 			{
-				type.Values.Add(x.GetText());
+				if (x.CHARACTER_LITERAL() != null)
+				{
+					type.Values.Add(new VHDLCharEnumerationValue(type, new VHDLCharacterLiteral(m_analysisResult, x.CHARACTER_LITERAL().Symbol.GetSpan(), x.CHARACTER_LITERAL().GetText()[1])));
+				}
+				else if (x.identifier() != null)
+				{
+					type.Values.Add(new VHDLNameEnumerationValue(type, new VHDLEnumerationValueDeclaration(m_analysisResult, x.identifier(), x.identifier().GetText(), type)));
+				}
 			}
 			return type;
 		}

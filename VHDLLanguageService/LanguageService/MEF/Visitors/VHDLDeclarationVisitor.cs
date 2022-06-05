@@ -132,16 +132,13 @@ namespace MyCompany.LanguageServices.VHDL
 				{
 				}
 			}
-			// If this is an enumeration, we make declaration for all values that are identifiers
-			var enumerationLiteralContexts = context?.type_definition()?.scalar_type_definition()?.enumeration_type_definition()?.enumeration_literal();
-			if (enumerationLiteralContexts != null)
+			// for enumeration we need to gather all declaration so they can be found as constants
+			if (decl.Type is VHDLEnumerationType et)
 			{
-				foreach (var identifierContext in enumerationLiteralContexts.Select(x => x.identifier()).Where(x => x != null))
+				foreach(var v in et.Values.OfType<VHDLNameEnumerationValue>())
 				{
-					//VHDLEnumerationValueDeclaration enumValueDecl = new VHDLEnumerationValueDeclaration(m_analysisResult, m_declarationStack.FirstOrDefault(), identifierContext.GetText(), decl);
-					VHDLEnumerationValueDeclaration enumValueDecl = new VHDLEnumerationValueDeclaration(m_analysisResult, identifierContext, identifierContext.GetText(), decl);
-					DeclarationsByContext.Add(identifierContext, enumValueDecl);
-					m_declarationStack.Peek().Children.Add(enumValueDecl);
+					DeclarationsByContext.Add(v.Declaration.Context, v.Declaration);
+					m_declarationStack.Peek().Children.Add(v.Declaration);
 				}
 			}
 			PopScope();

@@ -35,18 +35,18 @@ namespace MyCompany.LanguageServices.VHDL
 
 	class VHDLEvaluatedExpression
 	{
-		public VHDLEvaluatedExpression(VHDLType t, VHDLExpression e, VHDLLiteral l)
+		public VHDLEvaluatedExpression(VHDLType t, VHDLExpression e, VHDLConstantValue v)
 		{
 			Type = t;
 			Expression = e;
-			Result = l;
+			Result = v;
 		}
-		// The evaluated type of the expression
+		// The type of the result
 		public VHDLType Type { get; }
-		// The expression that evaluated to that
+		// The expression that was evaluated
 		public VHDLExpression Expression { get; }
-		// Can be a constant, or null if the expression cannot be evaluated
-		public VHDLLiteral Result { get; }
+		// null if the expression cannot be evaluated
+		public VHDLConstantValue Result { get; }
 	}
 	abstract class VHDLExpression
 	{
@@ -99,31 +99,6 @@ namespace MyCompany.LanguageServices.VHDL
 		public string Text { get; set; } = null;
 	}
 
-	class VHDLBooleanLiteral
-		: VHDLLiteral
-	{
-		public VHDLBooleanLiteral(bool value)
-			: base(null, new Span(), null)
-		{
-			Value = value;
-		}
-		public VHDLBooleanLiteral(AnalysisResult analysisResult, Span span, bool value)
-			: base(analysisResult, span, "")
-		{
-			Value = value;
-		}
-		public bool Value { get; set; }
-
-		public override VHDLClassifiedText GetClassifiedText()
-		{
-			return new VHDLClassifiedText(Text ?? Value.ToString());
-		}
-
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
-		{
-			return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, this);
-		}
-	}
 	class VHDLRealLiteral
 		: VHDLLiteral
 	{
@@ -146,7 +121,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
-			return new VHDLEvaluatedExpression(VHDLBuiltinTypeReal.Instance, this, this);
+			return new VHDLEvaluatedExpression(VHDLBuiltinTypeReal.Instance, this, new VHDLRealValue(Value));
 		}
 	}
 	class VHDLIntegerLiteral
@@ -170,7 +145,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
-			return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, this);
+			return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, new VHDLIntegerValue(Value));
 		}
 	}
 	class VHDLNull
@@ -185,7 +160,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
-			return new VHDLEvaluatedExpression(VHDLBuiltinTypeNull.Instance, this, this);
+			return new VHDLEvaluatedExpression(VHDLBuiltinTypeNull.Instance, this, null);
 		}
 	}
 	class VHDLCharacterLiteral
@@ -205,7 +180,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
-			return new VHDLEvaluatedExpression(new VHDLCharLiteralType(this), this, this);
+			return new VHDLEvaluatedExpression(VHDLCharLiteralType.Instance, this, new VHDLCharValue(Value));
 		}
 	}
 	class VHDLStringLiteral
@@ -225,7 +200,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
-			return new VHDLEvaluatedExpression(new VHDLStringLiteralType(this), this, this);
+			return new VHDLEvaluatedExpression(VHDLStringLiteralType.Instance, this, VHDLArrayValue.FromString(Value));
 		}
 	}
 	class VHDLBinaryStringLiteral
@@ -245,7 +220,7 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
-			return new VHDLEvaluatedExpression(new VHDLStringLiteralType(this), this, this);
+			return new VHDLEvaluatedExpression(VHDLStringLiteralType.Instance, this, VHDLArrayValue.FromString(Value));
 		}
 	}
 
@@ -266,9 +241,10 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
-			return new VHDLEvaluatedExpression(new VHDLStringLiteralType(this), this, this);
+			return new VHDLEvaluatedExpression(VHDLStringLiteralType.Instance, this, VHDLArrayValue.FromString(ToBinaryString()));
 		}
-		public VHDLStringLiteral ToStringLiteral()
+
+		public string ToBinaryString()
 		{
 			string[] table = new string[]
 			{
@@ -289,7 +265,11 @@ namespace MyCompany.LanguageServices.VHDL
 				else
 					return null;
 			}
-			return new VHDLStringLiteral(null, new Span(), sb.ToString());
+			return sb.ToString();
+		}
+		public VHDLStringLiteral ToStringLiteral()
+		{
+			return new VHDLStringLiteral(null, new Span(), ToBinaryString());
 		}
 	}
 	class VHDLHexStringLiteral
@@ -309,9 +289,9 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
-			return new VHDLEvaluatedExpression(new VHDLStringLiteralType(this), this, this);
+			return new VHDLEvaluatedExpression(VHDLStringLiteralType.Instance, this, VHDLArrayValue.FromString(ToBinaryString()));
 		}
-		public VHDLStringLiteral ToStringLiteral()
+		public string ToBinaryString()
 		{
 			string[] table = new string[]
 			{
@@ -342,7 +322,11 @@ namespace MyCompany.LanguageServices.VHDL
 				else
 					return null;
 			}
-			return new VHDLStringLiteral(null, new Span(), sb.ToString());
+			return sb.ToString();
+		}
+		public VHDLStringLiteral ToStringLiteral()
+		{
+			return new VHDLStringLiteral(null, new Span(), ToBinaryString());
 		}
 	}
 	class VHDLPhysicalLiteral
@@ -423,9 +407,9 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			VHDLEvaluatedExpression e = Expression.Evaluate(evaluationContext, expectedType);
 			if (VHDLType.IsInteger(e.Type))
-				return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, e.Result as VHDLIntegerLiteral);
+				return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, e.Result as VHDLIntegerValue);
 			if (VHDLType.IsReal(e.Type))
-				return new VHDLEvaluatedExpression(VHDLBuiltinTypeReal.Instance, this, e.Result as VHDLRealLiteral);
+				return new VHDLEvaluatedExpression(VHDLBuiltinTypeReal.Instance, this, e.Result as VHDLRealValue);
 
 			// Look for an operator function with arguments of the correct type
 			VHDLDeclaration enclosingDecl = VHDLDeclarationUtilities.GetEnclosingDeclaration(AnalysisResult, Span.Start);
@@ -470,15 +454,15 @@ namespace MyCompany.LanguageServices.VHDL
 			VHDLEvaluatedExpression e = Expression.Evaluate(evaluationContext, expectedType);
 			if (VHDLType.IsInteger(e.Type))
 			{
-				if (e?.Result is VHDLIntegerLiteral l)
-					return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, new VHDLIntegerLiteral(e.Result.AnalysisResult, new Span(), -l.Value, null));
+				if (e?.Result is VHDLIntegerValue v)
+					return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, new VHDLIntegerValue(-v.Value));
 				else
 					return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, null);
 			}
 			if (VHDLType.IsReal(e.Type))
 			{
-				if (e?.Result is VHDLRealLiteral l)
-					return new VHDLEvaluatedExpression(VHDLBuiltinTypeReal.Instance, null, new VHDLRealLiteral(e.Result.AnalysisResult, new Span(), -l.Value, null));
+				if (e?.Result is VHDLRealValue v)
+					return new VHDLEvaluatedExpression(VHDLBuiltinTypeReal.Instance, null, new VHDLRealValue(-v.Value));
 				else
 					return new VHDLEvaluatedExpression(VHDLBuiltinTypeReal.Instance, this, null);
 			}
@@ -534,25 +518,20 @@ namespace MyCompany.LanguageServices.VHDL
 				(l as VHDLOctalStringLiteral)?.ToStringLiteral()?.Value ??
 				(l as VHDLBinaryStringLiteral)?.Value;
 		}
-		VHDLEvaluatedExpression ConcatStringArray(VHDLLiteral left, VHDLAbstractArrayType rightType, VHDLLiteral right, bool invert, EvaluationContext evaluationContext)
+		VHDLEvaluatedExpression ConcatStringArray(VHDLArrayValue left, VHDLAbstractArrayType rightType, VHDLArrayValue right, bool invert, EvaluationContext evaluationContext)
 		{
-			// "010" & arr
-			string s = ToBitString(left);
-			if (s == null)
-				return null;
-
 			// check if elements are compatibles eg. <"abc" & std_logic_vector> is invalid
-			if (s.Any(c => VHDLType.AreCompatible(rightType.ElementType, new VHDLCharLiteralType(new VHDLCharacterLiteral(null, new Span(), c))) == VHDLCompatibilityResult.No))
+			if (left?.Value?.Any(c => VHDLType.AreCompatible(rightType.ElementType, VHDLCharLiteralType.Instance, null, c) == VHDLCompatibilityResult.No) == true)
 				return null;
 
 			// Try to evaluate the size of the concatenation operation
 			VHDLExpression count = rightType.GetIndexRange(0)?.Count(rightType.GetIndexType(0));
 			if (count != null)
-				count = VHDLAddExpression.AddConstant(count, s.Length);
+				count = VHDLAddExpression.AddConstant(count, left.Value.Count());
 			VHDLEvaluatedExpression eval = count?.Evaluate(evaluationContext);
-			if (eval?.Result is VHDLIntegerLiteral il)
+			if (eval?.Result is VHDLIntegerValue v)
 			{
-				VHDLArraySliceType sliceType = new VHDLArraySliceType(rightType.GetBaseType(), new VHDLRange(new VHDLIntegerLiteral(il.Value - 1), VHDLRangeDirection.DownTo, new VHDLIntegerLiteral(null, new Span(), 0, null)));
+				VHDLArraySliceType sliceType = new VHDLArraySliceType(rightType.GetBaseType(), new VHDLRange(new VHDLIntegerLiteral(v.Value - 1), VHDLRangeDirection.DownTo, new VHDLIntegerLiteral(null, new Span(), 0, null)));
 				return new VHDLEvaluatedExpression(sliceType, this, null); // should return literal if thats possible
 			}
 			else
@@ -562,32 +541,22 @@ namespace MyCompany.LanguageServices.VHDL
 				return new VHDLEvaluatedExpression(sliceType, this, null);
 			}
 		}
-		VHDLEvaluatedExpression ConcatStringString(VHDLLiteral left, VHDLLiteral right)
+		VHDLEvaluatedExpression ConcatStringString(VHDLArrayValue left, VHDLArrayValue right)
 		{
 			// "010" & "101"
-			string s1 = ToBitString(left);
-			string s2 = ToBitString(right);
-			if (s1 == null || s2 == null)
-				return null;
-
-			VHDLStringLiteral l = new VHDLStringLiteral(null, new Span(), s1 + s2);
-			return new VHDLEvaluatedExpression(new VHDLStringLiteralType(l), this, l);
+			return new VHDLEvaluatedExpression(VHDLStringLiteralType.Instance, this, new VHDLArrayValue(left.Value.Concat(right.Value)));
 		}
-		VHDLEvaluatedExpression ConcatCharString(VHDLCharacterLiteral left, VHDLLiteral right, bool invert)
+		VHDLEvaluatedExpression ConcatCharString(VHDLCharValue left, VHDLArrayValue right, bool invert)
 		{
-			// '0' & "101"
-			string s = ToBitString(right);
-			if (s == null)
-				return null;
-
-			VHDLStringLiteral l = invert ? new VHDLStringLiteral(null, new Span(), left.Value + s) : new VHDLStringLiteral(null, new Span(), s + left.Value);
-			return new VHDLEvaluatedExpression(new VHDLStringLiteralType(l), this, l);
+			VHDLArrayValue v = null;
+			if (left != null && right != null)
+				v = new VHDLArrayValue(invert ? right.Value.Append(left) : right.Value.Prepend(left));
+			return new VHDLEvaluatedExpression(VHDLStringLiteralType.Instance, this, v);
 		}
-		VHDLEvaluatedExpression ConcatCharChar(VHDLCharacterLiteral left, VHDLCharacterLiteral right)
+		VHDLEvaluatedExpression ConcatCharChar(VHDLCharValue left, VHDLCharValue right)
 		{
 			// '0' & '1'
-			VHDLStringLiteral l = new VHDLStringLiteral(null, new Span(), left.Value.ToString() + right.Value);
-			return new VHDLEvaluatedExpression(new VHDLStringLiteralType(l), this, l);
+			return new VHDLEvaluatedExpression(VHDLStringLiteralType.Instance, this, VHDLArrayValue.FromString(left.Value.ToString() + right.Value));
 		}
 		VHDLEvaluatedExpression ConcatArrayElement(VHDLEvaluatedExpression left, VHDLEvaluatedExpression right, bool invert, EvaluationContext evaluationContext)
 		{
@@ -603,9 +572,9 @@ namespace MyCompany.LanguageServices.VHDL
 			VHDLExpression count = aat.GetIndexRange(0)?.Count(aat.GetIndexType(0));
 			count = VHDLAddExpression.AddConstant(count, 1);
 			VHDLEvaluatedExpression eval = count?.Evaluate(evaluationContext);
-			if (eval?.Result is VHDLIntegerLiteral il)
+			if (eval?.Result is VHDLIntegerValue v)
 			{
-				VHDLArraySliceType sliceType = new VHDLArraySliceType(aat.GetBaseType(), new VHDLRange(new VHDLIntegerLiteral(il.Value - 1), VHDLRangeDirection.DownTo, new VHDLIntegerLiteral(null, new Span(), 0, null)));
+				VHDLArraySliceType sliceType = new VHDLArraySliceType(aat.GetBaseType(), new VHDLRange(new VHDLIntegerLiteral(v.Value - 1), VHDLRangeDirection.DownTo, new VHDLIntegerLiteral(null, new Span(), 0, null)));
 				return new VHDLEvaluatedExpression(sliceType, this, null); // should return literal if thats possible
 			}
 			else
@@ -615,7 +584,7 @@ namespace MyCompany.LanguageServices.VHDL
 				return new VHDLEvaluatedExpression(sliceType, this, null);
 			}
 		}
-		VHDLEvaluatedExpression ConcatArrayArray(VHDLAbstractArrayType leftType, VHDLLiteral left, VHDLAbstractArrayType rightType, VHDLLiteral right, EvaluationContext evaluationContext)
+		VHDLEvaluatedExpression ConcatArrayArray(VHDLAbstractArrayType leftType, VHDLArrayValue left, VHDLAbstractArrayType rightType, VHDLArrayValue right, EvaluationContext evaluationContext)
 		{
 			// '0' & arr
 
@@ -628,10 +597,10 @@ namespace MyCompany.LanguageServices.VHDL
 			VHDLExpression count2 = rightType.GetIndexRange(0)?.Count(rightType.GetIndexType(0));
 			VHDLExpression count = new VHDLAddExpression(null, new Span(), count1, count2);
 			VHDLEvaluatedExpression eval = count?.Evaluate(evaluationContext);
-			if (eval?.Result is VHDLIntegerLiteral il)
+			if (eval?.Result is VHDLIntegerValue v)
 			{
-				VHDLArraySliceType sliceType = new VHDLArraySliceType(rightType.GetBaseType(), new VHDLRange(new VHDLIntegerLiteral(il.Value - 1), VHDLRangeDirection.DownTo, new VHDLIntegerLiteral(null, new Span(), 0, null)));
-				return new VHDLEvaluatedExpression(sliceType, this, null); // should return literal if thats possible
+				VHDLArraySliceType sliceType = new VHDLArraySliceType(rightType.GetBaseType(), new VHDLRange(new VHDLIntegerLiteral(v.Value - 1), VHDLRangeDirection.DownTo, new VHDLIntegerLiteral(null, new Span(), 0, null)));
+				return new VHDLEvaluatedExpression(sliceType, this, null); // should return value if thats possible
 			}
 			else
 			{
@@ -653,34 +622,34 @@ namespace MyCompany.LanguageServices.VHDL
 			if (t1 == null || t2 == null)
 				return null;
 
-			if (t1 is VHDLStringLiteralType slt)
+			if (t1 is VHDLStringLiteralType)
 			{
-				if (t2 is VHDLCharLiteralType clt)
+				if (t2 is VHDLCharLiteralType)
 				{
 					// "010" & '0'
-					return ConcatCharString(clt.Literal, slt.Literal, true);
+					return ConcatCharString(e2.Result as VHDLCharValue, e1.Result as VHDLArrayValue, true);
 				}
-				else if (t2 is VHDLStringLiteralType slt2)
+				else if (t2 is VHDLStringLiteralType)
 				{
 					// "010" & "101"
-					return ConcatStringString(slt.Literal, slt2.Literal);
+					return ConcatStringString(e1.Result as VHDLArrayValue, e2.Result as VHDLArrayValue);
 				}
 				else if (t2 is VHDLAbstractArrayType aat && aat.Dimension == 1) // dont support multidim arrays
 				{
 					// "010" & arr
-					return ConcatStringArray(slt.Literal, aat, e2.Result, false, evaluationContext);
+					return ConcatStringArray(e1.Result as VHDLArrayValue, aat, e2.Result as VHDLArrayValue, false, evaluationContext);
 				}
 			}
-			else if (t1 is VHDLCharLiteralType clt)
+			else if (t1 is VHDLCharLiteralType)
 			{
-				if (t2 is VHDLCharLiteralType clt2)
+				if (t2 is VHDLCharLiteralType)
 				{
 					// "010" & '0'
-					return ConcatCharChar(clt.Literal, clt2.Literal);
+					return ConcatCharChar(e1.Result as VHDLCharValue, e2.Result as VHDLCharValue);
 				}
 				else if (t2 is VHDLStringLiteralType slt2)
 				{
-					return ConcatCharString(clt.Literal, slt2.Literal, false);
+					return ConcatCharString(e1.Result as VHDLCharValue, e2.Result as VHDLArrayValue, false);
 				}
 				else if (t2 is VHDLAbstractArrayType aat && aat.Dimension == 1) // dont support multidim arrays
 				{
@@ -691,11 +660,11 @@ namespace MyCompany.LanguageServices.VHDL
 			{
 				if (t2 is VHDLStringLiteralType slt2)
 				{
-					return ConcatStringArray(slt2.Literal, aat, e1.Result, true, evaluationContext);
+					return ConcatStringArray(e2.Result as VHDLArrayValue, aat, e1.Result as VHDLArrayValue, true, evaluationContext);
 				}
 				else if (t2 is VHDLAbstractArrayType aat2 && aat2.IndexTypes.Count() == 1) // dont support multidim arrays
 				{
-					return ConcatArrayArray(aat, e1.Result, aat2, e2.Result, evaluationContext);
+					return ConcatArrayArray(aat, e1.Result as VHDLArrayValue, aat2, e2.Result as VHDLArrayValue, evaluationContext);
 				}
 				else
 				{
@@ -746,9 +715,9 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
-					result = new VHDLIntegerLiteral(l1.Value + l2.Value);
+				VHDLIntegerValue result = null;
+				if (e1.Result is VHDLIntegerValue l1 && e2.Result is VHDLIntegerValue l2)
+					result = new VHDLIntegerValue(l1.Value + l2.Value);
 
 				return new VHDLEvaluatedExpression(e1.Type, this, result);
 			}
@@ -758,9 +727,9 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
-					result = new VHDLRealLiteral(l1.Value + l2.Value);
+				VHDLRealValue result = null;
+				if (e1.Result is VHDLRealValue l1 && e2.Result is VHDLRealValue l2)
+					result = new VHDLRealValue(l1.Value + l2.Value);
 
 				return new VHDLEvaluatedExpression(e1.Type, this, result);
 			}
@@ -840,9 +809,9 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
-					result = new VHDLIntegerLiteral(l1.Value - l2.Value);
+				VHDLIntegerValue result = null;
+				if (e1.Result is VHDLIntegerValue l1 && e2.Result is VHDLIntegerValue l2)
+					result = new VHDLIntegerValue(l1.Value - l2.Value);
 
 				return new VHDLEvaluatedExpression(e1.Type, this, result);
 			}
@@ -852,9 +821,9 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
-					result = new VHDLRealLiteral(l1.Value - l2.Value);
+				VHDLRealValue result = null;
+				if (e1.Result is VHDLRealValue l1 && e2.Result is VHDLRealValue l2)
+					result = new VHDLRealValue(l1.Value - l2.Value);
 
 				return new VHDLEvaluatedExpression(e1.Type, this, result);
 			}
@@ -927,9 +896,9 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
-					result = new VHDLIntegerLiteral(l1.Value * l2.Value);
+				VHDLIntegerValue result = null;
+				if (e1.Result is VHDLIntegerValue l1 && e2.Result is VHDLIntegerValue l2)
+					result = new VHDLIntegerValue(l1.Value * l2.Value);
 
 				return new VHDLEvaluatedExpression(e1.Type, this, result);
 			}
@@ -939,9 +908,9 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
-					result = new VHDLRealLiteral(l1.Value * l2.Value);
+				VHDLRealValue result = null;
+				if (e1.Result is VHDLRealValue l1 && e2.Result is VHDLRealValue l2)
+					result = new VHDLRealValue(l1.Value * l2.Value);
 
 				return new VHDLEvaluatedExpression(e1.Type, this, result);
 			}
@@ -1013,9 +982,9 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
-					result = new VHDLIntegerLiteral(l1.Value / l2.Value);
+				VHDLIntegerValue result = null;
+				if (e1.Result is VHDLIntegerValue l1 && e2.Result is VHDLIntegerValue l2)
+					result = new VHDLIntegerValue(l1.Value / l2.Value);
 
 				return new VHDLEvaluatedExpression(e1.Type, this, result);
 			}
@@ -1025,9 +994,9 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
-					result = new VHDLRealLiteral(l1.Value / l2.Value);
+				VHDLRealValue result = null;
+				if (e1.Result is VHDLRealValue l1 && e2.Result is VHDLRealValue l2)
+					result = new VHDLRealValue(l1.Value / l2.Value);
 
 				return new VHDLEvaluatedExpression(e1.Type, this, result);
 			}
@@ -1099,9 +1068,9 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
-					result = new VHDLIntegerLiteral(l1.Value / l2.Value);
+				VHDLIntegerValue result = null;
+				if (e1.Result is VHDLIntegerValue l1 && e2.Result is VHDLIntegerValue l2)
+					result = new VHDLIntegerValue(l1.Value / l2.Value);
 
 				return new VHDLEvaluatedExpression(e1.Type, this, result);
 			}
@@ -1111,9 +1080,9 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
-					result = new VHDLRealLiteral(l1.Value / l2.Value);
+				VHDLRealValue result = null;
+				if (e1.Result is VHDLRealValue l1 && e2.Result is VHDLRealValue l2)
+					result = new VHDLRealValue(l1.Value / l2.Value);
 
 				return new VHDLEvaluatedExpression(e1.Type, this, result);
 			}
@@ -1185,9 +1154,9 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
-					result = new VHDLIntegerLiteral(l1.Value / l2.Value);
+				VHDLIntegerValue result = null;
+				if (e1.Result is VHDLIntegerValue l1 && e2.Result is VHDLIntegerValue l2)
+					result = new VHDLIntegerValue(l1.Value / l2.Value);
 
 				return new VHDLEvaluatedExpression(e1.Type, this, result);
 			}
@@ -1197,9 +1166,9 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
-					result = new VHDLRealLiteral(l1.Value / l2.Value);
+				VHDLRealValue result = null;
+				if (e1.Result is VHDLRealValue l1 && e2.Result is VHDLRealValue l2)
+					result = new VHDLRealValue(l1.Value / l2.Value);
 
 				return new VHDLEvaluatedExpression(e1.Type, this, result);
 			}
@@ -1321,10 +1290,10 @@ namespace MyCompany.LanguageServices.VHDL
 		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
 			VHDLEvaluatedExpression e = Expression.Evaluate(evaluationContext);
-			if (e.Result is VHDLIntegerLiteral il)
-				return new VHDLEvaluatedExpression(e.Type, this, new VHDLIntegerLiteral(Math.Abs(il.Value)));
-			if (e.Result is VHDLRealLiteral rl)
-				return new VHDLEvaluatedExpression(e.Type, this, new VHDLRealLiteral(Math.Abs(rl.Value)));
+			if (e.Result is VHDLIntegerValue il)
+				return new VHDLEvaluatedExpression(e.Type, this, new VHDLIntegerValue(Math.Abs(il.Value)));
+			if (e.Result is VHDLRealValue rl)
+				return new VHDLEvaluatedExpression(e.Type, this, new VHDLRealValue(Math.Abs(rl.Value)));
 
 			// Look for an operator function with arguments of the correct type
 			VHDLDeclaration enclosingDecl = VHDLDeclarationUtilities.GetEnclosingDeclaration(AnalysisResult, Span.Start);
@@ -1398,8 +1367,8 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			if (VHDLType.IsInteger(e1.Type) && VHDLType.IsInteger(e2.Type))
 			{
-				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
-					return new VHDLEvaluatedExpression(e1.Type, this, new VHDLIntegerLiteral((long)Math.Pow(l1.Value, l2.Value)));
+				if (e1.Result is VHDLIntegerValue l1 && e2.Result is VHDLIntegerValue l2)
+					return new VHDLEvaluatedExpression(e1.Type, this, new VHDLIntegerValue((long)Math.Pow(l1.Value, l2.Value)));
 				return new VHDLEvaluatedExpression(e1.Type, this, null);
 			}
 			return null;
@@ -1408,8 +1377,8 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			if (VHDLType.IsReal(e1.Type) && VHDLType.IsInteger(e2.Type))
 			{
-				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
-					return new VHDLEvaluatedExpression(e1.Type, this, new VHDLIntegerLiteral((long)Math.Pow(l1.Value, l2.Value)));
+				if (e1.Result is VHDLRealValue l1 && e2.Result is VHDLIntegerValue l2)
+					return new VHDLEvaluatedExpression(e1.Type, this, new VHDLRealValue((long)Math.Pow(l1.Value, l2.Value)));
 				return new VHDLEvaluatedExpression(e1.Type, this, null);
 			}
 			return null;
@@ -1728,29 +1697,29 @@ namespace MyCompany.LanguageServices.VHDL
 
 			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
-					result = new VHDLBooleanLiteral(l1.Value == l2.Value);
+				VHDLBooleanValue result = null;
+				if (e1.Result is VHDLIntegerValue l1 && e2.Result is VHDLIntegerValue l2)
+					result = new VHDLBooleanValue(l1.Value == l2.Value);
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
 			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
-					result = new VHDLBooleanLiteral(l1.Value == l2.Value);
+				VHDLBooleanValue result = null;
+				if (e1.Result is VHDLRealValue l1 && e2.Result is VHDLRealValue l2)
+					result = new VHDLBooleanValue(l1.Value == l2.Value);
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
 			if (e1.Type == AnalysisResult.BooleanType && e2.Type == AnalysisResult.BooleanType)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLBooleanLiteral l1 && e2.Result is VHDLBooleanLiteral l2)
-					result = new VHDLBooleanLiteral(l1.Value == l2.Value);
+				VHDLBooleanValue result = null;
+				if (e1.Result is VHDLBooleanValue l1 && e2.Result is VHDLBooleanValue l2)
+					result = new VHDLBooleanValue(l1.Value == l2.Value);
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.AreCompatible(e1.Type, e2.Type, e1?.Result, e2?.Result) == VHDLCompatibilityResult.Yes)
 			{
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 			}
@@ -1805,29 +1774,29 @@ namespace MyCompany.LanguageServices.VHDL
 
 			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
-					result = new VHDLBooleanLiteral(l1.Value != l2.Value);
+				VHDLBooleanValue result = null;
+				if (e1.Result is VHDLIntegerValue l1 && e2.Result is VHDLIntegerValue l2)
+					result = new VHDLBooleanValue(l1.Value != l2.Value);
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
 			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
-					result = new VHDLBooleanLiteral(l1.Value != l2.Value);
+				VHDLBooleanValue result = null;
+				if (e1.Result is VHDLRealValue l1 && e2.Result is VHDLRealValue l2)
+					result = new VHDLBooleanValue(l1.Value != l2.Value);
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
 			if (e1.Type == AnalysisResult.BooleanType && e2.Type == AnalysisResult.BooleanType)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLBooleanLiteral l1 && e2.Result is VHDLBooleanLiteral l2)
-					result = new VHDLBooleanLiteral(l1.Value != l2.Value);
+				VHDLBooleanValue result = null;
+				if (e1.Result is VHDLBooleanValue l1 && e2.Result is VHDLBooleanValue l2)
+					result = new VHDLBooleanValue(l1.Value != l2.Value);
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
+			if (VHDLType.AreCompatible(e1.Type, e2.Type, e1?.Result, e2?.Result) == VHDLCompatibilityResult.Yes)
 			{
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 			}
@@ -1881,26 +1850,26 @@ namespace MyCompany.LanguageServices.VHDL
 
 			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
-					result = new VHDLBooleanLiteral(l1.Value > l2.Value);
+				VHDLBooleanValue result = null;
+				if (e1.Result is VHDLIntegerValue l1 && e2.Result is VHDLIntegerValue l2)
+					result = new VHDLBooleanValue(l1.Value > l2.Value);
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
 			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
-					result = new VHDLBooleanLiteral(l1.Value > l2.Value);
+				VHDLBooleanValue result = null;
+				if (e1.Result is VHDLRealValue l1 && e2.Result is VHDLRealValue l2)
+					result = new VHDLBooleanValue(l1.Value > l2.Value);
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (e1.Type.GetBaseType().Dereference() is VHDLEnumerationType et1 && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
+			if (e1.Type.GetBaseType().Dereference() is VHDLEnumerationType et1 && VHDLType.AreCompatible(e1.Type, e2.Type, e1?.Result, e2?.Result) == VHDLCompatibilityResult.Yes)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 			}
-			if (e2.Type.GetBaseType().Dereference() is VHDLEnumerationType et2 && VHDLType.AreCompatible(e2.Type, e1.Type) == VHDLCompatibilityResult.Yes)
+			if (e2.Type.GetBaseType().Dereference() is VHDLEnumerationType et2 && VHDLType.AreCompatible(e2.Type, e1.Type, e2?.Result, e1?.Result) == VHDLCompatibilityResult.Yes)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
@@ -1956,26 +1925,26 @@ namespace MyCompany.LanguageServices.VHDL
 
 			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
-					result = new VHDLBooleanLiteral(l1.Value >= l2.Value);
+				VHDLBooleanValue result = null;
+				if (e1.Result is VHDLIntegerValue l1 && e2.Result is VHDLIntegerValue l2)
+					result = new VHDLBooleanValue(l1.Value >= l2.Value);
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
 			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
-					result = new VHDLBooleanLiteral(l1.Value >= l2.Value);
+				VHDLBooleanValue result = null;
+				if (e1.Result is VHDLRealValue l1 && e2.Result is VHDLRealValue l2)
+					result = new VHDLBooleanValue(l1.Value >= l2.Value);
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (e1.Type.GetBaseType().Dereference() is VHDLEnumerationType et1 && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
+			if (e1.Type.GetBaseType().Dereference() is VHDLEnumerationType et1 && VHDLType.AreCompatible(e1.Type, e2.Type, e1?.Result, e2?.Result) == VHDLCompatibilityResult.Yes)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 			}
-			if (e2.Type.GetBaseType().Dereference() is VHDLEnumerationType et2 && VHDLType.AreCompatible(e2.Type, e1.Type) == VHDLCompatibilityResult.Yes)
+			if (e2.Type.GetBaseType().Dereference() is VHDLEnumerationType et2 && VHDLType.AreCompatible(e2.Type, e1.Type, e2?.Result, e1?.Result) == VHDLCompatibilityResult.Yes)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
@@ -2031,26 +2000,26 @@ namespace MyCompany.LanguageServices.VHDL
 
 			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
-					result = new VHDLBooleanLiteral(l1.Value < l2.Value);
+				VHDLBooleanValue result = null;
+				if (e1.Result is VHDLIntegerValue l1 && e2.Result is VHDLIntegerValue l2)
+					result = new VHDLBooleanValue(l1.Value < l2.Value);
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
 			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
-					result = new VHDLBooleanLiteral(l1.Value < l2.Value);
+				VHDLBooleanValue result = null;
+				if (e1.Result is VHDLRealValue l1 && e2.Result is VHDLRealValue l2)
+					result = new VHDLBooleanValue(l1.Value < l2.Value);
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (e1.Type.GetBaseType().Dereference() is VHDLEnumerationType et1 && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
+			if (e1.Type.GetBaseType().Dereference() is VHDLEnumerationType et1 && VHDLType.AreCompatible(e1.Type, e2.Type, e1?.Result, e2?.Result) == VHDLCompatibilityResult.Yes)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 			}
-			if (e2.Type.GetBaseType().Dereference() is VHDLEnumerationType et2 && VHDLType.AreCompatible(e2.Type, e1.Type) == VHDLCompatibilityResult.Yes)
+			if (e2.Type.GetBaseType().Dereference() is VHDLEnumerationType et2 && VHDLType.AreCompatible(e2.Type, e1.Type, e2?.Result, e1?.Result) == VHDLCompatibilityResult.Yes)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
@@ -2106,26 +2075,26 @@ namespace MyCompany.LanguageServices.VHDL
 
 			if (VHDLType.IsInteger(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLIntegerLiteral l1 && e2.Result is VHDLIntegerLiteral l2)
-					result = new VHDLBooleanLiteral(l1.Value <= l2.Value);
+				VHDLBooleanValue result = null;
+				if (e1.Result is VHDLIntegerValue l1 && e2.Result is VHDLIntegerValue l2)
+					result = new VHDLBooleanValue(l1.Value <= l2.Value);
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
 			if (VHDLType.IsReal(e1.Type) && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
 			{
-				VHDLLiteral result = null;
-				if (e1.Result is VHDLRealLiteral l1 && e2.Result is VHDLRealLiteral l2)
-					result = new VHDLBooleanLiteral(l1.Value <= l2.Value);
+				VHDLBooleanValue result = null;
+				if (e1.Result is VHDLRealValue l1 && e2.Result is VHDLRealValue l2)
+					result = new VHDLBooleanValue(l1.Value <= l2.Value);
 
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, result);
 			}
-			if (e1.Type.GetBaseType().Dereference() is VHDLEnumerationType et1 && VHDLType.AreCompatible(e1.Type, e2.Type) == VHDLCompatibilityResult.Yes)
+			if (e1.Type.GetBaseType().Dereference() is VHDLEnumerationType et1 && VHDLType.AreCompatible(e1.Type, e2.Type, e1?.Result, e2?.Result) == VHDLCompatibilityResult.Yes)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
 			}
-			if (e2.Type.GetBaseType().Dereference() is VHDLEnumerationType et2 && VHDLType.AreCompatible(e2.Type, e1.Type) == VHDLCompatibilityResult.Yes)
+			if (e2.Type.GetBaseType().Dereference() is VHDLEnumerationType et2 && VHDLType.AreCompatible(e2.Type, e1.Type, e2?.Result, e1?.Result) == VHDLCompatibilityResult.Yes)
 			{
 				// dont support exact evaluation now
 				return new VHDLEvaluatedExpression(AnalysisResult.BooleanType, this, null);
@@ -2620,7 +2589,7 @@ namespace MyCompany.LanguageServices.VHDL
 						var evaluatedParameters = ReorderParameters(d, Arguments, evaluationContext).Zip(d.Parameters, (x, y) => Tuple.Create(x.Evaluate(evaluationContext, y.Type), y));
 						foreach (var (ev, ex) in evaluatedParameters)
 						{
-							if (VHDLType.AreCompatible(ex.Type, ev.Type) == VHDLCompatibilityResult.No)
+							if (VHDLType.AreCompatible(ex.Type, ev.Type, null, ev.Result) == VHDLCompatibilityResult.No)
 								throw new VHDLCodeException(string.Format("Wrong argument type, '{0}' expected, got '{1}'",
 									ex.Type.GetClassifiedText()?.Text ?? "<error type>",
 									ev.Type.GetClassifiedText()?.Text ?? "<error type>"), ev?.Expression?.Span ?? Span);
@@ -2637,7 +2606,7 @@ namespace MyCompany.LanguageServices.VHDL
 						try
 						{
 							var evaluatedParameters = ReorderParameters(d, Arguments, evaluationContext).Zip(d.Parameters, (x, y) => Tuple.Create(x.Evaluate(evaluationContext, y.Type), y)).ToArray();
-							if (evaluatedParameters.Any(x => VHDLType.AreCompatible(x.Item2.Type, x.Item1.Type) == VHDLCompatibilityResult.No))
+							if (evaluatedParameters.Any(x => VHDLType.AreCompatible(x.Item2.Type, x.Item1.Type, null, x.Item1.Result) == VHDLCompatibilityResult.No))
 								continue;
 							VHDLEvaluatedExpression result = (d as VHDLFunctionBodyDeclaration)?.EvaluateCall(evaluatedParameters.Select(x => x.Item1), evaluationContext);
 							if (result == null)
@@ -2702,7 +2671,7 @@ namespace MyCompany.LanguageServices.VHDL
 					else
 					{
 						VHDLEvaluatedExpression evaluatedArg = Arguments.First().Evaluate(evaluationContext);
-						if (VHDLType.AreCompatible(aat.GetIndexType(0), evaluatedArg.Type) == VHDLCompatibilityResult.No)
+						if (VHDLType.AreCompatible(aat.GetIndexType(0), evaluatedArg.Type, null, evaluatedArg.Result) == VHDLCompatibilityResult.No)
 							throw new VHDLCodeException(string.Format("Wrong argument type, '{0}' expected, got '{1}'",
 								aat.IndexTypes.First()?.GetClassifiedText()?.Text ?? "<error type>",
 								evaluatedArg.Type?.GetClassifiedText()?.Text ?? "<error type>"), Span);
@@ -2719,7 +2688,7 @@ namespace MyCompany.LanguageServices.VHDL
 					foreach (var (x, y) in aat.IndexTypes.Zip(Arguments, (x, y) => Tuple.Create(x, y)))
 					{
 						VHDLEvaluatedExpression evaluatedArg = y.Evaluate(evaluationContext);
-						if (VHDLType.AreCompatible(evaluatedArg.Type, x) == VHDLCompatibilityResult.No)
+						if (VHDLType.AreCompatible(evaluatedArg.Type, x, evaluatedArg.Result, null) == VHDLCompatibilityResult.No)
 							throw new VHDLCodeException(string.Format("Wrong argument type, '{0}' expected, got '{1}'",
 								aat.IndexTypes.First()?.GetClassifiedText()?.Text ?? "<error type>",
 								evaluatedArg.Type?.GetClassifiedText()?.Text ?? "<error type>"), Span);
@@ -3081,37 +3050,58 @@ namespace MyCompany.LanguageServices.VHDL
 			// - elements must be assigned only once
 			// - expected type is not required "(9 downto 0 => '0')" is valid
 
-			foreach (var elem in Elements)
+			if (Elements.All(x => !(x is VHDLArgumentAssociationExpression)))
 			{
-				if (elem is VHDLArgumentAssociationExpression aae)
-				{
-					if (aae.Arguments.Single() is VHDLOthersExpression o)
-					{
-						VHDLAbstractArrayType aat = expectedType as VHDLAbstractArrayType;
-						if (aat == null || aat.Dimension != 1)
-							throw new VHDLCodeException("'others' is only available for 1 dimension arrays", Span);
+				VHDLType expectedElementType = null;
+				if (expectedType is VHDLAbstractArrayType aat)
+					expectedElementType = aat.ElementType;
 
-						if (!VHDLStatementUtilities.CheckExpressionType(aae.Value, aat.ElementType, e => throw new VHDLCodeException(e.Message, e.Span)))
-							return null;
+				var evaluatedElements = Elements.Select(x => x.Evaluate(evaluationContext, expectedElementType));
 
-						VHDLRange r = aat.GetIndexRange(0);
-						VHDLEvaluatedExpression ee = r.Count(aat.GetIndexType(0))?.Evaluate(evaluationContext);
-						VHDLLiteral result = null;
-						if (aae.Value is VHDLCharacterLiteral l1 && ee?.Result is VHDLIntegerLiteral l2)
-							result = new VHDLBinaryStringLiteral(AnalysisResult, new Span(), new string(l1.Value, (int)l2.Value));
+				VHDLType t = evaluatedElements.First().Type;
+				VHDLConstantValue v = evaluatedElements.First().Result;
+				if (evaluatedElements.Any(x => VHDLType.AreCompatible(t, x.Type, v, x.Result) == VHDLCompatibilityResult.No))
+					throw new VHDLCodeException(string.Format("Aggregate elements must be of the same type"), Span);
 
-						return new VHDLEvaluatedExpression(new VHDLArraySliceType(aat.GetBaseType(), r), this, result);
-					}
-					if (aae.Arguments.Single() is VHDLRangeExpression re)
-					{
-						VHDLEvaluatedExpression ee = aae.Value.Evaluate(evaluationContext, null);
-						if (ee.Type == null)
-							return null;
-						return new VHDLEvaluatedExpression(new VHDLAggregatedType(re.Range, ee.Type, re.Range?.DeduceType()), this, null);
-					}
-				}
-				return null;
+				VHDLRange r = new VHDLRange(new VHDLIntegerLiteral(0), VHDLRangeDirection.To, new VHDLIntegerLiteral(evaluatedElements.Count()));
+				return new VHDLEvaluatedExpression(new VHDLAggregatedType(r, t, VHDLBuiltinTypeInteger.Instance), this, null);
 			}
+			else if (Elements.All(x => x is VHDLArgumentAssociationExpression))
+			{
+				foreach (var elem in Elements)
+				{
+					if (elem is VHDLArgumentAssociationExpression aae)
+					{
+						if (aae.Arguments.Single() is VHDLOthersExpression o)
+						{
+							VHDLAbstractArrayType aat = expectedType as VHDLAbstractArrayType;
+							if (aat == null || aat.Dimension != 1)
+								throw new VHDLCodeException("'others' is only available for 1 dimension arrays", Span);
+
+							if (!VHDLStatementUtilities.CheckExpressionType(aae.Value, aat.ElementType, e => throw new VHDLCodeException(e.Message, e.Span)))
+								return null;
+
+							VHDLRange r = aat.GetIndexRange(0);
+							VHDLEvaluatedExpression ee = r?.Count(aat.GetIndexType(0))?.Evaluate(evaluationContext);
+							VHDLArrayValue result = null;
+							if (aae.Value is VHDLCharacterLiteral l1 && ee?.Result is VHDLIntegerValue l2)
+								result = VHDLArrayValue.FromString(new string(l1.Value, (int)l2.Value));
+
+							return new VHDLEvaluatedExpression(new VHDLArraySliceType(aat.GetBaseType(), r), this, result);
+						}
+						if (aae.Arguments.Single() is VHDLRangeExpression re)
+						{
+							VHDLEvaluatedExpression ee = aae.Value.Evaluate(evaluationContext, null);
+							if (ee.Type == null)
+								return null;
+							return new VHDLEvaluatedExpression(new VHDLAggregatedType(re.Range, ee.Type, re.Range?.DeduceType()), this, null);
+						}
+					}
+					return null;
+				}
+			}
+			else
+				throw new VHDLCodeException(string.Format("Cannot mix positionnal and named arguments"), Span);
 			return null;
 		}
 		public IEnumerable<VHDLExpression> Elements { get; set; } = null;
