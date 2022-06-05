@@ -3068,34 +3068,58 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 			else if (Elements.All(x => x is VHDLArgumentAssociationExpression))
 			{
-				foreach (var elem in Elements)
+				if (expectedType.Dereference() is VHDLRecordType rt)
 				{
-					if (elem is VHDLArgumentAssociationExpression aae)
+					Dictionary<VHDLRecordElementDeclaration, VHDLEvaluatedExpression> assignedList = new Dictionary<VHDLRecordElementDeclaration, VHDLEvaluatedExpression>();
+					foreach (var aae in Elements.Cast<VHDLArgumentAssociationExpression>())
 					{
-						if (aae.Arguments.Single() is VHDLOthersExpression o)
+						if (aae.Arguments.Count() != 1)
+							throw new VHDLCodeException("multiple choices not supported", Span);
+
+						if (aae.Arguments.First() is VHDLNameExpression ne)
 						{
-							VHDLAbstractArrayType aat = expectedType as VHDLAbstractArrayType;
-							if (aat == null || aat.Dimension != 1)
-								throw new VHDLCodeException("'others' is only available for 1 dimension arrays", Span);
+							var field = rt.Fields.FirstOrDefault(x => string.Compare(x.Name, ne.Name, true) == 0);
+							if (assignedList.ContainsKey(field))
+								throw new VHDLCodeException("record field already assigned", Span);
 
-							if (!VHDLStatementUtilities.CheckExpressionType(aae.Value, aat.ElementType, e => throw new VHDLCodeException(e.Message, e.Span)))
-								return null;
-
-							VHDLRange r = aat.GetIndexRange(0);
-							VHDLEvaluatedExpression ee = r?.Count(aat.GetIndexType(0))?.Evaluate(evaluationContext);
-							VHDLArrayValue result = null;
-							if (aae.Value is VHDLCharacterLiteral l1 && ee?.Result is VHDLIntegerValue l2)
-								result = VHDLArrayValue.FromString(new string(l1.Value, (int)l2.Value));
-
-							return new VHDLEvaluatedExpression(new VHDLArraySliceType(aat.GetBaseType(), r), this, result);
+							VHDLStatementUtilities.CheckExpressionType(aae.Value, field.Type, x => throw new VHDLCodeException(x.Message, x.Span));
+							assignedList[field] = null;
 						}
-						if (aae.Arguments.Single() is VHDLRangeExpression re)
-						{
-							VHDLEvaluatedExpression ee = aae.Value.Evaluate(evaluationContext, null);
-							if (ee.Type == null)
-								return null;
-							return new VHDLEvaluatedExpression(new VHDLAggregatedType(re.Range, ee.Type, re.Range?.DeduceType()), this, null);
-						}
+						else
+							throw new VHDLCodeException("multiple choices not supported", Span);
+					}
+
+					var notAssigned = rt.Fields.FirstOrDefault(x => !assignedList.ContainsKey(x));
+					if (notAssigned != null)
+						throw new VHDLCodeException(string.Format("field '{0}' is not assigned", notAssigned.Name), Span);
+
+					return new VHDLEvaluatedExpression(rt, this, null);
+				}
+				foreach (var aae in Elements.Cast<VHDLArgumentAssociationExpression>())
+				{
+					if (aae.Arguments.Single() is VHDLOthersExpression o)
+					{
+						VHDLAbstractArrayType aat = expectedType as VHDLAbstractArrayType;
+						if (aat == null || aat.Dimension != 1)
+							throw new VHDLCodeException("'others' is only available for 1 dimension arrays", Span);
+
+						if (!VHDLStatementUtilities.CheckExpressionType(aae.Value, aat.ElementType, e => throw new VHDLCodeException(e.Message, e.Span)))
+							return null;
+
+						VHDLRange r = aat.GetIndexRange(0);
+						VHDLEvaluatedExpression ee = r?.Count(aat.GetIndexType(0))?.Evaluate(evaluationContext);
+						VHDLArrayValue result = null;
+						if (aae.Value is VHDLCharacterLiteral l1 && ee?.Result is VHDLIntegerValue l2)
+							result = VHDLArrayValue.FromString(new string(l1.Value, (int)l2.Value));
+
+						return new VHDLEvaluatedExpression(new VHDLArraySliceType(aat.GetBaseType(), r), this, result);
+					}
+					if (aae.Arguments.Single() is VHDLRangeExpression re)
+					{
+						VHDLEvaluatedExpression ee = aae.Value.Evaluate(evaluationContext, null);
+						if (ee.Type == null)
+							return null;
+						return new VHDLEvaluatedExpression(new VHDLAggregatedType(re.Range, ee.Type, re.Range?.DeduceType()), this, null);
 					}
 					return null;
 				}
