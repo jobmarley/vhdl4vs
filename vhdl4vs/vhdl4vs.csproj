@@ -152,13 +152,6 @@
     <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.0.5232" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\VHDLItemTemplate\vhdl4vs.VHDLItemTemplate.csproj">
-      <Project>{41552BE0-4311-4A2B-B004-9FAADEFD2B23}</Project>
-      <Name>vhdl4vs.VHDLItemTemplate</Name>
-      <VSIXSubPath>ItemTemplates</VSIXSubPath>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <IncludeOutputGroupsInVSIX>TemplateProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
-    </ProjectReference>
     <ProjectReference Include="..\vhdl4vs.ProjectTemplate\vhdl4vs.ProjectTemplate.csproj">
       <Project>{0DAE39AE-B783-4351-8B2F-E36F92AEA2E9}</Project>
       <Name>vhdl4vs.ProjectTemplate</Name>
@@ -171,6 +164,13 @@
       <Name>vhdl4vs.ProjectType</Name>
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3bPkgdefProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
       <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
+    </ProjectReference>
+    <ProjectReference Include="..\vhdl4vs.VHDLItemTemplate\vhdl4vs.VHDLItemTemplate.csproj">
+      <Project>{41552BE0-4311-4A2B-B004-9FAADEFD2B23}</Project>
+      <Name>vhdl4vs.VHDLItemTemplate</Name>
+      <VSIXSubPath>ItemTemplates</VSIXSubPath>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <IncludeOutputGroupsInVSIX>TemplateProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
     </ProjectReference>
     <ProjectReference Include="..\vhdl4vs.VivadoIntegration\vhdl4vs.VivadoIntegration.csproj">
       <Project>{376CDD7F-C43C-49A4-8C3F-CB497D7909AA}</Project>

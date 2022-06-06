@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="vhdl4vs.LanguageService.26474cd0-d794-4698-a362-2635fb5dedfd" Version="1.0" Language="en-US" Publisher="jobmarley" />
-        <DisplayName>vhdl4vs.LanguageService</DisplayName>
+        <Identity Id="vhdl4vs.26474cd0-d794-4698-a362-2635fb5dedfd" Version="1.0" Language="en-US" Publisher="jobmarley" />
+        <DisplayName>vhdl4vs</DisplayName>
         <Description xml:space="preserve">VHDL/Vivado extension for Visual Studio</Description>
     </Metadata>
     <Installation>
@@ -19,9 +19,9 @@
     <Assets>
         <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%.ProjectType" Path="|vhdl4vs.ProjectType;PkgdefProjectOutputGroup|" />
         <Asset Type="Microsoft.VisualStudio.ProjectTemplate" d:Source="Project" d:ProjectName="%CurrentProject%.ProjectTemplate" d:TargetPath="|vhdl4vs.ProjectTemplate;TemplateProjectOutputGroup|" Path="ProjectTemplates" d:VsixSubPath="ProjectTemplates" />
-        <Asset Type="Microsoft.VisualStudio.ItemTemplate" d:Source="Project" d:ProjectName="%CurrentProject%.VHDLItemTemplate" d:TargetPath="|vhdl4vs.VHDLItemTemplate;TemplateProjectOutputGroup|" Path="ItemTemplates" d:VsixSubPath="ItemTemplates" />
         <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%.VivadoIntegration" Path="|vhdl4vs.VivadoIntegration;PkgdefProjectOutputGroup|" />
         <Asset Type="Microsoft.VisualStudio.MefComponent" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%|" />
         <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
+        <Asset Type="Microsoft.VisualStudio.ItemTemplate" d:Source="Project" d:ProjectName="%CurrentProject%.VHDLItemTemplate" d:TargetPath="|vhdl4vs.VHDLItemTemplate;TemplateProjectOutputGroup|" Path="ItemTemplates" d:VsixSubPath="ItemTemplates" />
     </Assets>
 </PackageManifest>
