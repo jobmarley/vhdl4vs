@@ -35,6 +35,7 @@ namespace MyCompany.LanguageServices.VHDL
     //  Language service attributes
     [ProvideService(typeof(VHDLLanguageService),
                              ServiceName = "VHDL Language Service")]
+    [ProvideService(typeof(SVHDLSettings), IsAsyncQueryable = true)]
     [ProvideLanguageService(typeof(VHDLLanguageService),
                              "VHDL",
                              106,             // resource ID of localized language name
@@ -54,6 +55,7 @@ namespace MyCompany.LanguageServices.VHDL
              SearchPaths = @"%InstallRoot%\VHDL\Snippets\%LCID%\Snippets\;" +
                            @"%TestDocs%\Code Snippets\VHDL\Test Code Snippets"
              )]
+    [ProvideLanguageEditorOptionPage(typeof(VHDLAdvancedOptionPage), "VHDL", "", "Advanced", null, 0)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
     /// <summary>
     /// This is the class that implements the package exposed by this assembly.
@@ -83,13 +85,19 @@ namespace MyCompany.LanguageServices.VHDL
 
         #region Package Members
 
-        System.Threading.Tasks.Task<object> LanguageServiceCreatorAsync(IAsyncServiceContainer container, CancellationToken ct, Type serviceType)
+        async System.Threading.Tasks.Task<object> LanguageServiceCreatorAsync(IAsyncServiceContainer container, CancellationToken ct, Type serviceType)
         {
             VHDLLanguageService ls = new VHDLLanguageService();
             ls.Initialize();
-            return (System.Threading.Tasks.Task<object>)(object)ls;
+            return ls;
         }
 
+        async System.Threading.Tasks.Task<object> VHDLSettingsServiceCreatorAsync(IAsyncServiceContainer container, CancellationToken ct, Type serviceType)
+		{
+            VHDLSettingsService s = new VHDLSettingsService(this);
+            s.Initialize();
+            return s;
+        }
         /// <summary>
         /// Initialization of the package; this method is called right after the package is sited, so this is the place
         /// where you can put all the initialization code that rely on services provided by VisualStudio.
@@ -100,9 +108,12 @@ namespace MyCompany.LanguageServices.VHDL
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
             AddService(typeof(VHDLLanguageService), LanguageServiceCreatorAsync);
+            AddService(typeof(SVHDLSettings), VHDLSettingsServiceCreatorAsync, true);
+
             // When initialized asynchronously, the current thread may be a background thread at this point.
             // Do any initialization that requires the UI thread after switching to the UI thread.
             await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+
         }
 
         #endregion

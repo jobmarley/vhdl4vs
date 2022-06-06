@@ -57,12 +57,14 @@ namespace MyCompany.LanguageServices.VHDL
 		private ITextBufferFactoryService		m_textBufferFactoryService = null;
 		private IProjectService					m_projectService = null;
 		private IVsRunningDocumentTable4		m_runningDocumentTable = null;
-		
+		private IVHDLSettings					m_vhdlSettings = null;
+
 		uint m_rdtEventCookie = 0;
 		
 		private ConcurrentDictionary<UnconfiguredProject, VHDLProject> m_projects = new ConcurrentDictionary<UnconfiguredProject, VHDLProject>();
 		private ConcurrentDictionary<string, VHDLDocument> m_orphanDocuments = new ConcurrentDictionary<string, VHDLDocument>(StringComparer.OrdinalIgnoreCase);
 
+		public IVHDLSettings Settings => m_vhdlSettings;
 		public async Task NotifyProjectLoadedAsync(UnconfiguredProject project)
 		{
 			VHDLProject proj = new VHDLProject(project, this);
@@ -80,6 +82,7 @@ namespace MyCompany.LanguageServices.VHDL
 		{
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 			m_runningDocumentTable = m_serviceProvider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable4;
+			m_vhdlSettings = m_serviceProvider.GetService(typeof(SVHDLSettings)) as IVHDLSettings;
 
 			m_textDocumentFactoryService.TextDocumentDisposed += OnTextDocumentDisposed;
 		}

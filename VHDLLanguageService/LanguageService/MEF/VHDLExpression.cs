@@ -2472,7 +2472,18 @@ namespace MyCompany.LanguageServices.VHDL
 				return evaluationContext[Declaration];
 
 			if (Declaration is VHDLConstantDeclaration constantDecl)
-				return new VHDLEvaluatedExpression(constantDecl.Type, this, constantDecl.InitializationExpression?.Evaluate(evaluationContext)?.Result);
+			{
+				VHDLEvaluatedExpression ee = null;
+				try
+				{
+					ee = constantDecl.InitializationExpression?.Evaluate(evaluationContext, constantDecl.Type);
+				}
+				catch (Exception e)
+				{
+					VHDLLogger.LogException(e);
+				}
+				return new VHDLEvaluatedExpression(constantDecl.Type, this, ee?.Result);
+			}
 			if (Declaration is VHDLAbstractVariableDeclaration d)
 			{
 				return new VHDLEvaluatedExpression(d.Type, this, null);
@@ -2566,6 +2577,8 @@ namespace MyCompany.LanguageServices.VHDL
 		}
 		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
 		{
+			bool enableFunctionExecution = AnalysisResult.Document.DocumentTable.Settings.EnableFunctionExecution;
+
 			VHDLEvaluatedExpression evaluatedName = NameExpression.Evaluate(evaluationContext);
 			if (NameExpression is VHDLReferenceExpression r)
 			{
@@ -2595,7 +2608,9 @@ namespace MyCompany.LanguageServices.VHDL
 									ev.Type.GetClassifiedText()?.Text ?? "<error type>"), ev?.Expression?.Span ?? Span);
 						}
 
-						VHDLEvaluatedExpression result = (d as VHDLFunctionBodyDeclaration)?.EvaluateCall(evaluatedParameters.Select(x => x.Item1), evaluationContext);
+						VHDLEvaluatedExpression result = null;
+						if (enableFunctionExecution)
+							result = (d as VHDLFunctionBodyDeclaration)?.EvaluateCall(evaluatedParameters.Select(x => x.Item1), evaluationContext);
 						if (result == null)
 							result = new VHDLEvaluatedExpression(d.ReturnType, this, null);
 						return result;
@@ -2608,7 +2623,9 @@ namespace MyCompany.LanguageServices.VHDL
 							var evaluatedParameters = ReorderParameters(d, Arguments, evaluationContext).Zip(d.Parameters, (x, y) => Tuple.Create(x.Evaluate(evaluationContext, y.Type), y)).ToArray();
 							if (evaluatedParameters.Any(x => VHDLType.AreCompatible(x.Item2.Type, x.Item1.Type, null, x.Item1.Result) == VHDLCompatibilityResult.No))
 								continue;
-							VHDLEvaluatedExpression result = (d as VHDLFunctionBodyDeclaration)?.EvaluateCall(evaluatedParameters.Select(x => x.Item1), evaluationContext);
+							VHDLEvaluatedExpression result = null;
+							if (enableFunctionExecution)
+								result = (d as VHDLFunctionBodyDeclaration)?.EvaluateCall(evaluatedParameters.Select(x => x.Item1), evaluationContext);
 							if (result == null)
 								result = new VHDLEvaluatedExpression(d.ReturnType, this, null);
 							results.Add(Tuple.Create(result, d));
@@ -3070,7 +3087,7 @@ namespace MyCompany.LanguageServices.VHDL
 			}
 			else if (Elements.All(x => x is VHDLArgumentAssociationExpression))
 			{
-				if (expectedType.Dereference() is VHDLRecordType rt)
+				if (expectedType?.Dereference() is VHDLRecordType rt)
 				{
 					Dictionary<VHDLRecordElementDeclaration, VHDLEvaluatedExpression> assignedList = new Dictionary<VHDLRecordElementDeclaration, VHDLEvaluatedExpression>();
 					foreach (var aae in Elements.Cast<VHDLArgumentAssociationExpression>())

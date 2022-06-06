@@ -98,6 +98,9 @@
     <Compile Include="LanguageService\MEF\Visitors\VHDLStatementVisitor.cs" />
     <Compile Include="LanguageService\MEF\Visitors\VHDLTypeResolverVisitor.cs" />
     <Compile Include="LanguageService\MEF\Visitors\VisitorUtility.cs" />
+    <Compile Include="LanguageService\OptionPages\VHDLAdvancedOptionPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="LanguageService\TestVisibility.cs" />
     <Compile Include="LanguageService\TreeUtilities.cs" />
     <Compile Include="LanguageService\MEF\VHDLDeclarationUtilities.cs" />
@@ -111,6 +114,7 @@
     <Compile Include="LanguageService\VHDLLanguageUtils.cs" />
     <Compile Include="LanguageService\MEF\VHDLType.cs" />
     <Compile Include="LanguageService\VHDLLogger.cs" />
+    <Compile Include="LanguageService\VHDLSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VHDLLanguageServicePackage.cs" />
     <None Include="XmlDesigner\HDLXmlEditorFactory.cs" />
