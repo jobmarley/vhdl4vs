@@ -13,8 +13,8 @@
     <ProjectGuid>{376CDD7F-C43C-49A4-8C3F-CB497D7909AA}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>VHDLVivadoIntegration</RootNamespace>
-    <AssemblyName>VHDLVivadoIntegration</AssemblyName>
+    <RootNamespace>vhdl4vs.VivadoIntegration</RootNamespace>
+    <AssemblyName>vhdl4vs.VivadoIntegration</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <GeneratePkgDefFile>true</GeneratePkgDefFile>
     <UseCodebase>true</UseCodebase>
@@ -57,7 +57,7 @@
     <Compile Include="Designer\HDLXmlEditorPane.cs" />
     <Compile Include="JsonExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VHDLVivadoIntegrationPackage.cs" />
+    <Compile Include="vhdl4vsVivadoIntegrationPackage.cs" />
     <Compile Include="VivadoHardwareManagerWindow.cs" />
     <Compile Include="VivadoHardwareManagerWindowCommand.cs" />
     <Compile Include="VivadoHMView1.xaml.cs">
@@ -125,7 +125,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\VivadoHardwareManagerWindowCommand.png" />
-    <VSCTCompile Include="VHDLVivadoIntegrationPackage.vsct">
+    <VSCTCompile Include="vhdl4vsVivadoIntegrationPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
     </VSCTCompile>
   </ItemGroup>

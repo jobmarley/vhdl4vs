@@ -116,7 +116,7 @@
     <Compile Include="LanguageService\VHDLLogger.cs" />
     <Compile Include="LanguageService\VHDLSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VHDLLanguageServicePackage.cs" />
+    <Compile Include="vhdl4vsPackage.cs" />
     <None Include="XmlDesigner\HDLXmlEditorFactory.cs" />
     <None Include="XmlDesigner\HDLXmlEditorPane.cs" />
     <None Include="XmlDesigner\IViewModel.cs" />

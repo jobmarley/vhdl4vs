@@ -49,7 +49,7 @@
     <Compile Include="MyUnconfiguredProject.cs" />
     <Compile Include="ProjectProperties.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VHDLProjectTypePackage.cs" />
+    <Compile Include="vhdl4vsProjectTypePackage.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="BuildSystem\DeployedBuildSystem\VHDLProjectType.props" />
