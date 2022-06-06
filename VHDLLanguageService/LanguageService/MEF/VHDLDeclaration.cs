@@ -1287,6 +1287,11 @@ namespace vhdl4vs
 		}*/
 	}
 
+	class EvaluationCounterException
+		: Exception
+	{
+
+	}
 	class EvaluationContext
 	{
 		private Stack<Dictionary<VHDLDeclaration, VHDLEvaluatedExpression>> m_scopes = new Stack<Dictionary<VHDLDeclaration, VHDLEvaluatedExpression>>();
@@ -1320,6 +1325,28 @@ namespace vhdl4vs
 			m_scopes.Pop();
 		}
 
+		bool m_counting = false;
+		uint m_performanceCounter = 0;
+		public bool IsCounting => m_counting;
+		public void StartCounter(uint counter)
+		{
+			m_performanceCounter = counter;
+			m_counting = true;
+		}
+		public void DecrementPerfCounter()
+		{
+			if (m_counting)
+			{
+				if (m_performanceCounter == 0)
+					throw new EvaluationCounterException();
+				--m_performanceCounter;
+			}
+		}
+		public void StopCounter()
+		{
+			m_performanceCounter = 0;
+			m_counting = false;
+		}
 	}
 
 	// This is a function declaration... it basically shares all the functionnalities, and can be used in the same way
@@ -1339,13 +1366,10 @@ namespace vhdl4vs
 			NameContext = nameContext;
 			Name = name;
 		}
-		bool ExecuteStatement(VHDLStatement statement, EvaluationContext evaluationContext, out VHDLEvaluatedExpression returnedValue, ref ulong performanceCounter)
+		bool ExecuteStatement(VHDLStatement statement, EvaluationContext evaluationContext, out VHDLEvaluatedExpression returnedValue)
 		{
 			returnedValue = null;
-			if (performanceCounter == 0)
-				throw new Exception("Performance counter reached 0");
-
-			--performanceCounter;
+			evaluationContext.DecrementPerfCounter();
 
 			if (statement is VHDLReturnStatement rs)
 			{
@@ -1416,7 +1440,7 @@ namespace vhdl4vs
 					{
 						foreach (VHDLStatement s in ifs.Statements)
 						{
-							if (ExecuteStatement(s, evaluationContext, out returnedValue, ref performanceCounter))
+							if (ExecuteStatement(s, evaluationContext, out returnedValue))
 								return true;
 						}
 					}
@@ -1429,9 +1453,7 @@ namespace vhdl4vs
 				while (true)
 				{
 					// make sure its not an empty loop
-					--performanceCounter;
-					if (performanceCounter == 0)
-						throw new Exception("Performance counter reached 0");
+					evaluationContext.DecrementPerfCounter();
 
 					VHDLEvaluatedExpression ee = ws.Condition.Evaluate(evaluationContext);
 					if (ee?.Result is VHDLBooleanValue l)
@@ -1440,7 +1462,7 @@ namespace vhdl4vs
 						{
 							foreach (VHDLStatement s in ws.Statements)
 							{
-								if (ExecuteStatement(s, evaluationContext, out returnedValue, ref performanceCounter))
+								if (ExecuteStatement(s, evaluationContext, out returnedValue))
 									return true;
 							}
 						}
@@ -1496,11 +1518,17 @@ namespace vhdl4vs
 		}
 		public VHDLEvaluatedExpression EvaluateCall(IEnumerable<VHDLEvaluatedExpression> args, EvaluationContext evaluationContext)
 		{
+			bool startedCounter = false;
 			try
 			{
 				evaluationContext.Push();
 
-				ulong performanceCounter = 30;
+				if (!evaluationContext.IsCounting)
+				{
+					startedCounter = true;
+					evaluationContext.StartCounter(AnalysisResult.Document.DocumentTable.Settings.PerformanceCounter);
+				}
+
 				foreach (var p in Parameters.Zip(args, (x, y) => Tuple.Create(x, y)))
 				{
 					if (VHDLType.AreCompatible(p.Item1.Type, p.Item2.Type) == VHDLCompatibilityResult.No)
@@ -1515,7 +1543,7 @@ namespace vhdl4vs
 				foreach (VHDLStatement s in Statements)
 				{
 					VHDLEvaluatedExpression result = null;
-					if (ExecuteStatement(s, evaluationContext, out result, ref performanceCounter))
+					if (ExecuteStatement(s, evaluationContext, out result))
 						return result;
 				}
 
@@ -1524,6 +1552,9 @@ namespace vhdl4vs
 			{
 				VHDLLogger.LogException(e);
 			}
+
+			if (startedCounter)
+				evaluationContext.StopCounter();
 
 			evaluationContext.Pop();
 			return null;

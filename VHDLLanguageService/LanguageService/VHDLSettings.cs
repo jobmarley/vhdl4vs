@@ -11,6 +11,7 @@ namespace vhdl4vs
 	interface IVHDLSettings
 	{
 		bool EnableFunctionExecution { get; }
+		uint PerformanceCounter { get; }
 	}
 	[Guid("2C19FD80-49A0-4F26-9CD5-98D406CEC0C0")]
 	interface SVHDLSettings
@@ -33,5 +34,6 @@ namespace vhdl4vs
 		}
 
 		public bool EnableFunctionExecution => m_advancedOptionPage.EnableFunctionExecution;
+		public uint PerformanceCounter => m_advancedOptionPage.PerformanceCounter;
 	}
 }
