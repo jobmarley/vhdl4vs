@@ -3,17 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vhdl4vs", "VHDLLanguageService\vhdl4vs.csproj", "{D68B1631-EF9B-49A1-9BB9-ACA2ECF02B01}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vhdl4vs", "vhdl4vs\vhdl4vs.csproj", "{D68B1631-EF9B-49A1-9BB9-ACA2ECF02B01}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vhdl4vs.ProjectType", "VHDLProjectType\vhdl4vs.ProjectType.csproj", "{87010EF2-4781-449E-81F8-9651D858E6E6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vhdl4vs.ProjectType", "vhdl4vs.ProjectType\vhdl4vs.ProjectType.csproj", "{87010EF2-4781-449E-81F8-9651D858E6E6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vhdl4vs.ProjectTemplate", "VHDLProjectTemplate\vhdl4vs.ProjectTemplate.csproj", "{0DAE39AE-B783-4351-8B2F-E36F92AEA2E9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vhdl4vs.ProjectTemplate", "vhdl4vs.ProjectTemplate\vhdl4vs.ProjectTemplate.csproj", "{0DAE39AE-B783-4351-8B2F-E36F92AEA2E9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vhdl4vs.VHDLItemTemplate", "VHDLItemTemplate\vhdl4vs.VHDLItemTemplate.csproj", "{41552BE0-4311-4A2B-B004-9FAADEFD2B23}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vhdl4vs.VHDLItemTemplate", "vhdl4vs.VHDLItemTemplate\vhdl4vs.VHDLItemTemplate.csproj", "{41552BE0-4311-4A2B-B004-9FAADEFD2B23}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vhdl4vsTests", "VHDLLanguageServiceTests\vhdl4vsTests.csproj", "{D6A258F7-8FC6-4748-AE9C-3E2DABB1FBA0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vhdl4vsTests", "vhdl4vsTests\vhdl4vsTests.csproj", "{D6A258F7-8FC6-4748-AE9C-3E2DABB1FBA0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vhdl4vs.VivadoIntegration", "VHDLVivadoIntegration\vhdl4vs.VivadoIntegration.csproj", "{376CDD7F-C43C-49A4-8C3F-CB497D7909AA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vhdl4vs.VivadoIntegration", "vhdl4vs.VivadoIntegration\vhdl4vs.VivadoIntegration.csproj", "{376CDD7F-C43C-49A4-8C3F-CB497D7909AA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

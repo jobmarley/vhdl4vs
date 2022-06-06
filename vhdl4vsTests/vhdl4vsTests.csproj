@@ -106,7 +106,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\VHDLLanguageService\vhdl4vs.csproj">
+    <ProjectReference Include="..\vhdl4vs\vhdl4vs.csproj">
       <Project>{d68b1631-ef9b-49a1-9bb9-aca2ecf02b01}</Project>
       <Name>vhdl4vs</Name>
     </ProjectReference>

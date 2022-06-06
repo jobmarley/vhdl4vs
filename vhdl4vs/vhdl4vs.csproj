@@ -159,20 +159,20 @@
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <IncludeOutputGroupsInVSIX>TemplateProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
     </ProjectReference>
-    <ProjectReference Include="..\VHDLProjectTemplate\vhdl4vs.ProjectTemplate.csproj">
+    <ProjectReference Include="..\vhdl4vs.ProjectTemplate\vhdl4vs.ProjectTemplate.csproj">
       <Project>{0DAE39AE-B783-4351-8B2F-E36F92AEA2E9}</Project>
       <Name>vhdl4vs.ProjectTemplate</Name>
       <VSIXSubPath>ProjectTemplates</VSIXSubPath>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <IncludeOutputGroupsInVSIX>TemplateProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
     </ProjectReference>
-    <ProjectReference Include="..\VHDLProjectType\vhdl4vs.ProjectType.csproj">
+    <ProjectReference Include="..\vhdl4vs.ProjectType\vhdl4vs.ProjectType.csproj">
       <Project>{87010EF2-4781-449E-81F8-9651D858E6E6}</Project>
       <Name>vhdl4vs.ProjectType</Name>
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3bPkgdefProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
       <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
     </ProjectReference>
-    <ProjectReference Include="..\VHDLVivadoIntegration\vhdl4vs.VivadoIntegration.csproj">
+    <ProjectReference Include="..\vhdl4vs.VivadoIntegration\vhdl4vs.VivadoIntegration.csproj">
       <Project>{376CDD7F-C43C-49A4-8C3F-CB497D7909AA}</Project>
       <Name>vhdl4vs.VivadoIntegration</Name>
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3bPkgdefProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
