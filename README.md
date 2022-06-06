@@ -25,3 +25,12 @@ Feel free to contribute, even if it's just a small fix.
 
 ### Library path
 ![image](https://user-images.githubusercontent.com/99695100/170562949-82136cd0-264b-438a-a401-9262d5fc081d.png)
+
+### Function result evaluation
+Small functions code can be executed to evaluate the result, this allow to catch more errors.  
+*This feature might need to be enabled in Tools -> Options -> Text Editor -> VHDL -> Advanced*  
+![image](https://user-images.githubusercontent.com/99695100/172079280-f4141254-9cac-4881-8b2f-26948ce33ded.png)
+
+### Sensitivity list mistakes
+![image](https://user-images.githubusercontent.com/99695100/172079659-cc4f9d1c-2472-418e-a794-76d7e0e188ad.png)
+
