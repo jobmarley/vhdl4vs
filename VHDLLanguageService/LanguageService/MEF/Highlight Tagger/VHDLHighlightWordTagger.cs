@@ -13,7 +13,7 @@ using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
 using System.Windows.Media;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	[Export(typeof(EditorFormatDefinition))]
 	[Name("MarkerFormatDefinition/VHDLHighlightWordFormatDefinition")]

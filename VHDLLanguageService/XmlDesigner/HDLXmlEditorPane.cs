@@ -32,7 +32,7 @@ using ISysServiceProvider = System.IServiceProvider;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 using VSStd97CmdID = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	/// <summary>
 	/// This control hosts the editor and is responsible for

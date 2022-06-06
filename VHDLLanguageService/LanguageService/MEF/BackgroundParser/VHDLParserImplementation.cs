@@ -10,7 +10,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using System.Diagnostics;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	class VHDLParserErrorListener
 		: IAntlrErrorListener<IToken>
@@ -20,7 +20,7 @@ namespace MyCompany.LanguageServices.VHDL
 			m_errors.Add(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, msg, offendingSymbol.GetSpan()));
 		}
 
-		private List<VHDLError> m_errors = new List<VHDL.VHDLError>();
+		private List<VHDLError> m_errors = new List<VHDLError>();
 		public IList<VHDLError> Errors
 		{
 			get
@@ -38,7 +38,7 @@ namespace MyCompany.LanguageServices.VHDL
 			m_errors.Add(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, msg, new Span(offendingSymbol, 1)));
 		}
 
-		private List<VHDLError> m_errors = new List<VHDL.VHDLError>();
+		private List<VHDLError> m_errors = new List<VHDLError>();
 		public IList<VHDLError> Errors
 		{
 			get
@@ -191,7 +191,7 @@ namespace MyCompany.LanguageServices.VHDL
 
 			vhdlParser.Design_fileContext context = parser.design_file();
 
-			List<VHDLError> errors = new List<VHDL.VHDLError>();
+			List<VHDLError> errors = new List<VHDLError>();
 			errors.AddRange(lexerErrorListener.Errors);
 			errors.AddRange(parserErrorListener.Errors);
 

@@ -7,7 +7,7 @@ using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio.Text.Classification;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
     class VHDLClassificationFormatDefinition
     {

@@ -9,7 +9,7 @@ using Microsoft.VisualStudio.Text;
 
 using UnconfiguredProject = Microsoft.VisualStudio.ProjectSystem.UnconfiguredProject;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	class VHDLSimpleParser
 		: VHDLParserImplementation

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace VHDLVivadoIntegration
+namespace vhdl4vs.VivadoIntegration
 {
 	/// <summary>
 	/// This class implements the tool window exposed by this package and hosts a user control.

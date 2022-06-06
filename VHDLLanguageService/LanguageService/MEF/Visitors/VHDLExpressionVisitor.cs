@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MyCompany.LanguageServices.VHDL.ExpressionVisitors
+namespace vhdl4vs.ExpressionVisitors
 {
 	class VHDLFakeResolver
 		: IVHDLToResolve

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 
 	// Usefull when need to parsing stuff in realtime, when the background parsing is not done, or is too long

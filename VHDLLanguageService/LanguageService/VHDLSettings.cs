@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	interface IVHDLSettings
 	{
@@ -22,8 +22,8 @@ namespace MyCompany.LanguageServices.VHDL
 		IVHDLSettings
 	{
 		private VHDLAdvancedOptionPage m_advancedOptionPage = null;
-		private VHDLLanguageServicePackage m_package = null;
-		public VHDLSettingsService(VHDLLanguageServicePackage package)
+		private vhdl4vsPackage m_package = null;
+		public VHDLSettingsService(vhdl4vsPackage package)
 		{
 			m_package = package;
 		}

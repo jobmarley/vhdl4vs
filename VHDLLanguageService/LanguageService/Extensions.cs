@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	public static class Extensions
     {

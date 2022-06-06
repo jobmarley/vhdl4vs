@@ -12,7 +12,7 @@ using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	[Export(typeof(IViewTaggerProvider))]
 	[ContentType("VHDL")]

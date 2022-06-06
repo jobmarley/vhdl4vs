@@ -7,7 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.IO;
 
-namespace VHDLVivadoIntegration.Vivado
+namespace vhdl4vs.VivadoIntegration.Vivado
 {
 	class TclObject
 	{

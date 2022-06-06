@@ -14,7 +14,7 @@ using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
 using Microsoft.VisualStudio.Text.Adornments;
 using System.Collections.Concurrent;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	class VHDLEvaluationContext
 	{

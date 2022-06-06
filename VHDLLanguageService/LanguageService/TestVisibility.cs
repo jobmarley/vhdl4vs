@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-[assembly: InternalsVisibleTo("VHDLLanguageServiceTests")]
-namespace MyCompany.LanguageServices.VHDL
+[assembly: InternalsVisibleTo("vhdl4vsTests")]
+namespace vhdl4vs
 {
 }

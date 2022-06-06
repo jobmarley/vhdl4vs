@@ -1,4 +1,4 @@
-﻿namespace MyCompany.Project.VHDL
+﻿namespace vhdl4vs.Project
 {
     using System;
     using System.Collections.Generic;

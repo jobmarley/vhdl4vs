@@ -8,7 +8,7 @@ using Antlr4.Runtime.Misc;
 using Antlr4.Runtime;
 using Microsoft.VisualStudio.Text.Adornments;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	class VHDLDeclarationVisitor
 	   : vhdlBaseVisitor<bool>

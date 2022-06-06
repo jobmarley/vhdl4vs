@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Task = System.Threading.Tasks.Task;
 
-namespace VHDLVivadoIntegration
+namespace vhdl4vs.VivadoIntegration
 {
 	/// <summary>
 	/// This is the class that implements the package exposed by this assembly.
@@ -25,7 +25,7 @@ namespace VHDLVivadoIntegration
 	/// </para>
 	/// </remarks>
 	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
-	[Guid(VHDLVivadoIntegrationPackage.PackageGuidString)]
+	[Guid(vhdl4vsVivadoIntegrationPackage.PackageGuidString)]
 	[ProvideMenuResource("Menus.ctmenu", 1)]
 	[ProvideToolWindow(typeof(VivadoHardwareManagerWindow))]
 	[ProvideEditorExtension(typeof(HDLXmlEditorFactory), ".bd", 65535,
@@ -36,7 +36,7 @@ namespace VHDLVivadoIntegration
 	[ProvideEditorLogicalView(typeof(HDLXmlEditorFactory), Microsoft.VisualStudio.Shell.Interop.LogicalViewID.Designer)]
 	// doesnt work, file .bd are opened before the package is loaded
 	[ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids80.SolutionExists, PackageAutoLoadFlags.BackgroundLoad)]
-	public sealed class VHDLVivadoIntegrationPackage : AsyncPackage
+	public sealed class vhdl4vsVivadoIntegrationPackage : AsyncPackage
 	{
 		public const string VHDLProjectTypeGuidString = "1617981A-8EA0-45C1-BBB9-A360BB4976CD";
 		/// <summary>
@@ -61,7 +61,7 @@ namespace VHDLVivadoIntegration
 		    await VivadoHardwareManagerWindowCommand.InitializeAsync(this);
 			HDLXmlEditorFactory editorFactory = new HDLXmlEditorFactory();
 			RegisterEditorFactory(editorFactory);
-		    await VHDLVivadoIntegration.Commands.GenerateBitstreamCommand.InitializeAsync(this);
+		    await vhdl4vs.VivadoIntegration.Commands.GenerateBitstreamCommand.InitializeAsync(this);
 		}
 
 		#endregion

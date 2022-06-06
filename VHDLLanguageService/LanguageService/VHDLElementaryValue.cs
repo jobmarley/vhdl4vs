@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	// This is something that expression can be evaluated to.
 	// This represent constant values that can be directly used

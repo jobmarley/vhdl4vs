@@ -14,7 +14,7 @@ using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Language.StandardClassification;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
     [Export(typeof(IAsyncQuickInfoSourceProvider))]
     [Name("VHDL QuickInfo Source")]

@@ -10,7 +10,7 @@ using Microsoft.VisualStudio.OLE.Interop;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 using System.Diagnostics;
 
-namespace VHDLVivadoIntegration
+namespace vhdl4vs.VivadoIntegration
 {
 	/// <summary>
 	/// Factory for creating our editor object. Extends from the IVsEditoryFactory interface

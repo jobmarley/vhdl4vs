@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
 
-namespace VHDLVivadoIntegration.Commands
+namespace vhdl4vs.VivadoIntegration.Commands
 {
 	/// <summary>
 	/// Command handler

@@ -12,8 +12,8 @@
     <ProjectGuid>{41552BE0-4311-4A2B-B004-9FAADEFD2B23}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>VHDLItemTemplate</RootNamespace>
-    <AssemblyName>VHDLItemTemplate</AssemblyName>
+    <RootNamespace>vhdl4vs.VHDLItemTemplate</RootNamespace>
+    <AssemblyName>vhdl4vs.VHDLItemTemplate</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <GeneratePkgDefFile>false</GeneratePkgDefFile>

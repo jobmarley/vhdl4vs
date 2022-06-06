@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Antlr4.Runtime.Misc;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
     class VHDLOutliningVisitor
         : vhdlBaseVisitor<bool>

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MyCompany.LanguageServices.VHDL.TypeVisitors
+namespace vhdl4vs.TypeVisitors
 {
 	class VHDLTypeResolverVisitor
 		: vhdlBaseVisitor<VHDLType>

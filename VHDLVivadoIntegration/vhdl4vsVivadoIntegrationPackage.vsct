@@ -22,7 +22,7 @@
 
   <!--The Commands section is where commands, menus, and menu groups are defined.
       This section uses a Guid to identify the package that provides the command defined inside it. -->
-  <Commands package="guidVHDLVivadoIntegrationPackage">
+  <Commands package="guidvhdl4vsVivadoIntegrationPackage">
     <!-- Inside this section we have different sub-sections: one for the menus, another
     for the menu groups, one for the buttons (the actual commands), one for the combos
     and the last one for the bitmaps used. Each element is identified by a command id that
@@ -31,14 +31,14 @@
     group; your package should define its own command set in order to avoid collisions
     with command ids defined by other packages. -->
 	<Menus>
-		<Menu guid="guidVHDLVivadoIntegrationPackageCmdSet" id="VivadoHMWindowToolbarID" priority="0x0000" type="ToolWindowToolbar">
-			<Parent guid="guidVHDLVivadoIntegrationPackageCmdSet" id="VivadoHMWindowToolbarID" />
+		<Menu guid="guidvhdl4vsVivadoIntegrationPackageCmdSet" id="VivadoHMWindowToolbarID" priority="0x0000" type="ToolWindowToolbar">
+			<Parent guid="guidvhdl4vsVivadoIntegrationPackageCmdSet" id="VivadoHMWindowToolbarID" />
 			<Strings>
 				<ButtonText>Tool Window Toolbar</ButtonText>
 				<CommandName>Tool Window Toolbar</CommandName>
 			</Strings>
 		</Menu>
-		<Menu guid="guidVHDLVivadoIntegrationPackageCmdSet" id="HDLDesignerMenuID" priority="0x0000" type="Context">
+		<Menu guid="guidvhdl4vsVivadoIntegrationPackageCmdSet" id="HDLDesignerMenuID" priority="0x0000" type="Context">
 			<Strings>
 				<ButtonText>HDL Designer Menu</ButtonText>
 				<CommandName>HDL Designer Menu</CommandName>
@@ -46,14 +46,14 @@
 		</Menu>
 	</Menus>
 	<Groups>
-		<Group guid="guidVHDLVivadoIntegrationPackageCmdSet" id="VivadoHMWindowToolbarGroupID" priority="0x0000">
-			<Parent guid="guidVHDLVivadoIntegrationPackageCmdSet" id="VivadoHMWindowToolbarID" />
+		<Group guid="guidvhdl4vsVivadoIntegrationPackageCmdSet" id="VivadoHMWindowToolbarGroupID" priority="0x0000">
+			<Parent guid="guidvhdl4vsVivadoIntegrationPackageCmdSet" id="VivadoHMWindowToolbarID" />
 		</Group>
-		<Group guid="guidVHDLVivadoIntegrationPackageCmdSet1" id="MyMenuGroup" priority="0x0600">
+		<Group guid="guidvhdl4vsVivadoIntegrationPackageCmdSet1" id="MyMenuGroup" priority="0x0600">
 			<Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS" />
 		</Group>
-		<Group guid="guidVHDLVivadoIntegrationPackageCmdSet" id="HDLDesignerMenuGroup" priority="0x0600">
-			<Parent guid="guidVHDLVivadoIntegrationPackageCmdSet" id="HDLDesignerMenuID" />
+		<Group guid="guidvhdl4vsVivadoIntegrationPackageCmdSet" id="HDLDesignerMenuGroup" priority="0x0600">
+			<Parent guid="guidvhdl4vsVivadoIntegrationPackageCmdSet" id="HDLDesignerMenuID" />
 		</Group>
 	</Groups>
 
@@ -68,7 +68,7 @@
               <CommandFlag>DefaultInvisible</CommandFlag>
               <CommandFlag>DynamicVisibility</CommandFlag>
           If you do not want an image next to your command, remove the Icon node /> -->
-		<Button guid="guidVHDLVivadoIntegrationPackageCmdSet" id="VivadoHardwareManagerWindowCommandId" priority="0x0100" type="Button">
+		<Button guid="guidvhdl4vsVivadoIntegrationPackageCmdSet" id="VivadoHardwareManagerWindowCommandId" priority="0x0100" type="Button">
 			<Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1" />
 			<Icon guid="guidImages2" id="icon1" />
 			<Strings>
@@ -76,8 +76,8 @@
 			</Strings>
 		</Button>
 
-		<Button guid="guidVHDLVivadoIntegrationPackageCmdSet" id="cmdidWindowsMediaOpen" priority="0x0101" type="Button">
-			<Parent guid="guidVHDLVivadoIntegrationPackageCmdSet" id="VivadoHMWindowToolbarGroupID" />
+		<Button guid="guidvhdl4vsVivadoIntegrationPackageCmdSet" id="cmdidWindowsMediaOpen" priority="0x0101" type="Button">
+			<Parent guid="guidvhdl4vsVivadoIntegrationPackageCmdSet" id="VivadoHMWindowToolbarGroupID" />
 			<Icon guid="guidImages" id="bmpPicSearch" />
 			<Strings>
 				<CommandName>cmdidWindowsMediaOpen</CommandName>
@@ -85,8 +85,8 @@
 			</Strings>
 		</Button>
 
-		<Button guid="guidVHDLVivadoIntegrationPackageCmdSet1" id="cmdidGenerateBitstreamCommand" priority="0x0100" type="Button">
-			<Parent guid="guidVHDLVivadoIntegrationPackageCmdSet1" id="MyMenuGroup" />
+		<Button guid="guidvhdl4vsVivadoIntegrationPackageCmdSet1" id="cmdidGenerateBitstreamCommand" priority="0x0100" type="Button">
+			<Parent guid="guidvhdl4vsVivadoIntegrationPackageCmdSet1" id="MyMenuGroup" />
 			<Icon guid="guidImages1" id="bmpPic1" />
 			<Strings>
 				<ButtonText>Invoke GenerateBitstreamCommand</ButtonText>
@@ -94,15 +94,15 @@
 		</Button>
 
 		<!-- Designer context menu commands -->
-		<Button guid="guidVHDLVivadoIntegrationPackageCmdSet" id="cmdidAddIP" priority="0x0100" type="Button">
-			<Parent guid="guidVHDLVivadoIntegrationPackageCmdSet" id="HDLDesignerMenuGroup" />
+		<Button guid="guidvhdl4vsVivadoIntegrationPackageCmdSet" id="cmdidAddIP" priority="0x0100" type="Button">
+			<Parent guid="guidvhdl4vsVivadoIntegrationPackageCmdSet" id="HDLDesignerMenuGroup" />
 			<Icon guid="guidImages1" id="bmpPic1" />
 			<Strings>
 				<ButtonText>Add IP</ButtonText>
 			</Strings>
 		</Button>
-		<Button guid="guidVHDLVivadoIntegrationPackageCmdSet" id="cmdidRecalculateLayout" priority="0x0100" type="Button">
-			<Parent guid="guidVHDLVivadoIntegrationPackageCmdSet" id="HDLDesignerMenuGroup" />
+		<Button guid="guidvhdl4vsVivadoIntegrationPackageCmdSet" id="cmdidRecalculateLayout" priority="0x0100" type="Button">
+			<Parent guid="guidvhdl4vsVivadoIntegrationPackageCmdSet" id="HDLDesignerMenuGroup" />
 			<Icon guid="guidImages1" id="bmpPic1" />
 			<Strings>
 				<ButtonText>Recalculate layout</ButtonText>
@@ -125,10 +125,10 @@
 
   <Symbols>
     <!-- This is the package guid. -->
-    <GuidSymbol name="guidVHDLVivadoIntegrationPackage" value="{721ad204-e738-404c-bf2a-0c60bec0f3fe}" />
+    <GuidSymbol name="guidvhdl4vsVivadoIntegrationPackage" value="{721ad204-e738-404c-bf2a-0c60bec0f3fe}" />
 
     <!-- This is the guid used to group the menu commands together -->
-    <GuidSymbol name="guidVHDLVivadoIntegrationPackageCmdSet" value="{76a9b486-a820-40d3-b8a2-b6eff436355b}">
+    <GuidSymbol name="guidvhdl4vsVivadoIntegrationPackageCmdSet" value="{76a9b486-a820-40d3-b8a2-b6eff436355b}">
       <IDSymbol name="VivadoHardwareManagerWindowCommandId" value="0x0100" />
 		<IDSymbol name="VivadoHMWindowToolbarID" value="0x1000" />
 		<IDSymbol name="VivadoHMWindowToolbarGroupID" value="0x1001" />
@@ -153,7 +153,7 @@
 		  <IDSymbol name="icon1" value="1" />
 	  </GuidSymbol>
   
-    <GuidSymbol value="{8f970dcd-714d-462e-abd7-40124a11d10f}" name="guidVHDLVivadoIntegrationPackageCmdSet1">
+    <GuidSymbol value="{8f970dcd-714d-462e-abd7-40124a11d10f}" name="guidvhdl4vsVivadoIntegrationPackageCmdSet1">
       <IDSymbol value="4128" name="MyMenuGroup" />
       <IDSymbol value="256" name="cmdidGenerateBitstreamCommand" />
     </GuidSymbol>

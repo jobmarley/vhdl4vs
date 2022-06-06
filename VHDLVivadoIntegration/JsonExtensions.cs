@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json;
 
-namespace VHDLVivadoIntegration
+namespace vhdl4vs.VivadoIntegration
 {
 	internal static class JsonExtensions
 	{

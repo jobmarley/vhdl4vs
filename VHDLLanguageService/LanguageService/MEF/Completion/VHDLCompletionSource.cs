@@ -22,7 +22,7 @@ using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
 using System.Collections.Immutable;
 using Antlr4.Runtime;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	class VHDLCompletionSource
 		: IAsyncCompletionSource

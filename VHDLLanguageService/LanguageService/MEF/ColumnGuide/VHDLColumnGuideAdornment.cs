@@ -12,7 +12,7 @@ using Microsoft.VisualStudio.Shell;
 
 using Task = System.Threading.Tasks.Task;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	/// <summary>
 	/// Adornment class that draws a square box in the top right hand corner of the viewport

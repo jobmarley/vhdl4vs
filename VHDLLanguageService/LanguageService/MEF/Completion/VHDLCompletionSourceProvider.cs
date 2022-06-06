@@ -15,7 +15,7 @@ using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Classification;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	[Export(typeof(IAsyncCompletionSourceProvider))]
 	[ContentType("VHDL")]

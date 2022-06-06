@@ -8,7 +8,7 @@ using Antlr4.Runtime.Tree;
 
 using Span = Microsoft.VisualStudio.Text.Span;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	internal static class RuleContextExtensions
 	{

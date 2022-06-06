@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Task = System.Threading.Tasks.Task;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
     // Xml Designer
     // Register the class as a Designer View in cooperation with the Xml Editor
@@ -75,8 +75,8 @@ namespace MyCompany.LanguageServices.VHDL
     /// </para>
     /// </remarks>
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
-    [Guid(VHDLLanguageServicePackage.PackageGuidString)]
-    public sealed class VHDLLanguageServicePackage : AsyncPackage
+    [Guid(vhdl4vsPackage.PackageGuidString)]
+    public sealed class vhdl4vsPackage : AsyncPackage
     {
         /// <summary>
         /// VHDLLanguageServicePackage GUID string.

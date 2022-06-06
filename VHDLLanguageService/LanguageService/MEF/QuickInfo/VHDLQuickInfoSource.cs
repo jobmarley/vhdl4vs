@@ -25,7 +25,7 @@ using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	//  Extension to apply text format to DependencyObject
 	internal static class DependencyObjectExtensions

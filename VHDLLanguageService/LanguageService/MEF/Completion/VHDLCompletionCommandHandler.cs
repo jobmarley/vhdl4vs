@@ -24,7 +24,7 @@ using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
 using Task = System.Threading.Tasks.Task;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 
 	[Export(typeof(IVsTextViewCreationListener))]

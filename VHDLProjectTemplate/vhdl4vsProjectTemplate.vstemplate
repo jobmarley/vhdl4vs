@@ -3,7 +3,7 @@
   <TemplateData>
     <Name>VHDL Project</Name>
     <Description>A template for creating a VHDL Project.</Description>
-    <Icon>VHDLProjectTemplate.ico</Icon>
+    <Icon>vhdl4vsProjectTemplate.ico</Icon>
     <ProjectType>VHDL</ProjectType>
     <LanguageTag>VHDL</LanguageTag>
     <RequiredFrameworkVersion>2.0</RequiredFrameworkVersion>
@@ -14,7 +14,7 @@
     <ProvideDefaultName>true</ProvideDefaultName>
   </TemplateData>
   <TemplateContent>
-    <Project File="VHDLProjectType.vhdproj" ReplaceParameters="true">
+    <Project File="vhdl4vsProjectType.vhdproj" ReplaceParameters="true">
 		<ProjectItem OpenInEditor="true">top.vhd</ProjectItem>
     </Project>
   </TemplateContent>

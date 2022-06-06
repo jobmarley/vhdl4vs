@@ -7,7 +7,7 @@ using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using Microsoft.VisualStudio.Text;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	class VHDLNameNotFoundException
 		: VHDLCodeException

@@ -15,7 +15,7 @@ using System.Windows.Shapes;
 using System.Xml;
 using System.Text.Json;
 
-namespace VHDLVivadoIntegration
+namespace vhdl4vs.VivadoIntegration
 {
 	public enum ComponentPortType
 	{

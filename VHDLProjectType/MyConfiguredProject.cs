@@ -9,7 +9,7 @@ PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
 
 ***************************************************************************/
 
-namespace MyCompany.Project.VHDL
+namespace vhdl4vs.Project
 {
 	using System;
 	using System.ComponentModel.Composition;

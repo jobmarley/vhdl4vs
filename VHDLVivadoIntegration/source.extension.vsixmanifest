@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="VHDLVivadoIntegration.2597ff22-584f-46ee-a73b-535742ea2da7" Version="1.0" Language="en-US" Publisher="jobmarley" />
-        <DisplayName>VHDLVivadoIntegration</DisplayName>
+        <Identity Id="vhdl4vs.VivadoIntegration.2597ff22-584f-46ee-a73b-535742ea2da7" Version="1.0" Language="en-US" Publisher="jobmarley" />
+        <DisplayName>vhdl4vs.VivadoIntegration</DisplayName>
         <Description xml:space="preserve">Empty VSIX Project.</Description>
     </Metadata>
     <Installation>

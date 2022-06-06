@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Language.Intellisense;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	// This is required because of the way Signature helper works.
 	// Maybe we could achieve something with presenters, but this way seems easier.

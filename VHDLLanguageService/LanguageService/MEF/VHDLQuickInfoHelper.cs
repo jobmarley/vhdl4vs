@@ -9,7 +9,7 @@ using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Formatting;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	public class VHDLQuickInfoHelper
 	{

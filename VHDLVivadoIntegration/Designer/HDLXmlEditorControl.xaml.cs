@@ -15,7 +15,7 @@ using System.Windows.Shapes;
 using System.Text.Json;
 using System.ComponentModel.Design;
 
-namespace VHDLVivadoIntegration
+namespace vhdl4vs.VivadoIntegration
 {
 	/// <summary>
 	/// Interaction logic for HDLXmlEditorControl.xaml

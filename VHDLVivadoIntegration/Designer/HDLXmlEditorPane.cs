@@ -22,7 +22,7 @@ using ISysServiceProvider = System.IServiceProvider;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 using VSStd97CmdID = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 
-namespace VHDLVivadoIntegration
+namespace vhdl4vs.VivadoIntegration
 {
 	/// <summary>
 	/// This control hosts the editor and is responsible for

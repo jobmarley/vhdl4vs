@@ -21,7 +21,7 @@ using Microsoft.VisualStudio.Shell;
 
 using Run = System.Windows.Documents.Run;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	internal class VHDLParameter
 		: IParameter

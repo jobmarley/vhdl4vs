@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="VHDLProjectType.0798a8a1-7c0f-46fe-bde2-bdc32d2039d7" Version="1.0" Language="en-US" Publisher="jobmarley" />
-        <DisplayName>VHDLProjectType</DisplayName>
+        <Identity Id="vhdl4vs.ProjectType.0798a8a1-7c0f-46fe-bde2-bdc32d2039d7" Version="1.0" Language="en-US" Publisher="jobmarley" />
+        <DisplayName>vhdl4vs.ProjectType</DisplayName>
         <Description xml:space="preserve">Empty VSIX Project.</Description>
     </Metadata>
     <Installation>

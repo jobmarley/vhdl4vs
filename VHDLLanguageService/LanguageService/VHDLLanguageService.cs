@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.Package;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System.Runtime.InteropServices;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
     /*
      * This is a legacy language service. Its only used for the language option page.

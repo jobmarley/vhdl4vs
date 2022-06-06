@@ -20,10 +20,10 @@ using System.Collections.Concurrent;
 using SVsServiceProvider = Microsoft.VisualStudio.Shell.SVsServiceProvider;
 using ThreadHelper = Microsoft.VisualStudio.Shell.ThreadHelper;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	[Export(ExportContractNames.Scopes.UnconfiguredProject, typeof(IProjectDynamicLoadComponent))]
-	[AppliesTo(Project.VHDL.MyUnconfiguredProject.UniqueCapability)]
+	[AppliesTo(Project.MyUnconfiguredProject.UniqueCapability)]
 	internal class VHDLProjectWatcher
 		: IProjectDynamicLoadComponent
 	{

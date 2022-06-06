@@ -10,7 +10,7 @@ using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	[Export(typeof(IViewTaggerProvider))]
 	[ContentType("text")]

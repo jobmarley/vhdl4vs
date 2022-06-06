@@ -21,7 +21,7 @@ using Microsoft.VisualStudio.OLE.Interop;
 
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	/// <summary>
 	/// Factory for creating our editor object. Extends from the IVsEditoryFactory interface

@@ -13,8 +13,8 @@
     <ProjectGuid>{87010EF2-4781-449E-81F8-9651D858E6E6}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>VHDLProjectType</RootNamespace>
-    <AssemblyName>VHDLProjectType</AssemblyName>
+    <RootNamespace>vhdl4vs.ProjectType</RootNamespace>
+    <AssemblyName>vhdl4vs.ProjectType</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <GeneratePkgDefFile>true</GeneratePkgDefFile>
     <UseCodebase>true</UseCodebase>
@@ -52,8 +52,8 @@
     <Compile Include="vhdl4vsProjectTypePackage.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="BuildSystem\DeployedBuildSystem\VHDLProjectType.props" />
-    <None Include="BuildSystem\DeployedBuildSystem\VHDLProjectType.targets" />
+    <None Include="BuildSystem\DeployedBuildSystem\vhdl4vsProjectType.props" />
+    <None Include="BuildSystem\DeployedBuildSystem\vhdl4vsProjectType.targets" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
@@ -151,8 +151,8 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /y /d "$(ProjectDir)\BuildSystem\DeployedBuildSystem" "$(LOCALAPPDATA)\CustomProjectSystems\$(ProjectName)"
-xcopy /y /d "$(ProjectDir)\BuildSystem\Rules" "$(LOCALAPPDATA)\CustomProjectSystems\$(ProjectName)\Rules"</PostBuildEvent>
+    <PostBuildEvent>xcopy /y /d /i "$(ProjectDir)\BuildSystem\DeployedBuildSystem" "$(LOCALAPPDATA)\CustomProjectSystems\$(ProjectName)"
+xcopy /y /d /i "$(ProjectDir)\BuildSystem\Rules" "$(LOCALAPPDATA)\CustomProjectSystems\$(ProjectName)\Rules"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

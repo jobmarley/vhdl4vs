@@ -11,7 +11,7 @@ using Antlr4.Runtime;
 
 using UnconfiguredProject = Microsoft.VisualStudio.ProjectSystem.UnconfiguredProject;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	class VHDLBackgroundParser
 		: VHDLParserImplementation

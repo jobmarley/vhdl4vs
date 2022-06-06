@@ -12,7 +12,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.OLE.Interop;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	[Export(typeof(ISignatureHelpSourceProvider))]
 	[Name("VHDL Signature Help source")]

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup Label="Globals">
-		<CustomProjectExtensionsPath>$(LocalAppData)\CustomProjectSystems\VHDLProjectType\</CustomProjectExtensionsPath>
+		<CustomProjectExtensionsPath>$(LocalAppData)\CustomProjectSystems\vhdl4vs.ProjectType\</CustomProjectExtensionsPath>
 	</PropertyGroup>
-	<Import Project="$(CustomProjectExtensionsPath)VHDLProjectType.props" />
+	<Import Project="$(CustomProjectExtensionsPath)vhdl4vsProjectType.props" />
 	<ItemGroup>
 		<VHDLSource Include="top.vhd" />
 	</ItemGroup>
 	<PropertyGroup>
 		<LibraryPaths>IEEE=$(XilinxLibraryPath)\ieee;STD=$(XilinxLibraryPath)\std;UNISIM=$(XilinxLibraryPath)\unisims</LibraryPaths>
 	</PropertyGroup>
-	<Import Project="$(CustomProjectExtensionsPath)VHDLProjectType.targets" />
+	<Import Project="$(CustomProjectExtensionsPath)vhdl4vsProjectType.targets" />
 </Project>

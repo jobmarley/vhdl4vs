@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.Text;
 
-using MyCompany.LanguageServices.VHDL;
+using vhdl4vs;
 
-namespace VHDLLanguageServiceTests
+namespace vhdl4vsTests
 {
 	[TestClass]
 	public class TypeCompatibilityTests

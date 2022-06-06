@@ -22,7 +22,7 @@ using EnvDTE;
 using System.Windows;
 using Microsoft.VisualStudio.Debugger.Interop;
 
-namespace MyCompany.LanguageServices.VHDL
+namespace vhdl4vs
 {
 	/// <summary>
 	/// Classifier that classifies all text as an instance of the "MLClassifier" classification type.

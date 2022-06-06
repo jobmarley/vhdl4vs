@@ -20,7 +20,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
 
-namespace MyCompany.Project.VHDL
+namespace vhdl4vs.Project
 {
 	[Export]
 	[AppliesTo(MyUnconfiguredProject.UniqueCapability)]
