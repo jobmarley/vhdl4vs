@@ -1168,7 +1168,7 @@ namespace vhdl4vs
 				var allReferences = expressionList.Where(x => x != null).SelectMany(x => CollectAllReferences(x));
 				foreach (var r in allReferences)
 				{
-					if (r?.Declaration is VHDLSignalDeclaration && sensitivity.All(x => x.Declaration != r.Declaration) && !hasAll)
+					if ((r?.Declaration is VHDLSignalDeclaration || r?.Declaration is VHDLPortDeclaration) && sensitivity.All(x => x.Declaration != r.Declaration) && !hasAll)
 					{
 						errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, String.Format("Signal '{0}' is not in the sensitivity list", r.Declaration.Name), r.Span));
 					}
