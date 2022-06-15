@@ -107,5 +107,28 @@ namespace vhdl4vs
                 return d.Values[i];
             return default(TValue);
         }
+
+		class DistinctByComparer<T>
+			: IEqualityComparer<T>
+		{
+            private Func<T, T, bool> m_f = null;
+            public DistinctByComparer(Func<T, T, bool> f)
+			{
+                m_f = f;
+			}
+            public bool Equals(T x, T y)
+			{
+                return m_f(x, y);
+			}
+
+			public int GetHashCode(T obj)
+			{
+                return 0;
+			}
+		}
+		public static IEnumerable<T> DistinctBy<T>(this IEnumerable<T> e, Func<T, T, bool> comparer)
+		{
+            return e.Distinct(new DistinctByComparer<T>(comparer));
+		}
     }
 }

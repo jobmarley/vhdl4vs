@@ -1116,7 +1116,27 @@ namespace vhdl4vs
 			var children = s.Children;
 			return children.OfType<VHDLStatement>().Concat(children.OfType<VHDLStatement>().SelectMany(x => CollectAllStatements(x)));
 		}
-		public override void Check(DeepAnalysisResult deepAnalysisResult, Action<VHDLError> errorListener)
+		private bool IsLatch(VHDLDeclaration d, IEnumerable<VHDLStatement> stmts)
+		{
+			foreach (VHDLStatement s in stmts)
+			{
+				if (s is VHDLSignalAssignmentStatement sas && (sas.NameExpression as VHDLReferenceExpression)?.Declaration == d)
+					return false;
+				if (s is VHDLIfStatement ifs)
+				{
+					if (ifs.ElseIfStatements.Select(x => x.Item2).Prepend(ifs.Statements).All(x => !IsLatch(d, x))
+						&& !IsLatch(d, ifs.ElseStatements as IEnumerable<VHDLStatement> ?? Array.Empty<VHDLStatement>()))
+						return false;
+				}
+				if (s is VHDLCaseStatement cs)
+				{
+					if (cs.Alternatives.Select(x => x.Statements).All(x => !IsLatch(d, x)))
+						return false;
+				}
+			}
+			return true;
+		}
+		private void CheckSensitivityList(DeepAnalysisResult deepAnalysisResult, Action<VHDLError> errorListener)
 		{
 			HashSet<VHDLReferenceExpression> sensitivity = new HashSet<VHDLReferenceExpression>();
 			bool hasAll = SensitivityList.Any(x => x is VHDLAllExpression n);
@@ -1174,6 +1194,23 @@ namespace vhdl4vs
 					}
 				}
 			}
+		}
+		private void CheckLatches(DeepAnalysisResult deepAnalysisResult, Action<VHDLError> errorListener)
+		{
+			var allStatements = Statements.SelectMany(x => CollectAllStatements(x)).Concat(Statements).ToArray();
+			var allAssignedSignals = allStatements.OfType<VHDLSignalAssignmentStatement>().Select(x => Tuple.Create(x.NameExpression, (x.NameExpression as VHDLReferenceExpression)?.Declaration)).Where(x => x.Item2 != null).DistinctBy((x, y) => x.Item2 == y.Item2);
+			
+			foreach (var (e, d) in allAssignedSignals)
+			{
+				if (IsLatch(d, Statements))
+					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, "Signal is not assigned in all cases, latch might be inferred", e.Span));
+			}
+		}
+		
+		public override void Check(DeepAnalysisResult deepAnalysisResult, Action<VHDLError> errorListener)
+		{
+			CheckSensitivityList(deepAnalysisResult, errorListener);
+			CheckLatches(deepAnalysisResult, errorListener);
 		}
 	}
 
