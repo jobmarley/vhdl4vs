@@ -126,9 +126,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="LanguageService\Grammar\vhdl.g4" />
-    <None Include="source.extension.vsixmanifest">
-      <SubType>Designer</SubType>
-    </None>
+	  <None Include="source.extension.vsixmanifest">
+		  <SubType>Designer</SubType>
+	  </None>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="PresentationCore" />
@@ -150,34 +150,6 @@
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.0.0-previews-4-31709-430" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.0.5232" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\vhdl4vs.ProjectTemplate\vhdl4vs.ProjectTemplate.csproj">
-      <Project>{0DAE39AE-B783-4351-8B2F-E36F92AEA2E9}</Project>
-      <Name>vhdl4vs.ProjectTemplate</Name>
-      <VSIXSubPath>ProjectTemplates</VSIXSubPath>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <IncludeOutputGroupsInVSIX>TemplateProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
-    </ProjectReference>
-    <ProjectReference Include="..\vhdl4vs.ProjectType\vhdl4vs.ProjectType.csproj">
-      <Project>{87010EF2-4781-449E-81F8-9651D858E6E6}</Project>
-      <Name>vhdl4vs.ProjectType</Name>
-      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3bPkgdefProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
-      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
-    </ProjectReference>
-    <ProjectReference Include="..\vhdl4vs.VHDLItemTemplate\vhdl4vs.VHDLItemTemplate.csproj">
-      <Project>{41552BE0-4311-4A2B-B004-9FAADEFD2B23}</Project>
-      <Name>vhdl4vs.VHDLItemTemplate</Name>
-      <VSIXSubPath>ItemTemplates</VSIXSubPath>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <IncludeOutputGroupsInVSIX>TemplateProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
-    </ProjectReference>
-    <ProjectReference Include="..\vhdl4vs.VivadoIntegration\vhdl4vs.VivadoIntegration.csproj">
-      <Project>{376CDD7F-C43C-49A4-8C3F-CB497D7909AA}</Project>
-      <Name>vhdl4vs.VivadoIntegration</Name>
-      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3bPkgdefProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
-      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="LanguageService\Grammar\readme.txt" />

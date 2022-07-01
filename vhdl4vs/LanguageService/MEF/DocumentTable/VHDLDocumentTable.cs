@@ -35,10 +35,11 @@ using ThreadHelper = Microsoft.VisualStudio.Shell.ThreadHelper;
 namespace vhdl4vs
 {
 	[Export(ExportContractNames.Scopes.UnconfiguredProject, typeof(IProjectDynamicLoadComponent))]
-	[AppliesTo(Project.MyUnconfiguredProject.UniqueCapability)]
+	[AppliesTo(VHDLProjectWatcher.UniqueCapability)]
 	internal class VHDLProjectWatcher
 		: IProjectDynamicLoadComponent
 	{
+		public const string UniqueCapability = "VHDLProjectType";
 		[Import]
 		public UnconfiguredProject UnconfiguredProject { get; set; }
 

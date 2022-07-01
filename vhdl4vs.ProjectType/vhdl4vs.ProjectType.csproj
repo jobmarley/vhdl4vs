@@ -52,8 +52,16 @@
     <Compile Include="vhdl4vsProjectTypePackage.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="BuildSystem\DeployedBuildSystem\vhdl4vsProjectType.props" />
-    <None Include="BuildSystem\DeployedBuildSystem\vhdl4vsProjectType.targets" />
+    <Content Include="BuildSystem\DeployedBuildSystem\vhdl4vsProjectType.props">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs</VSIXSubPath>
+    </Content>
+    <Content Include="BuildSystem\DeployedBuildSystem\vhdl4vsProjectType.targets">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs</VSIXSubPath>
+    </Content>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
@@ -77,82 +85,156 @@
     <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.0.0-previews-4-31709-430" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.0.5232" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
-    <Page Include="BuildSystem\Rules\debugger_general.xaml">
-      <Generator>MSBuild:GenerateRuleSourceFromXaml</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="BuildSystem\Rules\folder.xaml">
-      <Generator>MSBuild:GenerateRuleSourceFromXaml</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="BuildSystem\Rules\general.browseobject.xaml">
-      <Generator>MSBuild:GenerateRuleSourceFromXaml</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="BuildSystem\Rules\general.xaml">
-      <Generator>MSBuild:GenerateRuleSourceFromXaml</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="BuildSystem\Rules\general_file.xaml">
-      <Generator>MSBuild:GenerateRuleSourceFromXaml</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="BuildSystem\Rules\none.xaml">
-      <Generator>MSBuild:GenerateRuleSourceFromXaml</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="BuildSystem\Rules\ProjectItemsSchema.xaml">
-      <Generator>MSBuild:GenerateRuleSourceFromXaml</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="BuildSystem\Rules\scc.xaml">
-      <Generator>MSBuild:GenerateRuleSourceFromXaml</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="BuildSystem\Rules\script.browseobject.xaml">
-      <Generator>MSBuild:GenerateRuleSourceFromXaml</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="BuildSystem\Rules\script.xaml">
-      <Generator>MSBuild:GenerateRuleSourceFromXaml</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="BuildSystem\Rules\ScriptDebugger.xaml">
-      <Generator>MSBuild:GenerateRuleSourceFromXaml</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="BuildSystem\Rules\verilogsource.browseobject.xaml">
-      <Generator>MSBuild:GenerateRuleSourceFromXaml</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="BuildSystem\Rules\verilogsource.xaml">
-      <Generator>MSBuild:GenerateRuleSourceFromXaml</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="BuildSystem\Rules\vhdl.browseobject.xaml">
-      <Generator>MSBuild:GenerateRuleSourceFromXaml</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="BuildSystem\Rules\vhdl.xaml">
-      <Generator>MSBuild:GenerateRuleSourceFromXaml</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="BuildSystem\Rules\vhdlsource.browseobject.xaml">
-      <Generator>MSBuild:GenerateRuleSourceFromXaml</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="BuildSystem\Rules\vhdlsource.xaml">
-      <Generator>MSBuild:GenerateRuleSourceFromXaml</Generator>
-      <SubType>Designer</SubType>
-    </Page>
+    <ProjectReference Include="..\vhdl4vs.ProjectTemplate\vhdl4vs.ProjectTemplate.csproj">
+      <Project>{0DAE39AE-B783-4351-8B2F-E36F92AEA2E9}</Project>
+      <Name>vhdl4vs.ProjectTemplate</Name>
+      <VSIXSubPath>ProjectTemplates</VSIXSubPath>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <IncludeOutputGroupsInVSIX>TemplateProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
+    </ProjectReference>
+    <ProjectReference Include="..\vhdl4vs.VHDLItemTemplate\vhdl4vs.VHDLItemTemplate.csproj">
+      <Project>{41552BE0-4311-4A2B-B004-9FAADEFD2B23}</Project>
+      <Name>vhdl4vs.VHDLItemTemplate</Name>
+      <VSIXSubPath>ItemTemplates</VSIXSubPath>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <IncludeOutputGroupsInVSIX>TemplateProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
+    </ProjectReference>
+    <ProjectReference Include="..\vhdl4vs.VivadoIntegration\vhdl4vs.VivadoIntegration.csproj">
+      <Project>{376CDD7F-C43C-49A4-8C3F-CB497D7909AA}</Project>
+      <Name>vhdl4vs.VivadoIntegration</Name>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3bPkgdefProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
+      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
+    </ProjectReference>
+    <ProjectReference Include="..\vhdl4vs\vhdl4vs.csproj">
+      <Project>{D68B1631-EF9B-49A1-9BB9-ACA2ECF02B01}</Project>
+      <Name>vhdl4vs</Name>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3bPkgdefProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
+      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
+    </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="BuildSystem\Rules\debugger_general.xaml">
+      <SubType>Designer</SubType>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs\Rules</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="BuildSystem\Rules\folder.xaml">
+      <SubType>Designer</SubType>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs\Rules</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="BuildSystem\Rules\general.browseobject.xaml">
+      <SubType>Designer</SubType>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs\Rules</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="BuildSystem\Rules\general.xaml">
+      <SubType>Designer</SubType>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs\Rules</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="BuildSystem\Rules\general_file.xaml">
+      <SubType>Designer</SubType>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs\Rules</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="BuildSystem\Rules\none.xaml">
+      <SubType>Designer</SubType>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs\Rules</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="BuildSystem\Rules\ProjectItemsSchema.xaml">
+      <SubType>Designer</SubType>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs\Rules</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="BuildSystem\Rules\scc.xaml">
+      <SubType>Designer</SubType>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs\Rules</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="BuildSystem\Rules\script.browseobject.xaml">
+      <SubType>Designer</SubType>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs\Rules</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="BuildSystem\Rules\script.xaml">
+      <SubType>Designer</SubType>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs\Rules</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="BuildSystem\Rules\ScriptDebugger.xaml">
+      <SubType>Designer</SubType>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs\Rules</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="BuildSystem\Rules\verilogsource.browseobject.xaml">
+      <SubType>Designer</SubType>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs\Rules</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="BuildSystem\Rules\verilogsource.xaml">
+      <SubType>Designer</SubType>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs\Rules</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="BuildSystem\Rules\vhdl.browseobject.xaml">
+      <SubType>Designer</SubType>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs\Rules</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="BuildSystem\Rules\vhdl.xaml">
+      <SubType>Designer</SubType>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs\Rules</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="BuildSystem\Rules\vhdlsource.browseobject.xaml">
+      <SubType>Designer</SubType>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs\Rules</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="BuildSystem\Rules\vhdlsource.xaml">
+      <SubType>Designer</SubType>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs\Rules</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+  </ItemGroup>
+  <!--<ItemGroup>
+    <VSIXSourceItem Include="BuildSystem\DeployedBuildSystem\**">
+      <InProject>false</InProject>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs</VSIXSubPath>
+    </VSIXSourceItem>
+    <VSIXSourceItem Include="BuildSystem\Rules\**">
+      <InProject>false</InProject>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>CustomProjectSystems\vhdl4vs\Rules</VSIXSubPath>
+    </VSIXSourceItem>
+  </ItemGroup>-->
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /y /d /i "$(ProjectDir)\BuildSystem\DeployedBuildSystem" "$(LOCALAPPDATA)\CustomProjectSystems\$(ProjectName)"
-xcopy /y /d /i "$(ProjectDir)\BuildSystem\Rules" "$(LOCALAPPDATA)\CustomProjectSystems\$(ProjectName)\Rules"</PostBuildEvent>
+    <PostBuildEvent>
+		xcopy /y /d /i "$(ProjectDir)\BuildSystem\DeployedBuildSystem" "$(LOCALAPPDATA)\CustomProjectSystems\vhdl4vs"
+		xcopy /y /d /i "$(ProjectDir)\BuildSystem\Rules" "$(LOCALAPPDATA)\CustomProjectSystems\vhdl4vs\Rules"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
