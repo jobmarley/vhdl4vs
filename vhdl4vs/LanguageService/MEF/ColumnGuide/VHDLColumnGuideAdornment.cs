@@ -21,6 +21,7 @@ using System.Windows;
 using Microsoft.VisualStudio.Text.Formatting;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Shell;
+using System.Linq;
 
 using Task = System.Threading.Tasks.Task;
 
@@ -84,12 +85,12 @@ namespace vhdl4vs
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 				m_guidelines = CreateGuidelines(visitor.Guidelines);
 				AddGuidelinesToAdornmentLayer();
-				UpdatePositions();
+				await UpdatePositionsAsync();
 			}
 		}
-		async void OnDocumentParseComplete(object sender, ParseResultEventArgs e)
+		void OnDocumentParseComplete(object sender, ParseResultEventArgs e)
 		{
-			await UpdateAsync(e.Result);
+			_ = UpdateAsync(e.Result);
 		}
 		/// <summary>
 		/// Initializes a new instance of the <see cref="VHDLColumnGuideAdornment"/> class.
@@ -120,7 +121,7 @@ namespace vhdl4vs
 
 			ParseResult result = m_doc.Parser.PResult;
 			if (result != null)
-				UpdateAsync(result);
+				_ = UpdateAsync(result);
 		}
 
 		/// <summary>
@@ -160,7 +161,7 @@ namespace vhdl4vs
 			{
 				return;
 			}
-			UpdatePositions();
+			_ = UpdatePositionsAsync();
 		}
 
 		private List<KeyValuePair<VHDLGuideline, Line>> CreateGuidelines(IList<VHDLGuideline> guidelines)
@@ -184,34 +185,44 @@ namespace vhdl4vs
 			return result;
 		}
 
-		void PopulateLineGeometry(ITextViewLine line, GeometryGroup g)
+		IEnumerable<SnapshotSpan> GetLineTextSpans(ITextViewLine line)
 		{
-			int iStart = 0;
+			List<SnapshotSpan> spans = new List<SnapshotSpan>();
+
 			int i = 0;
-			foreach(char c in line.Extent.GetText())
+			string text = line.Extent.GetText();
+			while (i < text.Length)
 			{
-				if(char.IsWhiteSpace(c))
+				if (!char.IsWhiteSpace(text[i]))
 				{
-					if(iStart < i)
-					{
-						foreach(TextBounds b in line.GetNormalizedTextBounds(new SnapshotSpan(line.Snapshot, line.Start + iStart, i - iStart)))
-						{
-							g.Children.Add(new RectangleGeometry(new Rect(b.Left, b.Top, b.Width, b.Height)));
-						}
-					}
-					iStart = i + 1;
+					int end = i + 1;
+					while (end < text.Length && !char.IsWhiteSpace(text[end]))
+						++end;
+
+					spans.Add(new SnapshotSpan(line.Snapshot, line.Start + i, end - i));
+					i = end;
+					continue;
 				}
+
 				++i;
 			}
-			if (iStart < i)
+
+			return spans;
+		}
+		void PopulateLineGeometry(ITextViewLine line, GeometryGroup g, IDictionary<VHDLGuideline, Tuple<Point, Point>> coordinates)
+		{
+			foreach (SnapshotSpan span in GetLineTextSpans(line))
 			{
-				foreach (TextBounds b in line.GetNormalizedTextBounds(new SnapshotSpan(line.Snapshot, line.Start + iStart, i - iStart)))
-				{
-					g.Children.Add(new RectangleGeometry(new Rect(b.Left, b.Top, b.Width, b.Height)));
-				}
+				TextBounds b1 = line.GetCharacterBounds(span.Start);
+				TextBounds b2 = line.GetCharacterBounds(span.End - 1);
+
+				var co = m_guidelines.Select(x => coordinates.TryGetValue(x.Key, out var value) ? value : null).Where(x => x != null);
+				if (co.Any(x => x.Item1.X >= b1.Left && x.Item1.X < b2.Right && (x.Item1.Y < b1.Bottom || x.Item2.Y > b1.Top)))
+					g.Children.Add(new RectangleGeometry(new Rect(b1.Left, b1.Top, b2.Right - b1.Left, b1.Height)));
+
 			}
 		}
-		Geometry CreateTextGeometry()
+		Geometry CreateTextGeometry(IDictionary<VHDLGuideline, Tuple<Point, Point>> coordinates)
 		{
 			GeometryGroup geom = new GeometryGroup();
 			geom.Children.Add(new RectangleGeometry(new Rect(view.ViewportLeft, view.ViewportTop, view.ViewportRight - view.ViewportLeft, view.ViewportBottom - view.ViewportTop)));
@@ -220,63 +231,87 @@ namespace vhdl4vs
 				if (line.VisibilityState == VisibilityState.Unattached || line.VisibilityState == VisibilityState.Hidden)
 					continue;
 
-				PopulateLineGeometry(line, geom);
-				/*var aaa = line.GetNormalizedTextBounds(line.Extent);
-				RectangleGeometry rect = new RectangleGeometry(new Rect(line.TextLeft, line.Top, line.TextWidth, line.Height));
-				geom.Children.Add(rect);*/
+				PopulateLineGeometry(line, geom, coordinates);
 			}
 			geom.Freeze();
 			return geom;
 		}
-		Geometry m_textGeometry = null;
-		void UpdatePositions()
+
+		IDictionary<VHDLGuideline, Tuple<Point, Point>> GetGuidelinesCoordinates(List<KeyValuePair<VHDLGuideline, Line>> guidelines)
 		{
-			m_textGeometry = CreateTextGeometry();
-			foreach (KeyValuePair<VHDLGuideline, Line> g in m_guidelines)
+			Dictionary<VHDLGuideline, Tuple<Point, Point>> coordinates = new Dictionary<VHDLGuideline, Tuple<Point, Point>>();
+			foreach (KeyValuePair<VHDLGuideline, Line> g in guidelines)
 			{
 				Line line = g.Value;
 				if (g.Key.Points != null && g.Key.Points.Count >= 2)
 				{
-					SnapshotPoint p1 = g.Key.Points[0].TranslateTo(view.TextSnapshot, PointTrackingMode.Positive);
+					SnapshotPoint snapshotPt1 = g.Key.Points[0].TranslateTo(view.TextSnapshot, PointTrackingMode.Positive);
 					//SnapshotPoint? p1InTopBuffer = view.BufferGraph.MapUpToSnapshot(p1, PointTrackingMode.Positive, PositionAffinity.Successor, view.VisualSnapshot);
-					SnapshotPoint p2 = g.Key.Points[1].TranslateTo(view.TextSnapshot, PointTrackingMode.Positive);
+					SnapshotPoint snapshotPt2 = g.Key.Points[1].TranslateTo(view.TextSnapshot, PointTrackingMode.Positive);
 					//SnapshotPoint? p2InTopBuffer = view.BufferGraph.MapUpToSnapshot(p2, PointTrackingMode.Positive, PositionAffinity.Successor, view.VisualSnapshot);
+
+					Point p1 = new Point();
+					Point p2 = new Point();
 
 					/*
 					 * - Check if p1 > last line
 					 * - check if p2 < first line
 					 * - check if p1 or p2 collapsed
 					 */
-					if(p2 < view.TextViewLines.FormattedSpan.Start || p1 > view.TextViewLines.FormattedSpan.End)
+					if (snapshotPt2 < view.TextViewLines.FormattedSpan.Start || snapshotPt1 > view.TextViewLines.FormattedSpan.End)
 					{
-						line.Visibility = Visibility.Hidden;
 						continue;
 					}
-					line.Clip = m_textGeometry;
+
+					if (view.TextViewLines.ContainsBufferPosition(snapshotPt1))
+					{
+						TextBounds b = view.TextViewLines.GetCharacterBounds(snapshotPt1);
+						p1.Y = b.Bottom + 0.5;
+						p1.X = p2.X = (b.Left + b.Right) / 2;
+					}
+					else
+					{
+						p1.Y = view.ViewportTop;
+					}
+
+					if (view.TextViewLines.ContainsBufferPosition(snapshotPt2))
+					{
+						TextBounds b = view.TextViewLines.GetCharacterBounds(snapshotPt2);
+						p2.Y = b.Bottom;
+					}
+					else
+					{
+						p2.Y = view.ViewportBottom;
+					}
+
+					coordinates[g.Key] = Tuple.Create(p1, p2);
+				}
+			}
+
+			return coordinates;
+		}
+		async Task UpdatePositionsAsync()
+		{
+			var guidelines = m_guidelines;
+			var guidelineCoordinates = GetGuidelinesCoordinates(guidelines);
+			Geometry textGeometry = CreateTextGeometry(guidelineCoordinates);
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+			foreach (KeyValuePair<VHDLGuideline, Line> g in guidelines)
+			{
+				Line line = g.Value;
+
+				if (guidelineCoordinates.TryGetValue(g.Key, out var coord))
+				{
+					line.Clip = textGeometry;
 					line.Visibility = Visibility.Visible;
-
-					if (view.TextViewLines.ContainsBufferPosition(p1))
-					{
-						TextBounds b = view.TextViewLines.GetCharacterBounds(p1);
-						line.Y1 = b.Bottom + 0.5;
-						line.X1 = line.X2 = (b.Left + b.Right) / 2;
-					}
-					else
-					{
-						//TextBounds b = view.TextViewLines.GetCharacterBounds(p1);
-						line.Y1 = view.ViewportTop;
-						//X = (b.Left + b.Right) / 2;
-					}
-
-					if (view.TextViewLines.ContainsBufferPosition(p2))
-					{
-						TextBounds b = view.TextViewLines.GetCharacterBounds(p2);
-						line.Y2 = b.Bottom;
-					}
-					else
-					{
-						line.Y2 = view.ViewportBottom;
-					}
+					line.X1 = coord.Item1.X;
+					line.Y1 = coord.Item1.Y;
+					line.X2 = coord.Item2.X;
+					line.Y2 = coord.Item2.Y;
+				}
+				else
+				{
+					line.Visibility = Visibility.Hidden;
 				}
 			}
 		}
