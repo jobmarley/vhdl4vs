@@ -285,7 +285,29 @@ namespace vhdl4vs
 
 			ExpressionVisitors.VHDLExpressionVisitor visitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener);
 			statement.ComponentNameExpression = visitor.Visit(context.instantiated_unit().name()) as VHDLReferenceExpression;
-			foreach (var elementContext in context.port_map_aspect().association_list().association_element())
+
+			foreach (var elementContext in context?.generic_map_aspect()?.association_list()?.association_element() ?? Array.Empty<vhdlParser.Association_elementContext>())
+			{
+				ExpressionVisitors.VHDLExpressionVisitor genericVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, (x, y, z) => statement.ResolveGenericName(x, y, z));
+				try
+				{
+					VHDLExpression v = visitor.Visit(elementContext.actual_part());
+					VHDLExpression port = null;
+					if (elementContext.formal_part() != null)
+						port = genericVisitor.Visit(elementContext.formal_part());
+
+					if (port != null)
+						statement.Generics.Add(new VHDLArgumentAssociationExpression(m_analysisResult, elementContext.GetSpan(), new[] { port }, v));
+					else
+						statement.Generics.Add(v);
+				}
+				catch (Exception ex)
+				{
+					// so the parameters stay ordered
+					statement.Generics.Add(null);
+				}
+			}
+			foreach (var elementContext in context?.port_map_aspect()?.association_list()?.association_element() ?? Array.Empty<vhdlParser.Association_elementContext>())
 			{
 				ExpressionVisitors.VHDLExpressionVisitor portVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, (x, y, z) => statement.ResolvePortName(x, y, z));
 				try

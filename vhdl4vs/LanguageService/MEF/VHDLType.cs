@@ -532,16 +532,19 @@ namespace vhdl4vs
 			end = iEnd.Value;
 			return true;
 		}
-		public VHDLCompatibilityResult IsOutOfBound(VHDLExpression e)
+		public VHDLCompatibilityResult IsOutOfBound(VHDLExpression e, EvaluationContext evaluationContext = null)
 		{
-			VHDLEvaluatedExpression estart = Start?.Evaluate(new EvaluationContext());
-			VHDLEvaluatedExpression eend = End?.Evaluate(new EvaluationContext());
+			if (evaluationContext == null)
+				evaluationContext = new EvaluationContext();
+
+			VHDLEvaluatedExpression estart = Start?.Evaluate(evaluationContext);
+			VHDLEvaluatedExpression eend = End?.Evaluate(evaluationContext);
 			long? iStart = Direction == VHDLRangeDirection.To ? (estart?.Result as VHDLIntegerValue)?.Value : (eend?.Result as VHDLIntegerValue)?.Value;
 			long? iEnd = Direction == VHDLRangeDirection.To ? (eend?.Result as VHDLIntegerValue)?.Value : (estart?.Result as VHDLIntegerValue)?.Value;
 			if (iStart == null || iEnd == null)
 				return VHDLCompatibilityResult.Unsure;
 
-			VHDLEvaluatedExpression ee = e?.Evaluate(new EvaluationContext());
+			VHDLEvaluatedExpression ee = e?.Evaluate(evaluationContext);
 			if (ee.Result is VHDLIntegerValue l)
 			{
 				if (l.Value >= iStart.Value && l.Value <= iEnd.Value)

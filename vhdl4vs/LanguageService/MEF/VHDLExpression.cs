@@ -2706,7 +2706,7 @@ namespace vhdl4vs
 								evaluatedArg.Type?.GetClassifiedText()?.Text ?? "<error type>"), Span);
 
 						VHDLRange ra = aat.GetIndexRange(0);
-						if (ra?.IsOutOfBound(Arguments.First()) == VHDLCompatibilityResult.Yes)
+						if (ra?.IsOutOfBound(Arguments.First(), evaluationContext) == VHDLCompatibilityResult.Yes)
 							throw new VHDLCodeException(string.Format("Argument is out of bounds"), Span);
 					}
 

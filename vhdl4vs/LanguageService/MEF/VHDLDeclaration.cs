@@ -908,6 +908,14 @@ namespace vhdl4vs
 			return new VHDLClassifiedText(UndecoratedName, "vhdl.constant");
 		}
 	}
+	class VHDLGenericDeclaration
+		: VHDLConstantDeclaration
+	{
+		public VHDLGenericDeclaration(AnalysisResult analysisResult, ParserRuleContext context, ParserRuleContext nameContext, string name, VHDLDeclaration parent)
+			: base(analysisResult, context, nameContext, name, parent)
+		{
+		}
+	}
 	// Types are not compatible with each other, but they are compatible with their own subtypes
 	class VHDLTypeDeclaration
 		: VHDLModifiableDeclaration
@@ -1880,7 +1888,7 @@ namespace vhdl4vs
 			NameContext = context.identifier()?.FirstOrDefault();
 		}
 
-		public List<VHDLDeclaration> Generics = new List<VHDLDeclaration>();
+		public IEnumerable<VHDLGenericDeclaration> Generics => Children.OfType<VHDLGenericDeclaration>();
 		public IEnumerable<VHDLPortDeclaration> Ports => Children.OfType<VHDLPortDeclaration>();
 		private VHDLClassifiedText GetClassifiedDeclaration()
 		{

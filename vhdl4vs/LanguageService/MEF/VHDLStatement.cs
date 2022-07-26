@@ -21,14 +21,17 @@ namespace vhdl4vs
 {
 	class VHDLStatementUtilities
 	{
-		public static bool CheckExpressionType(VHDLExpression expression, VHDLType expectedType, Action<VHDLError> errorListener)
+		public static bool CheckExpressionType(VHDLExpression expression, VHDLType expectedType, Action<VHDLError> errorListener, EvaluationContext evaluationContext = null)
 		{
 			if (expression == null)
 				return false;
 
+			if (evaluationContext == null)
+				evaluationContext = new EvaluationContext();
+
 			try
 			{
-				VHDLEvaluatedExpression eval = expression.Evaluate(new EvaluationContext(), expectedType);
+				VHDLEvaluatedExpression eval = expression.Evaluate(evaluationContext, expectedType);
 				if (eval?.Type == null)
 				{
 					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Type cannot be evaluated", expression.Span));
@@ -396,6 +399,7 @@ namespace vhdl4vs
 		public string Name { get; set; } = null;
 		public VHDLReferenceExpression ComponentNameExpression { get; set; } = null;
 		public List<VHDLExpression> Parameters { get; set; } = new List<VHDLExpression>();
+		public List<VHDLExpression> Generics { get; set; } = new List<VHDLExpression>();
 		public override IEnumerable<object> Children { get { return Parameters.Prepend(ComponentNameExpression).Where(x => x != null); } }
 
 		public override void Check(Action<VHDLError> errorListener)
@@ -415,19 +419,121 @@ namespace vhdl4vs
 				Parameters.Any(x => !(x is VHDLArgumentAssociationExpression)))
 			{
 				errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Cannot mix named association and positional port mapping", Parameters.Select(x => x.Span).Aggregate((x, y) => x.Union(y))));
-				return;
 			}
 
-			if (!Parameters.Any())
+			if (Generics.Any(x => x is VHDLArgumentAssociationExpression) &&
+				Generics.Any(x => !(x is VHDLArgumentAssociationExpression)))
 			{
-				if (componentDecl.Ports.Any())
-				{
-					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Missing ports {0} from entity '{1}'", string.Join(", ", componentDecl.Ports.Select(x => "'" + x.Name + "'")), componentDecl.Name), ComponentNameExpression.Span));
-				}
-				return;
+				errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Cannot mix named association and positional port mapping", Generics.Select(x => x.Span).Aggregate((x, y) => x.Union(y))));
 			}
 
-			bool named = Parameters.First() is VHDLArgumentAssociationExpression;
+			EvaluationContext evaluationContext = new EvaluationContext();
+			evaluationContext.Push();
+			bool named = Generics.FirstOrDefault() is VHDLArgumentAssociationExpression;
+			if (named)
+			{
+				HashSet<string> usedGenerics = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+				foreach (var parameter in Generics.OfType<VHDLArgumentAssociationExpression>())
+				{
+					try
+					{
+						var arg = parameter.Arguments.Single();
+						if (arg is VHDLNameExpression ne)
+						{
+							string name = ne.Name;
+
+							// Check if generic exist in component
+							VHDLGenericDeclaration componentGeneric = componentDecl.Generics.FirstOrDefault(p => string.Compare(p.Name, name, true) == 0);
+							if (componentGeneric == null)
+							{
+								errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Generic '{0}' doesn't exist in component '{1}'", name, componentDecl.Name), arg.Span));
+								continue;
+							}
+							VHDLType portType = componentGeneric.Type.Dereference();
+							if (portType is VHDLAbstractArrayType aat)
+							{
+								// If this the port is an array, we add all the elements
+								if (aat.Dimension != 1)
+								{
+									errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, "Array with dimension != 1 not supported", arg.Span));
+									continue;
+								}
+								VHDLRange r = aat.GetIndexRange(0);
+								long start;
+								long end;
+								if (r?.TryGetIntegerRange(out start, out end) != true)
+								{
+									errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, "Expression cannot be evaluated", arg.Span));
+									continue;
+								}
+								for (long i = start; i <= end; ++i)
+								{
+									string n = name + "(" + i.ToString() + ")";
+									if (!usedGenerics.Add(n))
+									{
+										errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Generic already associated '{0}'", n), arg.Span));
+										continue;
+									}
+								}
+							}
+							else
+							{
+								if (!usedGenerics.Add(name))
+								{
+									errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Generic already associated '{0}'", name), arg.Span));
+									continue;
+								}
+							}
+							// Check types are same
+							VHDLStatementUtilities.CheckExpressionType(parameter.Value, componentGeneric.Type, errorListener);
+							evaluationContext[componentGeneric] = parameter.Value.Evaluate(evaluationContext, componentGeneric.Type);
+						}
+						else
+						{
+							errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Expected name", arg.Span));
+							continue;
+						}
+
+					}
+					catch (Exception e)
+					{
+						VHDLLogger.LogException(e);
+					}
+				}
+
+				// Get list of generics that are not assigned
+				List<string> missingGenerics = new List<string>();
+				foreach (var p in componentDecl.Generics)
+				{
+					if (usedGenerics.Contains(p.Name) || p.InitializationExpression != null)
+						continue;
+
+					missingGenerics.Add(p.Name);
+				}
+				if (missingGenerics.Any())
+					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, string.Format("Missing generics {0} from entity '{1}'", string.Join(", ", missingGenerics.Select(x => "'" + x + "'")), componentDecl.Name), ComponentNameExpression.Span));
+			}
+			else
+			{
+				foreach (var (p1, p2) in Generics.Zip(componentDecl.Generics, (x, y) => Tuple.Create(x, y)))
+				{
+					VHDLType t2 = p2.Type;
+					VHDLStatementUtilities.CheckExpressionType(p1, t2, errorListener);
+					evaluationContext[p2] = p1.Evaluate(evaluationContext, t2);
+				}
+
+				var missingGenerics = componentDecl.Generics.Skip(Generics.Count).Where(x => x.InitializationExpression == null);
+				if (missingGenerics.Any())
+				{
+					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Missing generics {0} from entity '{1}'", string.Join(", ", missingGenerics.Select(x => "'" + x.Name + "'")), componentDecl.Name), ComponentNameExpression.Span));
+				}
+				else if (Generics.Count > componentDecl.Generics.Count())
+				{
+					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Component '{0}' has {1} generics, {2} given", componentDecl.Name, componentDecl.Generics.Count(), Generics.Count), ComponentNameExpression.Span));
+				}
+			}
+
+			named = Parameters.FirstOrDefault() is VHDLArgumentAssociationExpression;
 			if (named)
 			{
 				HashSet<string> usedPorts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -483,7 +589,7 @@ namespace vhdl4vs
 								}
 							}
 							// Check types are same
-							VHDLStatementUtilities.CheckExpressionType(parameter.Value, componentPort.Type, errorListener);
+							VHDLStatementUtilities.CheckExpressionType(parameter.Value, componentPort.Type, errorListener, evaluationContext);
 
 						}
 						else if (arg is VHDLFunctionCallOrIndexExpression fce)
@@ -502,8 +608,8 @@ namespace vhdl4vs
 								continue;
 							}
 							VHDLRange r = (fce.Arguments.First() as VHDLRangeExpression)?.Range;
-							VHDLEvaluatedExpression estart = (r?.Start ?? fce.Arguments.First())?.Evaluate(new EvaluationContext());
-							VHDLEvaluatedExpression eend = (r?.End ?? fce.Arguments.First())?.Evaluate(new EvaluationContext());
+							VHDLEvaluatedExpression estart = (r?.Start ?? fce.Arguments.First())?.Evaluate(evaluationContext);
+							VHDLEvaluatedExpression eend = (r?.End ?? fce.Arguments.First())?.Evaluate(evaluationContext);
 							long? iStart = r?.Direction == VHDLRangeDirection.To ? (estart.Result as VHDLIntegerValue)?.Value : (eend.Result as VHDLIntegerValue)?.Value;
 							long? iEnd = r?.Direction == VHDLRangeDirection.To ? (eend.Result as VHDLIntegerValue)?.Value : (estart.Result as VHDLIntegerValue)?.Value;
 							if (iStart == null || iEnd == null)
@@ -523,7 +629,7 @@ namespace vhdl4vs
 							VHDLType argType = null;
 							try
 							{
-								argType = arg.Evaluate(new EvaluationContext())?.Type;
+								argType = arg.Evaluate(evaluationContext)?.Type;
 							}
 							catch (VHDLCodeException ce)
 							{
@@ -534,7 +640,7 @@ namespace vhdl4vs
 								VHDLLogger.LogException(e);
 								continue;
 							}
-							VHDLStatementUtilities.CheckExpressionType(parameter.Value, argType, errorListener);
+							VHDLStatementUtilities.CheckExpressionType(parameter.Value, argType, errorListener, evaluationContext);
 						}
 						else
 						{
@@ -560,8 +666,8 @@ namespace vhdl4vs
 						if (aat.Dimension != 1)
 							continue;
 						VHDLRange r = aat.GetIndexRange(0);
-						VHDLEvaluatedExpression estart = r.Start.Evaluate(new EvaluationContext());
-						VHDLEvaluatedExpression eend = r.End.Evaluate(new EvaluationContext());
+						VHDLEvaluatedExpression estart = r.Start.Evaluate(evaluationContext);
+						VHDLEvaluatedExpression eend = r.End.Evaluate(evaluationContext);
 						long? iStart = r.Direction == VHDLRangeDirection.To ? (estart.Result as VHDLIntegerValue)?.Value : (eend.Result as VHDLIntegerValue)?.Value;
 						long? iEnd = r.Direction == VHDLRangeDirection.To ? (eend.Result as VHDLIntegerValue)?.Value : (estart.Result as VHDLIntegerValue)?.Value;
 						if (iStart == null || iEnd == null)
@@ -601,7 +707,7 @@ namespace vhdl4vs
 				foreach (var (p1, p2) in Parameters.Zip(componentDecl.Ports, (x, y) => Tuple.Create(x, y)))
 				{
 					VHDLType t2 = p2.Type;
-					VHDLStatementUtilities.CheckExpressionType(p1, t2, errorListener);
+					VHDLStatementUtilities.CheckExpressionType(p1, t2, errorListener, evaluationContext);
 				}
 
 				if (Parameters.Count < componentDecl.Ports.Count())
@@ -623,6 +729,29 @@ namespace vhdl4vs
 			if (overriden is VHDLNameExpression n)
 			{
 				n.Declaration = VHDLDeclarationUtilities.GetMemberDeclaration(ComponentNameExpression.Declaration, n.Name);
+				if (n.Declaration != null)
+					deepAnalysisResult.SortedReferences.Add(n.Span.Start,
+						new VHDLNameReference(
+							Name,
+							n.Span,
+							n.Declaration));
+			}
+			else
+			{
+				overriden.Resolve(deepAnalysisResult, errorListener);
+			}
+		}
+		public void ResolveGenericName(IVHDLToResolve overriden, DeepAnalysisResult deepAnalysisResult, Action<VHDLError> errorListener)
+		{
+			if (ComponentNameExpression?.Declaration == null)
+				return;
+
+			if (overriden is VHDLNameExpression n)
+			{
+				var decl = VHDLDeclarationUtilities.GetMemberDeclaration(ComponentNameExpression.Declaration, n.Name);
+				if (decl is VHDLGenericDeclaration gendecl)
+					n.Declaration = gendecl;
+
 				if (n.Declaration != null)
 					deepAnalysisResult.SortedReferences.Add(n.Span.Start,
 						new VHDLNameReference(

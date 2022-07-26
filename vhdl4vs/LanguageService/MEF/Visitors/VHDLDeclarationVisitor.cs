@@ -33,6 +33,7 @@ namespace vhdl4vs
 		private AnalysisResult m_analysisResult = null;
 		private Action<VHDLError> m_errorListener = null;
 		private HashSet<string> m_uniqueNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		private bool m_generic = false;
 		public VHDLDeclarationVisitor(AnalysisResult analysisResult, Action<VHDLError> errorListener = null)
 		{
 			m_analysisResult = analysisResult;
@@ -327,7 +328,11 @@ namespace vhdl4vs
 				{
 					string name = identifier_context.GetText();
 
-					VHDLConstantDeclaration decl = new VHDLConstantDeclaration(m_analysisResult, context, identifier_context, name, m_declarationStack.FirstOrDefault());
+					VHDLConstantDeclaration decl = null;
+					if (m_generic)
+						decl = new VHDLGenericDeclaration(m_analysisResult, context, identifier_context, name, m_declarationStack.FirstOrDefault());
+					else
+						decl = new VHDLConstantDeclaration(m_analysisResult, context, identifier_context, name, m_declarationStack.FirstOrDefault());
 					DeclarationsByContext.Add(identifier_context, decl);
 					(m_declarationStack.First() as VHDLSubprogramDeclaration)?.Parameters.Add(decl);
 					m_declarationStack.Peek().Children.Add(decl);
@@ -1118,5 +1123,12 @@ namespace vhdl4vs
 			return true;
 		}
 
+		public override bool VisitGeneric_list([NotNull] vhdlParser.Generic_listContext context)
+		{
+			m_generic = true;
+			bool b = base.VisitGeneric_list(context);
+			m_generic = false;
+			return b;
+		}
 	}
 }
