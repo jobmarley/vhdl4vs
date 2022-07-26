@@ -144,7 +144,10 @@ namespace vhdl4vs
 				{
 				}
 			}
+			PopScope();
+
 			// for enumeration we need to gather all declaration so they can be found as constants
+			// add enum values after pop so they are added to the parent scope
 			if (decl.Type is VHDLEnumerationType et)
 			{
 				foreach(var v in et.Values.OfType<VHDLNameEnumerationValue>())
@@ -153,7 +156,6 @@ namespace vhdl4vs
 					m_declarationStack.Peek().Children.Add(v.Declaration);
 				}
 			}
-			PopScope();
 			return true;
 		}
 

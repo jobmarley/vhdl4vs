@@ -439,7 +439,11 @@ namespace vhdl4vs
 							if (m_signatureHelpSession == null)
 							{
 								ITextBuffer textBuffer = m_textView.TextBuffer;
-								textBuffer.Insert(m_textView.Caret.Position.BufferPosition, "(");
+
+								if (m_textView.Selection.IsEmpty)
+									textBuffer.Insert(m_textView.Caret.Position.BufferPosition, "(");
+								else
+									textBuffer.Replace(m_textView.Selection.SelectedSpans.Last(), "(");
 								ITextSnapshot snapshot = textBuffer.CurrentSnapshot;
 								ITrackingPoint point = snapshot.CreateTrackingPoint(m_textView.Caret.Position.BufferPosition.TranslateTo(snapshot, PointTrackingMode.Positive), PointTrackingMode.Positive);
 								m_signatureHelpSession = m_signatureHelpBroker.CreateSignatureHelpSession(m_textView, point, true);
@@ -481,6 +485,7 @@ namespace vhdl4vs
 							{
 								m_signatureHelpSession.Dismiss();
 							}
+							return VSConstants.S_OK;
 						}
 						else if (char.IsLetterOrDigit(typedChar) || typedChar == '_')
 						{
