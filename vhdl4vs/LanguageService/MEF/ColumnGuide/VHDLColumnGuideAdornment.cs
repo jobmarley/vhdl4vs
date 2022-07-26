@@ -217,7 +217,7 @@ namespace vhdl4vs
 				TextBounds b2 = line.GetCharacterBounds(span.End - 1);
 
 				var co = m_guidelines.Select(x => coordinates.TryGetValue(x.Key, out var value) ? value : null).Where(x => x != null);
-				if (co.Any(x => x.Item1.X >= b1.Left && x.Item1.X < b2.Right && (x.Item1.Y < b1.Bottom || x.Item2.Y > b1.Top)))
+				if (co.Any(x => x.Item1.X >= b1.Left && x.Item1.X < b2.Right && x.Item1.Y < b1.Bottom && x.Item2.Y > b1.Top))
 					g.Children.Add(new RectangleGeometry(new Rect(b1.Left, b1.Top, b2.Right - b1.Left, b1.Height)));
 
 			}
@@ -271,7 +271,10 @@ namespace vhdl4vs
 					}
 					else
 					{
+						var l = view.GetTextViewLineContainingBufferPosition(snapshotPt1);
+						TextBounds b = l.GetCharacterBounds(snapshotPt1);
 						p1.Y = view.ViewportTop;
+						p1.X = p2.X = (b.Left + b.Right) / 2;
 					}
 
 					if (view.TextViewLines.ContainsBufferPosition(snapshotPt2))
@@ -295,6 +298,8 @@ namespace vhdl4vs
 			var guidelines = m_guidelines;
 			var guidelineCoordinates = GetGuidelinesCoordinates(guidelines);
 			Geometry textGeometry = CreateTextGeometry(guidelineCoordinates);
+			// dont need synchronization because it runs only on the main thread.
+			// There is still a risk it executes in the wrong order but I didnt run into any issues so...
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 			foreach (KeyValuePair<VHDLGuideline, Line> g in guidelines)
 			{
