@@ -210,8 +210,9 @@ namespace vhdl4vs.TypeVisitors
 			foreach (var x in context.index_subtype_definition())
 			{
 				// hmmm weird, are they all unconstrained? according to vhdl.g4, yes.
-				VHDLUnconstrainedType indexType = new VHDLUnconstrainedType();
-				indexType.Type = new VHDLReferenceType(new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener).Visit(x.name()) as VHDLReferenceExpression);
+				VHDLUnconstrainedType indexType = new VHDLUnconstrainedType(
+					new VHDLReferenceType(new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener).Visit(x.name()) as VHDLReferenceExpression)
+					);
 				indexTypes.Add(indexType);
 			}
 

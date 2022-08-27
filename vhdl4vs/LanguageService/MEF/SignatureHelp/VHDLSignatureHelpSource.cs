@@ -143,6 +143,14 @@ namespace vhdl4vs
 
 			return block;
 		}
+
+		public static VHDLClassifiedText operator+(VHDLClassifiedText t1, VHDLClassifiedText t2)
+		{
+			VHDLClassifiedText r = new VHDLClassifiedText();
+			r.Add(t1);
+			r.Add(t2);
+			return r;
+		}
 	}
 	internal class VHDLSignature
 		: ISignature

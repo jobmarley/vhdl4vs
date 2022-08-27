@@ -192,7 +192,6 @@ namespace vhdl4vs
 						return VHDLCompatibilityResult.No;
 
 					// Try to check if size match
-					VHDLCompatibilityResult r = VHDLCompatibilityResult.Yes;
 					for (int i = 0; i < aat2.Dimension; i++)
 					{
 						VHDLRange r1 = aat1.GetIndexRange(0);
@@ -200,12 +199,10 @@ namespace vhdl4vs
 						VHDLRange r2 = aat2.GetIndexRange(0);
 						VHDLEvaluatedExpression count2 = r2?.Count(aat2.GetIndexType(0))?.Evaluate(new EvaluationContext());
 						if (count1?.Result is VHDLIntegerValue c1 && count2?.Result is VHDLIntegerValue c2)
-							r = r && ((c1.Value == c2.Value) ? VHDLCompatibilityResult.Yes : VHDLCompatibilityResult.No);
-
-						r = r && VHDLCompatibilityResult.Unsure;
+							return (c1.Value == c2.Value) ? VHDLCompatibilityResult.Yes : VHDLCompatibilityResult.No;
 					}
 					// Cannot make sure that size match
-					return r;
+					return VHDLCompatibilityResult.Unsure;
 				}
 				if (t2 is VHDLAggregatedType at)
 				{
@@ -384,6 +381,11 @@ namespace vhdl4vs
 			Type = t;
 		}
 		public VHDLType Type { get; set; }
+
+		public virtual VHDLClassifiedText GetClassifiedText()
+		{
+			return null;
+		}
 	}
 	class VHDLNameEnumerationValue
 		: VHDLEnumerationElement
@@ -394,6 +396,11 @@ namespace vhdl4vs
 			Declaration = d;
 		}
 		public VHDLEnumerationValueDeclaration Declaration { get; } = null;
+
+		public override VHDLClassifiedText GetClassifiedText()
+		{
+			return new VHDLClassifiedText(Declaration.UndecoratedName, "vhdl.constant");
+		}
 	}
 	class VHDLCharEnumerationValue
 		: VHDLEnumerationElement
@@ -404,6 +411,10 @@ namespace vhdl4vs
 			Literal = l;
 		}
 		public VHDLCharacterLiteral Literal { get; } = null;
+		public override VHDLClassifiedText GetClassifiedText()
+		{
+			return new VHDLClassifiedText(Literal.Text, "vhdl.string");
+		}
 	}
 	class VHDLEnumerationType
 		: VHDLType
@@ -412,8 +423,13 @@ namespace vhdl4vs
 
 		public override VHDLClassifiedText GetClassifiedText()
 		{
-			if (Declaration.Name == null)
-				return new VHDLClassifiedText("<error type>");
+			if (Declaration?.Name == null)
+			{
+				var vals = Values.Take(3).Select(x => x.GetClassifiedText());
+				if (Values.Count() > 3)
+					vals = vals.Append(new VHDLClassifiedText("..."));
+				return new VHDLClassifiedText("enum", "vhdl.keyword") + new VHDLClassifiedText("(") + vals.Aggregate((x, y) => x + new VHDLClassifiedText(", ") + y) + new VHDLClassifiedText(")");
+			}
 			return new VHDLClassifiedText(Declaration.Name, "vhdl.type");
 		}
 
@@ -818,7 +834,11 @@ namespace vhdl4vs
 	class VHDLUnconstrainedType
 		: VHDLType
 	{
-		public VHDLReferenceType Type { get; set; } = null;
+		public VHDLUnconstrainedType(VHDLType type)
+		{
+			Type = type;
+		}
+		public VHDLType Type { get; set; } = null;
 
 		public override VHDLClassifiedText GetClassifiedText()
 		{
@@ -952,7 +972,7 @@ namespace vhdl4vs
 
 		public override VHDLType GetIndexType(int i)
 		{
-			return (ArrayType.Dereference() as VHDLArrayType)?.GetIndexType(i);
+			return (ArrayType.GetBaseType() as VHDLArrayType)?.GetIndexType(i);
 		}
 	}
 	// This is necessary, for stuff like eg. "array_signal <= ('1', '0', '1', '0');"

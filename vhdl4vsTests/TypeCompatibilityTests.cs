@@ -41,9 +41,15 @@ namespace vhdl4vsTests
 		{
 			AnalysisResult = new AnalysisResult();
 			AnalysisResult.BooleanType = CreateEnum(new string[]{ "TRUE", "FALSE" });
+
+
+			IntegerType = CreateRangeType(int.MinValue + 1, int.MaxValue); // -2147483647 to 2147483647
+			NaturalType = CreateRangeType(0, int.MaxValue); // 0 to 2147483647
 		}
 
 		private static AnalysisResult AnalysisResult { get; set; } = null;
+		private static VHDLScalarType IntegerType { get; set; } = null;
+		private static VHDLScalarType NaturalType { get; set; } = null;
 
 		private VHDLIntegerLiteral Integer(int i)
 		{
@@ -58,14 +64,14 @@ namespace vhdl4vsTests
 			return new VHDLCharacterLiteral(AnalysisResult, new Span(), c);
 		}
 
-		private void AssertCompatible(VHDLType t1, VHDLType t2)
+		private void AssertCompatible(VHDLType t1, VHDLType t2, VHDLConstantValue v1 = null, VHDLConstantValue v2 = null)
 		{
-			Assert.IsTrue(VHDLType.AreCompatible(t1, t2) == VHDLCompatibilityResult.Yes,
+			Assert.IsTrue(VHDLType.AreCompatible(t1, t2, v1, v2) == VHDLCompatibilityResult.Yes,
 				$"'{t1.GetClassifiedText().Text}' should be compatible with '{t2.GetClassifiedText().Text}'");
 		}
-		private void AssertNotCompatible(VHDLType t1, VHDLType t2)
+		private void AssertNotCompatible(VHDLType t1, VHDLType t2, VHDLConstantValue v1 = null, VHDLConstantValue v2 = null)
 		{
-			Assert.IsFalse(VHDLType.AreCompatible(t1, t2) == VHDLCompatibilityResult.Yes,
+			Assert.IsFalse(VHDLType.AreCompatible(t1, t2, v1, v2) == VHDLCompatibilityResult.Yes,
 				$"'{t1.GetClassifiedText().Text}' should not be compatible with '{t2.GetClassifiedText().Text}'");
 		}
 		[TestMethod]
@@ -95,31 +101,23 @@ namespace vhdl4vsTests
 
 			// yes
 			AssertCompatible(integer_strong_type_1, VHDLBuiltinTypeInteger.Instance);
-			AssertNotCompatible(VHDLBuiltinTypeInteger.Instance, integer_strong_type_1);
 
 			// no
 			AssertNotCompatible(integer_strong_type_1, integer_strong_type_2);
-			AssertNotCompatible(integer_strong_type_2, integer_strong_type_1);
 
 			// yes
 			AssertCompatible(integer_strong_type_1, subtype1);
-			AssertCompatible(subtype1, integer_strong_type_1);
 
 			// no
 			AssertNotCompatible(integer_strong_type_2, subtype1);
-			AssertNotCompatible(subtype1, integer_strong_type_2);
 
 			// yes
 			AssertCompatible(integer_strong_type_1, subtype2);
-			AssertCompatible(subtype2, integer_strong_type_1);
 
 			// yes
 			AssertCompatible(integer_strong_type_1, weak_range_type);
-			AssertNotCompatible(weak_range_type, integer_strong_type_1);
 			AssertCompatible(subtype2, weak_range_type);
-			AssertNotCompatible(weak_range_type, subtype2);
 			AssertNotCompatible(VHDLBuiltinTypeInteger.Instance, weak_range_type);
-			AssertCompatible(weak_range_type, VHDLBuiltinTypeInteger.Instance);
 
 		}
 		[TestMethod]
@@ -136,22 +134,17 @@ namespace vhdl4vsTests
 
 			// integer_strong_type_1 <= builtin int
 			AssertCompatible(real_strong_type_1, VHDLBuiltinTypeInteger.Instance);
-			//AssertCompatible(VHDLBuiltinTypeInteger.Instance, integer_strong_type_1);
 
 			// integer_strong_type_1 <= integer_strong_type_2
 			AssertNotCompatible(real_strong_type_1, real_strong_type_2);
-			AssertNotCompatible(real_strong_type_2, real_strong_type_1);
 
 			// integer_strong_type_1 <= integer_weak_type_1
 			AssertCompatible(real_strong_type_1, real_weak_type_1);
-			AssertCompatible(real_weak_type_1, real_strong_type_1);
 
 			// integer_strong_type_2 <= integer_weak_type_1
 			AssertNotCompatible(real_strong_type_2, real_weak_type_1);
-			AssertNotCompatible(real_weak_type_1, real_strong_type_2);
 
 			AssertNotCompatible(real_strong_type_1, integer_strong_type_1);
-			AssertNotCompatible(integer_strong_type_1, real_strong_type_1);
 		}
 
 
@@ -165,23 +158,75 @@ namespace vhdl4vsTests
 			enum_type_1_decl.Type = enum_type_1;
 			VHDLEnumerationValueDeclaration enum_type_1_value_decl = (enum_type_1.Values[3] as VHDLNameEnumerationValue).Declaration;
 
+			var char0 = Char('0');
+			var evaluatedChar0 = char0.Evaluate(new EvaluationContext());
+			var charz = Char('z');
+			var evaluatedCharz = charz.Evaluate(new EvaluationContext());
+
 			// no
 			AssertNotCompatible(enum_type_1, VHDLBuiltinTypeInteger.Instance);
-			AssertNotCompatible(VHDLBuiltinTypeInteger.Instance, enum_type_1);
 
 			// yes
-			AssertCompatible(enum_type_1, Char('0').Evaluate(null).Type);
-			// no
-			AssertNotCompatible(Char('0').Evaluate(null).Type, enum_type_1);
+			AssertCompatible(enum_type_1, evaluatedChar0.Type, null, evaluatedChar0.Result);
 
 			// no
-			AssertNotCompatible(enum_type_1, Char('z').Evaluate(null).Type);
-			AssertNotCompatible(Char('z').Evaluate(null).Type, enum_type_1);
+			AssertNotCompatible(enum_type_1, evaluatedCharz.Type, null, evaluatedCharz.Result);
 
 			// yes
 			AssertCompatible(enum_type_1, enum_type_1_value_decl.Type);
-			AssertCompatible(enum_type_1_value_decl.Type, enum_type_1);
+		}
 
+		static VHDLIndexConstrainedType IndexConstrained(int a, int b, VHDLArrayType t)
+		{
+			return new VHDLIndexConstrainedType(t, new VHDLType[] { CreateRangeType(a, b) });
+		}
+
+		// scalar can be a strong type (INTEGER -2147483647 to 2147483647), or a subtype (NATURAL is INTEGER 0 to 2147483647)
+		static VHDLScalarType CreateRangeType(int a, int b, VHDLType t = null)
+		{
+			VHDLScalarType st = new VHDLScalarType(t == null);
+			st.Range = new VHDLRange(new VHDLIntegerLiteral(a), a < b ? VHDLRangeDirection.To : VHDLRangeDirection.DownTo, new VHDLIntegerLiteral(b));
+			st.Type = t;
+			return st;
+		}
+		static VHDLScalarType CreateRangeType(float a, float b, VHDLType t = null)
+		{
+			VHDLScalarType st = new VHDLScalarType(t == null);
+			st.Range = new VHDLRange(new VHDLRealLiteral(a), a < b ? VHDLRangeDirection.To : VHDLRangeDirection.DownTo, new VHDLRealLiteral(b));
+			st.Type = t;
+			return st;
+		}
+		static VHDLArraySliceType CreateSliceType(int a, int b, VHDLType t)
+		{
+			return new VHDLArraySliceType(t, new VHDLRange(new VHDLIntegerLiteral(a), a < b ? VHDLRangeDirection.To : VHDLRangeDirection.DownTo, new VHDLIntegerLiteral(b)));
+		}
+		[TestMethod]
+		public void ArrayCompatibilityTests()
+		{
+			VHDLEnumerationType enum_type_1 = CreateEnum(new string[] { "'0'", "'1'", "'x'", "baba", "bobo" });
+			VHDLArrayType unconstrainedArrayType1 = new VHDLArrayType(enum_type_1, new VHDLType[] { new VHDLUnconstrainedType(IntegerType) });
+			VHDLArrayType arrayType2 = new VHDLArrayType(enum_type_1, new VHDLType[] { CreateRangeType(31, 0) });
+			VHDLArrayType arrayType3 = new VHDLArrayType(enum_type_1, new VHDLType[] { CreateRangeType(31, 0) });
+
+			// no
+			AssertNotCompatible(arrayType2, arrayType3);
+
+			// index constrained
+			VHDLIndexConstrainedType arrayType4 = IndexConstrained(31, 0, unconstrainedArrayType1);
+			VHDLIndexConstrainedType arrayType5 = IndexConstrained(31, 0, unconstrainedArrayType1);
+			VHDLIndexConstrainedType arrayType6 = IndexConstrained(0, 31, unconstrainedArrayType1);
+
+			AssertCompatible(arrayType4, arrayType5);
+
+			AssertCompatible(arrayType4, arrayType6);
+
+			// slices
+			VHDLArraySliceType arrayType7 = CreateSliceType(0, 15, arrayType5);
+			VHDLArraySliceType arrayType8 = CreateSliceType(0, 15, arrayType6);
+			VHDLArraySliceType arrayType9 = CreateSliceType(1, 15, arrayType6);
+
+			AssertCompatible(arrayType7, arrayType8);
+			AssertNotCompatible(arrayType8, arrayType9);
 		}
 	}
 }
