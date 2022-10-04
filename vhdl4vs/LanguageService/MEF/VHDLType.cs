@@ -170,8 +170,10 @@ namespace vhdl4vs
 
 					VHDLRange r1 = aat1.GetIndexRange(0);
 					VHDLEvaluatedExpression count1 = r1?.Count(aat1.GetIndexType(0))?.Evaluate(new EvaluationContext());
-					if (count1?.Result is VHDLIntegerValue v && v2 is VHDLArrayValue av2)
-						return (v.Value == av2.Value.Count()) ? VHDLCompatibilityResult.Yes : VHDLCompatibilityResult.No;
+					VHDLRange r2 = cat.GetIndexRange(0);
+					VHDLEvaluatedExpression count2 = r2?.Count(cat.GetIndexType(0))?.Evaluate(new EvaluationContext());
+					if (count1?.Result is VHDLIntegerValue c1 && count2?.Result is VHDLIntegerValue c2)
+						return (c1.Value == c2.Value) ? VHDLCompatibilityResult.Yes : VHDLCompatibilityResult.No;
 
 					// Cannot make sure that size match
 					return VHDLCompatibilityResult.Unsure;

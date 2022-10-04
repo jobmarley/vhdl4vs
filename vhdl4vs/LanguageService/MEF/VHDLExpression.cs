@@ -560,7 +560,7 @@ namespace vhdl4vs
 				return null;
 
 			// That's pretty ugly, but I don't see any other way to define an array type
-			VHDLConcatenatedArrayType at = new VHDLConcatenatedArrayType(rightType, new VHDLRange(new VHDLIntegerLiteral(left.Value.Count() + 1), VHDLRangeDirection.DownTo, new VHDLIntegerLiteral(0)));
+			VHDLConcatenatedArrayType at = new VHDLConcatenatedArrayType(rightType, new VHDLRange(new VHDLIntegerLiteral(left.Value.Count()), VHDLRangeDirection.DownTo, new VHDLIntegerLiteral(0)));
 			return new VHDLEvaluatedExpression(at, this, null); // should return literal if thats possible
 		}
 		VHDLEvaluatedExpression ConcatStringString(VHDLArrayValue left, VHDLArrayValue right)
@@ -662,7 +662,26 @@ namespace vhdl4vs
 			VHDLType t2 = e2?.Type?.Dereference();
 			if (t1 == null || t2 == null)
 				return null;
-
+	
+			if (t1 is VHDLEnumerationType et1)
+			{
+				if (t2 is VHDLCharLiteralType)
+				{
+					return ConcatCharEnum(e2.Result as VHDLCharValue, et1);
+				}
+				else if (t2 is VHDLStringLiteralType)
+				{
+					return ConcatStringEnum(e2.Result as VHDLArrayValue, et1, true, evaluationContext);
+				}
+				else if (t2 is VHDLAbstractArrayType aat && aat.Dimension == 1) // dont support multidim arrays
+				{
+					return ConcatArrayElement(e1, e2, true, evaluationContext);
+				}
+				else if (t2 is VHDLEnumerationType et2)
+				{
+					return ConcatEnumEnum(et1, et2);
+				}
+			}
 			if (t1 is VHDLStringLiteralType)
 			{
 				if (t2 is VHDLCharLiteralType)
