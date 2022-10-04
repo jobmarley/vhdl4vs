@@ -553,6 +553,16 @@ namespace vhdl4vs
 				return new VHDLEvaluatedExpression(sliceType, this, null);
 			}
 		}
+		VHDLEvaluatedExpression ConcatStringEnum(VHDLArrayValue left, VHDLEnumerationType rightType, bool invert, EvaluationContext evaluationContext)
+		{
+			// check if elements are compatibles eg. <"abc" & std_logic> is invalid
+			if (left?.Value?.Any(c => VHDLType.AreCompatible(rightType, VHDLCharLiteralType.Instance, null, c) == VHDLCompatibilityResult.No) == true)
+				return null;
+
+			// That's pretty ugly, but I don't see any other way to define an array type
+			VHDLConcatenatedArrayType at = new VHDLConcatenatedArrayType(rightType, new VHDLRange(new VHDLIntegerLiteral(left.Value.Count() + 1), VHDLRangeDirection.DownTo, new VHDLIntegerLiteral(0)));
+			return new VHDLEvaluatedExpression(at, this, null); // should return literal if thats possible
+		}
 		VHDLEvaluatedExpression ConcatStringString(VHDLArrayValue left, VHDLArrayValue right)
 		{
 			// "010" & "101"
@@ -569,6 +579,24 @@ namespace vhdl4vs
 		{
 			// '0' & '1'
 			return new VHDLEvaluatedExpression(VHDLStringLiteralType.Instance, this, VHDLArrayValue.FromString(left.Value.ToString() + right.Value));
+		}
+		VHDLEvaluatedExpression ConcatCharEnum(VHDLCharValue left, VHDLEnumerationType rightType)
+		{
+			if (VHDLType.AreCompatible(VHDLCharLiteralType.Instance, rightType, left, null) == VHDLCompatibilityResult.No)
+				return null;
+
+			// '0' & std_logic
+			VHDLConcatenatedArrayType at = new VHDLConcatenatedArrayType(rightType, new VHDLRange(new VHDLIntegerLiteral(1), VHDLRangeDirection.DownTo, new VHDLIntegerLiteral(0)));
+			return new VHDLEvaluatedExpression(at, this, null); // should return literal if thats possible
+		}
+		VHDLEvaluatedExpression ConcatEnumEnum(VHDLEnumerationType leftType, VHDLEnumerationType rightType)
+		{
+			if (VHDLType.AreCompatible(leftType, rightType, null, null) == VHDLCompatibilityResult.No)
+				return null;
+
+			// std_ulogic & std_logic
+			VHDLConcatenatedArrayType at = new VHDLConcatenatedArrayType(leftType.GetBaseType(), new VHDLRange(new VHDLIntegerLiteral(1), VHDLRangeDirection.DownTo, new VHDLIntegerLiteral(0)));
+			return new VHDLEvaluatedExpression(at, this, null); // should return literal if thats possible
 		}
 		VHDLEvaluatedExpression ConcatArrayElement(VHDLEvaluatedExpression left, VHDLEvaluatedExpression right, bool invert, EvaluationContext evaluationContext)
 		{
@@ -601,7 +629,8 @@ namespace vhdl4vs
 			// '0' & arr
 
 			// arrays must be of the same base type
-			if (leftType.GetBaseType() != rightType.GetBaseType())
+			if (VHDLType.AreCompatible(leftType.ElementType, rightType.ElementType, null, null) == VHDLCompatibilityResult.No
+				|| leftType.Dimension != 1 || rightType.Dimension != 1)
 				return null;
 
 			// Try to evaluate the size of the concatenation operation
@@ -611,14 +640,14 @@ namespace vhdl4vs
 			VHDLEvaluatedExpression eval = count?.Evaluate(evaluationContext);
 			if (eval?.Result is VHDLIntegerValue v)
 			{
-				VHDLArraySliceType sliceType = new VHDLArraySliceType(rightType.GetBaseType(), new VHDLRange(new VHDLIntegerLiteral(v.Value - 1), VHDLRangeDirection.DownTo, new VHDLIntegerLiteral(null, new Span(), 0, null)));
-				return new VHDLEvaluatedExpression(sliceType, this, null); // should return value if thats possible
+				VHDLConcatenatedArrayType at = new VHDLConcatenatedArrayType(rightType.ElementType.GetBaseType(), new VHDLRange(new VHDLIntegerLiteral(v.Value - 1), VHDLRangeDirection.DownTo, new VHDLIntegerLiteral(null, new Span(), 0, null)));
+				return new VHDLEvaluatedExpression(at, this, null); // should return value if thats possible
 			}
 			else
 			{
-				// cannot evaluate range, just return a slice without range
-				VHDLArraySliceType sliceType = new VHDLArraySliceType(rightType.GetBaseType(), null);
-				return new VHDLEvaluatedExpression(sliceType, this, null);
+				// cannot evaluate range, just return an array without range
+				VHDLConcatenatedArrayType at = new VHDLConcatenatedArrayType(rightType.ElementType.GetBaseType(), null);
+				return new VHDLEvaluatedExpression(at, this, null);
 			}
 		}
 		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null)
@@ -651,6 +680,10 @@ namespace vhdl4vs
 					// "010" & arr
 					return ConcatStringArray(e1.Result as VHDLArrayValue, aat, e2.Result as VHDLArrayValue, false, evaluationContext);
 				}
+				else if (t2 is VHDLEnumerationType et)
+				{
+					return ConcatStringEnum(e1.Result as VHDLArrayValue, et, false, evaluationContext);
+				}
 			}
 			else if (t1 is VHDLCharLiteralType)
 			{
@@ -666,6 +699,10 @@ namespace vhdl4vs
 				else if (t2 is VHDLAbstractArrayType aat && aat.Dimension == 1) // dont support multidim arrays
 				{
 					return ConcatArrayElement(e1, e2, true, evaluationContext);
+				}
+				else if (t2 is VHDLEnumerationType et)
+				{
+					return ConcatCharEnum(e1.Result as VHDLCharValue, et);
 				}
 			}
 			else if (t1 is VHDLAbstractArrayType aat && aat.Dimension == 1)

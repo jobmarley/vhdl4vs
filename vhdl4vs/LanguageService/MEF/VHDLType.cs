@@ -163,6 +163,19 @@ namespace vhdl4vs
 
 			if (t1 is VHDLAbstractArrayType aat1)
 			{
+				if (aat1.Dimension == 1 && t2 is VHDLConcatenatedArrayType cat)
+				{
+					if (AreCompatible(aat1.ElementType, cat.ElementType) == VHDLCompatibilityResult.No)
+						return VHDLCompatibilityResult.No;
+
+					VHDLRange r1 = aat1.GetIndexRange(0);
+					VHDLEvaluatedExpression count1 = r1?.Count(aat1.GetIndexType(0))?.Evaluate(new EvaluationContext());
+					if (count1?.Result is VHDLIntegerValue v && v2 is VHDLArrayValue av2)
+						return (v.Value == av2.Value.Count()) ? VHDLCompatibilityResult.Yes : VHDLCompatibilityResult.No;
+
+					// Cannot make sure that size match
+					return VHDLCompatibilityResult.Unsure;
+				}
 				if (aat1.Dimension == 1 && t2 is VHDLStringLiteralType slt)
 				{
 					//string s = (slt.Literal as VHDLStringLiteral)?.Value ??
@@ -994,6 +1007,55 @@ namespace vhdl4vs
 		public override VHDLClassifiedText GetClassifiedText()
 		{
 			return new VHDLClassifiedText("<aggregate>");
+		}
+	}
+
+	class VHDLConcatenatedArrayType
+		: VHDLAbstractArrayType
+	{
+		public VHDLConcatenatedArrayType(VHDLType elementType, VHDLRange range)
+		{
+			m_elementType = elementType;
+			Range = range;
+			VHDLScalarType st = new VHDLScalarType(false);
+			st.Range = range;
+			m_indexTypes = new List<VHDLType>() { st };
+		}
+
+		private VHDLType m_elementType = null;
+		public override VHDLType ElementType => m_elementType;
+
+		private List<VHDLType> m_indexTypes = new List<VHDLType>();
+		public VHDLRange Range { get; } = null;
+		public override IEnumerable<VHDLType> IndexTypes => m_indexTypes;
+
+		public override VHDLClassifiedText GetClassifiedText()
+		{
+			VHDLClassifiedText text = new VHDLClassifiedText("array ", "keyword");
+			text.Add("(");
+			if (Range != null)
+			{
+				text.Add(Range.GetClassifiedText());
+			}
+			else
+			{
+				text.Add("range ", "keyword");
+				text.Add("<>");
+			}
+			text.Add(") ");
+			text.Add(" of ", "keyword");
+			text.Add(ElementType.GetClassifiedText());
+			return text;
+		}
+
+		public override VHDLType GetBaseType()
+		{
+			return this;
+		}
+
+		public override VHDLType GetIndexType(int i)
+		{
+			return m_indexTypes[i];
 		}
 	}
 }
