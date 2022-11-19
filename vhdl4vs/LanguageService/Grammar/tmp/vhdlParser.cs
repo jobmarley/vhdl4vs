@@ -3706,11 +3706,11 @@ public partial class vhdlParser : Parser {
 		[System.Diagnostics.DebuggerNonUserCode] public IdentifierContext identifier() {
 			return GetRuleContext<IdentifierContext>(0);
 		}
-		[System.Diagnostics.DebuggerNonUserCode] public Discrete_rangeContext discrete_range() {
-			return GetRuleContext<Discrete_rangeContext>(0);
-		}
 		[System.Diagnostics.DebuggerNonUserCode] public Simple_expressionContext simple_expression() {
 			return GetRuleContext<Simple_expressionContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public Discrete_rangeContext discrete_range() {
+			return GetRuleContext<Discrete_rangeContext>(0);
 		}
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode OTHERS() { return GetToken(vhdlParser.OTHERS, 0); }
 		public ChoiceContext(ParserRuleContext parent, int invokingState)
@@ -3755,14 +3755,14 @@ public partial class vhdlParser : Parser {
 				EnterOuterAlt(_localctx, 2);
 				{
 				State = 873;
-				discrete_range();
+				simple_expression();
 				}
 				break;
 			case 3:
 				EnterOuterAlt(_localctx, 3);
 				{
 				State = 874;
-				simple_expression();
+				discrete_range();
 				}
 				break;
 			case 4:
@@ -21680,8 +21680,8 @@ public partial class vhdlParser : Parser {
 		'\x5', 'V', ',', '\x2', '\x367', '\x368', '\a', '\x87', '\x2', '\x2', 
 		'\x368', '\x369', '\x5', '\x198', '\xCD', '\x2', '\x369', 'S', '\x3', 
 		'\x2', '\x2', '\x2', '\x36A', '\x36F', '\x5', '\xE8', 'u', '\x2', '\x36B', 
-		'\x36F', '\x5', '\x96', 'L', '\x2', '\x36C', '\x36F', '\x5', '\x1AA', 
-		'\xD6', '\x2', '\x36D', '\x36F', '\a', '@', '\x2', '\x2', '\x36E', '\x36A', 
+		'\x36F', '\x5', '\x1AA', '\xD6', '\x2', '\x36C', '\x36F', '\x5', '\x96', 
+		'L', '\x2', '\x36D', '\x36F', '\a', '@', '\x2', '\x2', '\x36E', '\x36A', 
 		'\x3', '\x2', '\x2', '\x2', '\x36E', '\x36B', '\x3', '\x2', '\x2', '\x2', 
 		'\x36E', '\x36C', '\x3', '\x2', '\x2', '\x2', '\x36E', '\x36D', '\x3', 
 		'\x2', '\x2', '\x2', '\x36F', 'U', '\x3', '\x2', '\x2', '\x2', '\x370', 

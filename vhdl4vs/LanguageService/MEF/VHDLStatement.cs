@@ -375,6 +375,17 @@ namespace vhdl4vs
 		public VHDLExpression Expression { get; set; } = null;
 		public List<VHDLCaseAlternative> Alternatives { get; set; } = new List<VHDLCaseAlternative>();
 		public override IEnumerable<object> Children { get { return Alternatives.SelectMany(x => x.Children).Prepend(Expression).Where(x => x != null); } }
+
+		public override void Check(Action<VHDLError> errorListener)
+		{
+			var evaluatedExpr = Expression.Evaluate(new EvaluationContext())?.Type;
+			foreach (var c in Alternatives.SelectMany(x => x.Conditions).Where(x => !(x is VHDLOthersExpression)))
+			{
+				VHDLStatementUtilities.CheckExpressionType(c, evaluatedExpr, errorListener);
+			}
+
+			base.Check(errorListener);
+		}
 	}
 
 	class VHDLProcedureCallStatement

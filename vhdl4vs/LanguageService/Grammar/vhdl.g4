@@ -392,8 +392,8 @@ case_statement_alternative
 
 choice
   : identifier
-  | discrete_range
   | simple_expression
+  | discrete_range
   | OTHERS
   ;
 
