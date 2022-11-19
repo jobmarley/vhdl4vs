@@ -180,5 +180,42 @@ namespace vhdl4vs
 				return 0;
 			}
 		}
+		public override int VisitCase_statement([NotNull] vhdlParser.Case_statementContext context)
+		{
+			try
+			{
+				if (m_position >= context.Start.StartIndex && m_position < context.Stop.StopIndex)
+				{
+					return base.VisitCase_statement(context) + 1;
+				}
+				else
+				{
+					return 0;
+				}
+			}
+			catch (Exception e)
+			{
+				return 0;
+			}
+		}
+
+		public override int VisitCase_statement_alternative([NotNull] vhdlParser.Case_statement_alternativeContext context)
+		{
+			try
+			{
+				if (m_position >= context.Start.StartIndex && m_position < context.Stop.StopIndex)
+				{
+					return base.VisitCase_statement_alternative(context) + 1;
+				}
+				else
+				{
+					return 0;
+				}
+			}
+			catch (Exception e)
+			{
+				return 0;
+			}
+		}
 	}
 }
