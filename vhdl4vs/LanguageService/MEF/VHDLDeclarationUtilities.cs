@@ -306,8 +306,8 @@ namespace vhdl4vs
 				// Check if name exist in same project documents
 				// we do this here not to repeat it for each parent scope
 				var siblingARs = enclosingDeclaration.Document.DocumentTable.EnumerateSiblings(enclosingDeclaration.Document).Where(x => x != enclosingDeclaration.Document).Select(x => x?.Parser?.AResult).Where(x => x != null);
-				// x.Declarations.Values.First() is the file declaration
-				foreach (var v in siblingARs.Select(x => x.Declarations.Values.FirstOrDefault()).Where(x => x != null).SelectMany(x => x.Children).Where(x => predicate(x)))
+				// x.SortedScopedDeclarations.Values.First() is the file declaration
+				foreach (var v in siblingARs.Select(x => x.SortedScopedDeclarations.Values.FirstOrDefault()).Where(x => x != null).SelectMany(x => x.Children).Where(x => predicate(x)))
 					yield return v;
 			}
 		}
