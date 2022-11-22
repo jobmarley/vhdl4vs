@@ -44,11 +44,23 @@ namespace vhdl4vs.ExpressionVisitors
 		private Action<IVHDLToResolve, DeepAnalysisResult, Action<VHDLError>> m_resolveOverrider = null;
 		private Action<VHDLError> m_errorListener = null;
 		private AnalysisResult m_analysisResult = null;
-		public VHDLExpressionVisitor(AnalysisResult analysisResult, Action<VHDLError> errorListener, Action<IVHDLToResolve, DeepAnalysisResult, Action<VHDLError>> resolveOverrider = null)
+		private VHDLExpression m_assignedToExpression = null;
+
+		private void AddToResolve(IVHDLToResolve toResolve)
+		{
+			if (m_resolveOverrider != null)
+				m_analysisResult.AddToResolve(new VHDLFakeResolver(toResolve, m_resolveOverrider));
+			else
+				m_analysisResult.AddToResolve(toResolve);
+		}
+		public VHDLExpressionVisitor(AnalysisResult analysisResult, Action<VHDLError> errorListener,
+			Action<IVHDLToResolve, DeepAnalysisResult, Action<VHDLError>> resolveOverrider = null,
+			VHDLExpression assignedToExpression = null)
 		{
 			m_analysisResult = analysisResult;
 			m_errorListener = errorListener;
 			m_resolveOverrider = resolveOverrider;
+			m_assignedToExpression = assignedToExpression;
 		}
 		protected override VHDLExpression AggregateResult(VHDLExpression aggregate, VHDLExpression nextResult)
 		{
@@ -291,24 +303,58 @@ namespace vhdl4vs.ExpressionVisitors
 		}
 		public override VHDLExpression VisitAggregate([NotNull] vhdlParser.AggregateContext context)
 		{
+			var tmpOverrider = m_resolveOverrider;
+			// aggregate named elements must be resolved in the context of the assigned variable type
+			m_resolveOverrider = (r, dar, errorListener) =>
+			{
+				VHDLNameExpression expr = r as VHDLNameExpression;
+				if (expr == null)
+					return;
+
+				VHDLRecordType rt = ((m_assignedToExpression as VHDLReferenceExpression)?.Declaration as VHDLAbstractVariableDeclaration)?.Type?.Dereference() as VHDLRecordType;
+				if (rt == null)
+				{
+					m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Name '{0}' cannot be found", expr.Name), expr.Span));
+					return;
+				}
+				expr.Declaration = rt.Fields.FirstOrDefault(x => string.Compare(x.Name, expr.Name) == 0);
+				if (expr.Declaration != null)
+					dar.SortedReferences.Add(expr.Span.Start,
+						new VHDLNameReference(
+							expr.Name,
+							expr.Span,
+							expr.Declaration));
+			};
 			List<VHDLExpression> elements = new List<VHDLExpression>();
 			foreach (var elemContext in context.element_association())
 			{
 				elements.Add(VisitElement_association(elemContext));
 			}
+			m_resolveOverrider = tmpOverrider;
 			return new VHDLAggregateExpression(m_analysisResult, context.GetSpan(), elements);
 		}
 		public override VHDLExpression VisitElement_association([NotNull] vhdlParser.Element_associationContext context)
 		{
-			VHDLExpression e = VisitExpression(context.expression());
+			// (name => expression, ...)
+			// expression must be parsed after name
+			// lets say we have something like "record <= (name1 => (name2 => value), ...)"
+			// to resolve name1, we need to resolve record to get its type, and definition.
+			// Only then can name1 be resolved to record.name1
+			// Then we know the type of name1, and name2 can be resolved, etc...
+
+			VHDLExpression e = null;
 			if (context.choices() != null)
 			{
+				VHDLNameExpression nameExpr = null;
 				List<VHDLExpression> choices = new List<VHDLExpression>();
 				foreach (var choiceContext in context.choices().choice())
 				{
 					if (choiceContext.identifier() != null)
 					{
-						choices.Add(new VHDLNameExpression(m_analysisResult, choiceContext.identifier().GetSpan(), choiceContext.identifier().GetText()));
+						// element names need to be resolved in the context of the expected type (a record?)
+						nameExpr = new VHDLNameExpression(m_analysisResult, choiceContext.identifier().GetSpan(), choiceContext.identifier().GetText());
+						choices.Add(nameExpr);
+						AddToResolve(nameExpr);
 					}
 					else if (choiceContext.discrete_range() != null)
 					{
@@ -323,9 +369,12 @@ namespace vhdl4vs.ExpressionVisitors
 						choices.Add(new VHDLOthersExpression(m_analysisResult, choiceContext.OTHERS().Symbol.GetSpan()));
 					}
 				}
+				// We must create a new visitor because the context is different, and otherwise it will be overriden
+				e = new VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, nameExpr).Visit(context.expression());
 				return new VHDLArgumentAssociationExpression(m_analysisResult, context.GetSpan(), choices, e);
 			}
 
+			e = new VHDLExpressionVisitor(m_analysisResult, m_errorListener).Visit(context.expression());
 			return e;
 		}
 		

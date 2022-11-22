@@ -234,23 +234,7 @@ namespace vhdl4vs
 			int start = m_declarationStack.Peek().Span.Start;
 			int stop = m_declarationStack.Peek().Span.End;
 
-			VHDLExpression expr = null;
-			if (context.expression() != null)
-			{
-				try // This should not cause an error
-				{
-					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener);
-					expr = exprVisitor.Visit(context.expression());
-				}
-				catch (VHDLCodeException e)
-				{
-					m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Internal error", e.Span));
-				}
-				catch (Exception e)
-				{
-					m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Internal error", context.expression().GetSpan()));
-				}
-			}
+			List<VHDLAbstractVariableDeclaration> declarationList = new List<VHDLAbstractVariableDeclaration>();
 			if (context.identifier_list()?.identifier() != null)
 			{
 				VHDLType type = null;
@@ -278,23 +262,19 @@ namespace vhdl4vs
 					m_declarationStack.Peek().Children.Add(decl);
 					decl.Type = type;
 
-					decl.InitializationExpression = expr;
+					declarationList.Add(decl);
 					decl.Mode = VisitSignalMode(context.signal_mode());
 				}
 			}
-			return true;
-		}
-		public override bool VisitInterface_constant_declaration([NotNull] vhdlParser.Interface_constant_declarationContext context)
-		{
-			int start = m_declarationStack.Peek().Span.Start;
-			int stop = m_declarationStack.Peek().Span.End;
-
 			VHDLExpression expr = null;
 			if (context.expression() != null)
 			{
 				try // This should not cause an error
-				{ 
-					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener);
+				{
+					// Declarations don't have a VHDLNameExpression currently, and the ExpressionVisitor requires one. So we create a fake one
+					VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, declarationList.First().NameContext.GetSpan(), declarationList.First().Name);
+					m_analysisResult.ToResolve.Add(nameExpr);
+					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, nameExpr);
 					expr = exprVisitor.Visit(context.expression());
 				}
 				catch (VHDLCodeException e)
@@ -306,6 +286,16 @@ namespace vhdl4vs
 					m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Internal error", context.expression().GetSpan()));
 				}
 			}
+			foreach (var d in declarationList)
+				d.InitializationExpression = expr;
+			return true;
+		}
+		public override bool VisitInterface_constant_declaration([NotNull] vhdlParser.Interface_constant_declarationContext context)
+		{
+			int start = m_declarationStack.Peek().Span.Start;
+			int stop = m_declarationStack.Peek().Span.End;
+
+			List<VHDLAbstractVariableDeclaration> declarationList = new List<VHDLAbstractVariableDeclaration>();
 			if (context.identifier_list()?.identifier() != null)
 			{
 				VHDLType type = null;
@@ -338,23 +328,18 @@ namespace vhdl4vs
 					m_declarationStack.Peek().Children.Add(decl);
 
 					decl.Type = type;
-
-					decl.InitializationExpression = expr;
+					declarationList.Add(decl);
 				}
 			}
-			return true;
-		}
-		public override bool VisitInterface_signal_declaration([NotNull] vhdlParser.Interface_signal_declarationContext context)
-		{
-			int start = m_declarationStack.Peek().Span.Start;
-			int stop = m_declarationStack.Peek().Span.End;
-
 			VHDLExpression expr = null;
 			if (context.expression() != null)
 			{
 				try // This should not cause an error
-				{ 
-					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener);
+				{
+					// Declarations don't have a VHDLNameExpression currently, and the ExpressionVisitor requires one. So we create a fake one
+					VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, declarationList.First().NameContext.GetSpan(), declarationList.First().Name);
+					m_analysisResult.ToResolve.Add(nameExpr);
+					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, nameExpr);
 					expr = exprVisitor.Visit(context.expression());
 				}
 				catch (VHDLCodeException e)
@@ -366,6 +351,16 @@ namespace vhdl4vs
 					m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Internal error", context.expression().GetSpan()));
 				}
 			}
+			foreach (var d in declarationList)
+				d.InitializationExpression = expr;
+			return true;
+		}
+		public override bool VisitInterface_signal_declaration([NotNull] vhdlParser.Interface_signal_declarationContext context)
+		{
+			int start = m_declarationStack.Peek().Span.Start;
+			int stop = m_declarationStack.Peek().Span.End;
+
+			List<VHDLAbstractVariableDeclaration> declarationList = new List<VHDLAbstractVariableDeclaration>();
 			if (context.identifier_list()?.identifier() != null)
 			{
 				VHDLType type = null;
@@ -392,11 +387,33 @@ namespace vhdl4vs
 					(m_declarationStack.First() as VHDLSubprogramDeclaration)?.Parameters.Add(decl);
 					m_declarationStack.Peek().Children.Add(decl);
 					decl.Type = type;
-					
-					decl.InitializationExpression = expr;
+
+					declarationList.Add(decl);
 					decl.Mode = VisitSignalMode(context.signal_mode());
 				}
 			}
+			VHDLExpression expr = null;
+			if (context.expression() != null)
+			{
+				try // This should not cause an error
+				{
+					// Declarations don't have a VHDLNameExpression currently, and the ExpressionVisitor requires one. So we create a fake one
+					VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, declarationList.First().NameContext.GetSpan(), declarationList.First().Name);
+					m_analysisResult.ToResolve.Add(nameExpr);
+					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, nameExpr);
+					expr = exprVisitor.Visit(context.expression());
+				}
+				catch (VHDLCodeException e)
+				{
+					m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Internal error", e.Span));
+				}
+				catch (Exception e)
+				{
+					m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Internal error", context.expression().GetSpan()));
+				}
+			}
+			foreach (var d in declarationList)
+				d.InitializationExpression = expr;
 			return true;
 		}
 		public override bool VisitConstant_declaration([NotNull] vhdlParser.Constant_declarationContext context)
@@ -404,18 +421,7 @@ namespace vhdl4vs
 			int start = m_declarationStack.Peek().Span.Start;
 			int stop = m_declarationStack.Peek().Span.End;
 
-			VHDLExpression expr = null;
-			if (context.expression() != null)
-			{
-				try // This should not cause an error
-				{ 
-					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener);
-					expr = exprVisitor.Visit(context.expression());
-				}
-				catch (Exception e)
-				{
-				}
-			}
+			List<VHDLAbstractVariableDeclaration> declarationList = new List<VHDLAbstractVariableDeclaration>();
 			if (context.identifier_list()?.identifier() != null)
 			{
 				VHDLType type = null;
@@ -442,9 +448,28 @@ namespace vhdl4vs
 					m_declarationStack.Peek().Children.Add(decl);
 					decl.Type = type;
 
-					decl.InitializationExpression = expr;
+					declarationList.Add(decl);
 				}
 			}
+			VHDLExpression expr = null;
+			if (context.expression() != null)
+			{
+				try // This should not cause an error
+				{
+					// Declarations don't have a VHDLNameExpression currently, and the ExpressionVisitor requires one. So we create a fake one
+					VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, declarationList.First().NameContext.GetSpan(), declarationList.First().Name);
+					m_analysisResult.ToResolve.Add(nameExpr);
+					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, nameExpr);
+					expr = exprVisitor.Visit(context.expression());
+				}
+				catch (Exception e)
+				{
+				}
+			}
+
+			foreach (var d in declarationList)
+				d.InitializationExpression = expr;
+
 			return true;
 		}
 
@@ -453,23 +478,7 @@ namespace vhdl4vs
 			int start = m_declarationStack.Peek().Span.Start;
 			int stop = m_declarationStack.Peek().Span.End;
 
-			VHDLExpression expr = null;
-			if (context.expression() != null)
-			{
-				try // This should not cause an error
-				{ 
-					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener);
-					expr = exprVisitor.Visit(context.expression());
-				}
-				catch (VHDLCodeException e)
-				{
-					m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Internal error", e.Span));
-				}
-				catch (Exception e)
-				{
-					m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Internal error", context.GetSpan()));
-				}
-			}
+			List<VHDLAbstractVariableDeclaration> declarationList = new List<VHDLAbstractVariableDeclaration>();
 			if (context.identifier_list()?.identifier() != null)
 			{
 				VHDLType type = null;
@@ -496,23 +505,18 @@ namespace vhdl4vs
 					m_declarationStack.Peek().Children.Add(decl);
 					decl.Type = type;
 
-					decl.InitializationExpression = expr;
+					declarationList.Add(decl);
 				}
 			}
-
-			return true;
-		}
-		public override bool VisitVariable_declaration([NotNull] vhdlParser.Variable_declarationContext context)
-		{
-			int start = m_declarationStack.Peek().Span.Start;
-			int stop = m_declarationStack.Peek().Span.End;
-
 			VHDLExpression expr = null;
 			if (context.expression() != null)
 			{
 				try // This should not cause an error
-				{ 
-					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener);
+				{
+					// Declarations don't have a VHDLNameExpression currently, and the ExpressionVisitor requires one. So we create a fake one
+					VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, declarationList.First().NameContext.GetSpan(), declarationList.First().Name);
+					m_analysisResult.ToResolve.Add(nameExpr);
+					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, nameExpr);
 					expr = exprVisitor.Visit(context.expression());
 				}
 				catch (VHDLCodeException e)
@@ -521,9 +525,20 @@ namespace vhdl4vs
 				}
 				catch (Exception e)
 				{
-					m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Internal error", context.expression().GetSpan()));
+					m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Internal error", context.GetSpan()));
 				}
 			}
+			foreach (var d in declarationList)
+				d.InitializationExpression = expr;
+
+			return true;
+		}
+		public override bool VisitVariable_declaration([NotNull] vhdlParser.Variable_declarationContext context)
+		{
+			int start = m_declarationStack.Peek().Span.Start;
+			int stop = m_declarationStack.Peek().Span.End;
+
+			List<VHDLAbstractVariableDeclaration> declarationList = new List<VHDLAbstractVariableDeclaration>();
 			if (context.identifier_list()?.identifier() != null)
 			{
 				VHDLType type = null;
@@ -549,10 +564,32 @@ namespace vhdl4vs
 					DeclarationsByContext.Add(identifier_context, decl);
 					m_declarationStack.Peek().Children.Add(decl);
 					decl.Type = type;
-					
-					decl.InitializationExpression = expr;
+
+					declarationList.Add(decl);
 				}
 			}
+			VHDLExpression expr = null;
+			if (context.expression() != null)
+			{
+				try // This should not cause an error
+				{
+					// Declarations don't have a VHDLNameExpression currently, and the ExpressionVisitor requires one. So we create a fake one
+					VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, declarationList.First().NameContext.GetSpan(), declarationList.First().Name);
+					m_analysisResult.ToResolve.Add(nameExpr);
+					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, nameExpr);
+					expr = exprVisitor.Visit(context.expression());
+				}
+				catch (VHDLCodeException e)
+				{
+					m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Internal error", e.Span));
+				}
+				catch (Exception e)
+				{
+					m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Internal error", context.expression().GetSpan()));
+				}
+			}
+			foreach (var d in declarationList)
+				d.InitializationExpression = expr;
 
 			return true;
 		}

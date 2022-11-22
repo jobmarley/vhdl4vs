@@ -153,7 +153,11 @@ namespace vhdl4vs
 					try
 					{
 						if (choiceContext.identifier() != null)
-							alternative.Conditions.Add(new VHDLNameExpression(m_analysisResult, choiceContext.identifier().GetSpan(), choiceContext.identifier().GetText()));
+						{
+							VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, choiceContext.identifier().GetSpan(), choiceContext.identifier().GetText());
+							alternative.Conditions.Add(nameExpr);
+							m_analysisResult.AddToResolve(nameExpr);
+						}
 						else if (choiceContext.discrete_range() != null)
 						{
 							alternative.Conditions.Add(null);
@@ -380,7 +384,8 @@ namespace vhdl4vs
 				if (waveformElementContext.AFTER() != null)
 				{
 				}
-				VHDLExpression valueExpression = visitor.Visit(waveformElementContext.expression()[0]);
+				// we create a new visitor cause the value expression need the name expression for resolve in the case of aggregates (records)
+				VHDLExpression valueExpression = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, statement.NameExpression).Visit(waveformElementContext.expression()[0]);
 				statement.Values.Add(new VHDLConditionalExpression(conditionExpression, valueExpression));
 
 
@@ -426,7 +431,8 @@ namespace vhdl4vs
 				if (waveformElementContext.AFTER() != null)
 				{
 				}
-				VHDLExpression valueExpression = visitor.Visit(waveformElementContext.expression()[0]);
+				// we create a new visitor cause the value expression need the name expression for resolve in the case of aggregates (records)
+				VHDLExpression valueExpression = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, statement.NameExpression).Visit(waveformElementContext.expression()[0]);
 				statement.Values.Add(new VHDLConditionalExpression(conditionExpression, valueExpression));
 
 
@@ -453,7 +459,8 @@ namespace vhdl4vs
 				if (conditionalExpressionContext.condition()?.expression() != null)
 					conditionExpression = visitor.Visit(conditionalExpressionContext.condition().expression());
 
-				VHDLExpression valueExpression = visitor.Visit(conditionalExpressionContext.expression());
+				// we create a new visitor cause the value expression need the name expression for resolve in the case of aggregates (records)
+				VHDLExpression valueExpression = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, statement.NameExpression).Visit(conditionalExpressionContext.expression());
 				statement.Values.Add(new VHDLConditionalExpression(conditionExpression, valueExpression));
 
 				conditionalExpressionContext = conditionalExpressionContext.conditional_expression();
