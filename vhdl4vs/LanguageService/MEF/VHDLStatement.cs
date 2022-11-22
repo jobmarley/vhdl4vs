@@ -62,6 +62,24 @@ namespace vhdl4vs
 			}
 			return true;
 		}
+
+		public static void CheckReadable(VHDLExpression e, Action<VHDLError> errorListener)
+		{
+			if (e is VHDLReferenceExpression re && re.Declaration is VHDLPortDeclaration pd
+					&& pd.Mode != VHDLSignalMode.In && pd.Mode != VHDLSignalMode.Inout)
+			{
+				errorListener.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Cannot read from port that is not in/inout", e.Span));
+			}
+		}
+		public static IEnumerable<VHDLExpression> GetAllChildren(VHDLExpression expression)
+		{
+			foreach (VHDLExpression e in expression.Children)
+			{
+				yield return e;
+				foreach (VHDLExpression c in GetAllChildren(e))
+					yield return c;
+			}
+		}
 	}
 	internal class VHDLStatement
 	{
@@ -144,6 +162,11 @@ namespace vhdl4vs
 					VHDLStatementUtilities.CheckExpressionType(expression, type, errorListener);
 				}
 			}
+
+			foreach(VHDLExpression e in Values.SelectMany(x => VHDLStatementUtilities.GetAllChildren(x.ValueExpression).Prepend(x.ValueExpression).Prepend(x.ConditionExpression)))
+			{
+				VHDLStatementUtilities.CheckReadable(e, errorListener);
+			}
 		}
 		public override IEnumerable<object> Children { get { return Values.SelectMany(x => x.Children).Prepend(NameExpression).Where(x => x != null); } }
 	}
@@ -204,6 +227,11 @@ namespace vhdl4vs
 					VHDLStatementUtilities.CheckExpressionType(expression, type, errorListener);
 				}
 			}
+
+			foreach (VHDLExpression e in Values.SelectMany(x => VHDLStatementUtilities.GetAllChildren(x.ValueExpression).Prepend(x.ValueExpression).Prepend(x.ConditionExpression)))
+			{
+				VHDLStatementUtilities.CheckReadable(e, errorListener);
+			}
 		}
 		public override IEnumerable<object> Children { get { return Values.SelectMany(x => x.Children).Prepend(NameExpression).Where(x => x != null); } }
 	}
@@ -226,6 +254,15 @@ namespace vhdl4vs
 				VHDLStatementUtilities.CheckExpressionType(cond, AnalysisResult.BooleanType, errorListener);
 			}
 
+			foreach (VHDLExpression e in ElseIfStatements.Select(x => x.Item1).Prepend(Condition).SelectMany(x => VHDLStatementUtilities.GetAllChildren(x)))
+			{
+				VHDLStatementUtilities.CheckReadable(e, errorListener);
+			}
+
+			foreach (var e in VHDLStatementUtilities.GetAllChildren(Condition).Prepend(Condition))
+			{
+				VHDLStatementUtilities.CheckReadable(e, errorListener);
+			}
 			/*foreach (VHDLStatement statement in ElseIfStatements.Select(x => x.Item2).Prepend(Statements).Append(ElseStatements).SelectMany(x => x))
 			{
 				try
@@ -270,6 +307,11 @@ namespace vhdl4vs
 					VHDLLogger.LogException(e);
 				}
 			}
+
+			foreach (var e in VHDLStatementUtilities.GetAllChildren(Condition).Prepend(Condition))
+			{
+				VHDLStatementUtilities.CheckReadable(e, errorListener);
+			}
 		}
 		public override IEnumerable<object> Children { get { return Statements.Prepend<object>(Condition).Where(x => x != null); } }
 	}
@@ -299,6 +341,7 @@ namespace vhdl4vs
 			}*/
 		}
 		public override IEnumerable<object> Children { get { return Statements.Where(x => x != null); } }
+
 	}
 	class VHDLReturnStatement
 		: VHDLStatement
@@ -314,6 +357,17 @@ namespace vhdl4vs
 		}
 		public VHDLExpression Expression { get; set; } = null;
 		public override IEnumerable<object> Children { get { if (Expression != null) yield return Expression; } }
+
+		public override void Check(Action<VHDLError> errorListener)
+		{
+
+			foreach (var e in VHDLStatementUtilities.GetAllChildren(Expression).Prepend(Expression))
+			{
+				VHDLStatementUtilities.CheckReadable(e, errorListener);
+			}
+
+			base.Check(errorListener);
+		}
 	}
 	class VHDLBreakStatement
 		: VHDLStatement
@@ -384,6 +438,12 @@ namespace vhdl4vs
 				VHDLStatementUtilities.CheckExpressionType(c, evaluatedExpr, errorListener);
 			}
 
+
+			foreach (var e in VHDLStatementUtilities.GetAllChildren(Expression).Prepend(Expression))
+			{
+				VHDLStatementUtilities.CheckReadable(e, errorListener);
+			}
+
 			base.Check(errorListener);
 		}
 	}
@@ -398,6 +458,16 @@ namespace vhdl4vs
 		public VHDLExpression NameExpression { get; set; } = null;
 		public List<VHDLExpression> Arguments { get; set; } = new List<VHDLExpression>();
 		public override IEnumerable<object> Children { get { return Arguments.Prepend(NameExpression).Where(x => x != null); } }
+
+		public override void Check(Action<VHDLError> errorListener)
+		{
+			base.Check(errorListener);
+
+			foreach(var e in Arguments.SelectMany(x => VHDLStatementUtilities.GetAllChildren(x).Prepend(x)))
+			{
+				VHDLStatementUtilities.CheckReadable(e, errorListener);
+			}
+		}
 	}
 
 	class VHDLComponentInstanciationStatement
