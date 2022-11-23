@@ -3182,34 +3182,36 @@ namespace vhdl4vs
 
 					return new VHDLEvaluatedExpression(rt, this, null);
 				}
-				foreach (var aae in Elements.Cast<VHDLArgumentAssociationExpression>())
+				if (expectedType?.Dereference() is VHDLAbstractArrayType aat)
 				{
-					if (aae.Arguments.Single() is VHDLOthersExpression o)
+					if (aat == null || aat.Dimension != 1)
+						throw new VHDLCodeException("Aggregates with multidimensional arrays not supported", Span);
+
+					foreach (var aae in Elements.Cast<VHDLArgumentAssociationExpression>())
 					{
-						VHDLAbstractArrayType aat = expectedType as VHDLAbstractArrayType;
-						if (aat == null || aat.Dimension != 1)
-							throw new VHDLCodeException("'others' is only available for 1 dimension arrays", Span);
-
-						if (!VHDLStatementUtilities.CheckExpressionType(aae.Value, aat.ElementType, e => throw new VHDLCodeException(e.Message, e.Span)))
-							return null;
-
-						VHDLRange r = aat.GetIndexRange(0);
-						VHDLEvaluatedExpression ee = r?.Count(aat.GetIndexType(0))?.Evaluate(evaluationContext);
-						VHDLArrayValue result = null;
-						if (aae.Value is VHDLCharacterLiteral l1 && ee?.Result is VHDLIntegerValue l2)
-							result = VHDLArrayValue.FromString(new string(l1.Value, (int)l2.Value));
-
-						return new VHDLEvaluatedExpression(new VHDLArraySliceType(aat.GetBaseType(), r), this, result);
+						// We should check number of elements etc... but that will do for now
+						if (aae.Arguments.Single() is VHDLOthersExpression o)
+						{
+							if (!VHDLStatementUtilities.CheckExpressionType(aae.Value, aat.ElementType, e => throw new VHDLCodeException(e.Message, e.Span)))
+								return null;
+						}
+						else if (aae.Arguments.Single() is VHDLRangeExpression re)
+						{
+							if (!VHDLStatementUtilities.CheckExpressionType(aae.Value, new VHDLArraySliceType(aat.GetBaseType(), re.Range), x => throw new VHDLCodeException(x.Message, x.Span), evaluationContext))
+								return null;
+						}
+						else
+						{
+							if (!VHDLStatementUtilities.CheckExpressionType(aae.Arguments.Single(), aat.GetIndexType(0), x => throw new VHDLCodeException(x.Message, x.Span), evaluationContext))
+								return null;
+							if (!VHDLStatementUtilities.CheckExpressionType(aae.Value, aat.ElementType, x => throw new VHDLCodeException(x.Message, x.Span), evaluationContext))
+								return null;
+						}
 					}
-					if (aae.Arguments.Single() is VHDLRangeExpression re)
-					{
-						VHDLEvaluatedExpression ee = aae.Value.Evaluate(evaluationContext, null);
-						if (ee.Type == null)
-							return null;
-						return new VHDLEvaluatedExpression(new VHDLAggregatedType(re.Range, ee.Type, re.Range?.DeduceType()), this, null);
-					}
-					return null;
+
+					return new VHDLEvaluatedExpression(new VHDLArraySliceType(aat.GetBaseType(), aat.GetIndexRange(0)), this, null);
 				}
+				return null;
 			}
 			else
 				throw new VHDLCodeException(string.Format("Cannot mix positionnal and named arguments"), Span);
