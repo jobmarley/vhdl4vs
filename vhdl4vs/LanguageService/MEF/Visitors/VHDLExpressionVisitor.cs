@@ -314,16 +314,22 @@ namespace vhdl4vs.ExpressionVisitors
 				VHDLRecordType rt = ((m_assignedToExpression as VHDLReferenceExpression)?.Declaration as VHDLAbstractVariableDeclaration)?.Type?.Dereference() as VHDLRecordType;
 				if (rt == null)
 				{
-					m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Name '{0}' cannot be found", expr.Name), expr.Span));
+					// This is not a record, resolve the name normally
+					r.Resolve(dar, errorListener);
 					return;
 				}
 				expr.Declaration = rt.Fields.FirstOrDefault(x => string.Compare(x.Name, expr.Name) == 0);
-				if (expr.Declaration != null)
-					dar.SortedReferences.Add(expr.Span.Start,
-						new VHDLNameReference(
-							expr.Name,
-							expr.Span,
-							expr.Declaration));
+				if (expr.Declaration == null)
+				{
+					// record but name was not found
+					m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Name '{0}' cannot be found", expr.Name), expr.Span));
+					return;
+				}
+				dar.SortedReferences.Add(expr.Span.Start,
+					new VHDLNameReference(
+						expr.Name,
+						expr.Span,
+						expr.Declaration));
 			};
 			List<VHDLExpression> elements = new List<VHDLExpression>();
 			foreach (var elemContext in context.element_association())
