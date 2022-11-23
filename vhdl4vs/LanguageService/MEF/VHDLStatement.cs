@@ -68,7 +68,20 @@ namespace vhdl4vs
 			if (e is VHDLReferenceExpression re && re.Declaration is VHDLPortDeclaration pd
 					&& pd.Mode != VHDLSignalMode.In && pd.Mode != VHDLSignalMode.Inout)
 			{
-				errorListener.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Cannot read from port that is not in/inout", e.Span));
+				errorListener.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Cannot read from {0} port", pd.Mode.ToString().ToLower()), e.Span));
+			}
+		}
+		public static void CheckWritable(VHDLExpression e, Action<VHDLError> errorListener)
+		{
+			VHDLReferenceExpression re = e as VHDLReferenceExpression;
+			if (re.Declaration is VHDLPortDeclaration pd
+					&& pd.Mode != VHDLSignalMode.Out && pd.Mode != VHDLSignalMode.Inout && pd.Mode != VHDLSignalMode.Buffer)
+			{
+				errorListener.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Cannot write to {0} port", pd.Mode.ToString().ToLower()), e.Span));
+			}
+			else if (re.Declaration is VHDLConstantDeclaration)
+			{
+				errorListener.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Cannot write to constant", e.Span));
 			}
 		}
 		public static IEnumerable<VHDLExpression> GetAllChildren(VHDLExpression expression)
@@ -167,6 +180,8 @@ namespace vhdl4vs
 			{
 				VHDLStatementUtilities.CheckReadable(e, errorListener);
 			}
+
+			VHDLStatementUtilities.CheckWritable(NameExpression, errorListener);
 		}
 		public override IEnumerable<object> Children { get { return Values.SelectMany(x => x.Children).Prepend(NameExpression).Where(x => x != null); } }
 	}
@@ -232,6 +247,7 @@ namespace vhdl4vs
 			{
 				VHDLStatementUtilities.CheckReadable(e, errorListener);
 			}
+			VHDLStatementUtilities.CheckWritable(NameExpression, errorListener);
 		}
 		public override IEnumerable<object> Children { get { return Values.SelectMany(x => x.Children).Prepend(NameExpression).Where(x => x != null); } }
 	}
