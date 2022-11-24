@@ -1968,6 +1968,11 @@ namespace vhdl4vs
 					continue;
 				}
 
+				if (p1.Mode != p2.Mode)
+				{
+					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("{0} port '{1}' must be of the same type as declared in the entity ({2})", p1.Mode.ToString().ToLower(), p1.Name, p2.Mode.ToString().ToLower()), p1.Span));
+				}
+
 				VHDLType t1 = p1.Type;
 				VHDLType t2 = p2.Type;
 				if (VHDLType.AreCompatible(t2, t1) == VHDLCompatibilityResult.No)
