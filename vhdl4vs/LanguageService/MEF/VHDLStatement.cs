@@ -31,7 +31,7 @@ namespace vhdl4vs
 
 			try
 			{
-				VHDLEvaluatedExpression eval = expression.Evaluate(evaluationContext, expectedType);
+				VHDLEvaluatedExpression eval = expression.Evaluate(evaluationContext, expectedType, (e) => throw new VHDLCodeException(e.Message, e.Span));
 				if (eval?.Type == null)
 				{
 					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Type cannot be evaluated", expression.Span));
@@ -154,7 +154,7 @@ namespace vhdl4vs
 			{
 				try
 				{
-					type = NameExpression.Evaluate(new EvaluationContext())?.Type;
+					type = NameExpression.Evaluate(new EvaluationContext(), null, errorListener)?.Type;
 					if (type == null)
 						errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Type cannot be evaluated", NameExpression.Span));
 				}
@@ -221,7 +221,7 @@ namespace vhdl4vs
 			{
 				try
 				{
-					type = NameExpression.Evaluate(new EvaluationContext())?.Type;
+					type = NameExpression.Evaluate(new EvaluationContext(), null, errorListener)?.Type;
 					if (type == null)
 						errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "Type cannot be evaluated", NameExpression.Span));
 				}
@@ -448,7 +448,7 @@ namespace vhdl4vs
 
 		public override void Check(Action<VHDLError> errorListener)
 		{
-			var evaluatedExpr = Expression.Evaluate(new EvaluationContext())?.Type;
+			var evaluatedExpr = Expression.Evaluate(new EvaluationContext(), null, errorListener)?.Type;
 			foreach (var c in Alternatives.SelectMany(x => x.Conditions).Where(x => !(x is VHDLOthersExpression)))
 			{
 				VHDLStatementUtilities.CheckExpressionType(c, evaluatedExpr, errorListener);
@@ -583,7 +583,7 @@ namespace vhdl4vs
 							}
 							// Check types are same
 							VHDLStatementUtilities.CheckExpressionType(parameter.Value, componentGeneric.Type, errorListener);
-							evaluationContext[componentGeneric] = parameter.Value.Evaluate(evaluationContext, componentGeneric.Type);
+							evaluationContext[componentGeneric] = parameter.Value.Evaluate(evaluationContext, componentGeneric.Type, errorListener);
 						}
 						else
 						{
@@ -616,7 +616,7 @@ namespace vhdl4vs
 				{
 					VHDLType t2 = p2.Type;
 					VHDLStatementUtilities.CheckExpressionType(p1, t2, errorListener);
-					evaluationContext[p2] = p1.Evaluate(evaluationContext, t2);
+					evaluationContext[p2] = p1.Evaluate(evaluationContext, t2, errorListener);
 				}
 
 				var missingGenerics = componentDecl.Generics.Skip(Generics.Count).Where(x => x.InitializationExpression == null);
@@ -705,8 +705,8 @@ namespace vhdl4vs
 								continue;
 							}
 							VHDLRange r = (fce.Arguments.First() as VHDLRangeExpression)?.Range;
-							VHDLEvaluatedExpression estart = (r?.Start ?? fce.Arguments.First())?.Evaluate(evaluationContext);
-							VHDLEvaluatedExpression eend = (r?.End ?? fce.Arguments.First())?.Evaluate(evaluationContext);
+							VHDLEvaluatedExpression estart = (r?.Start ?? fce.Arguments.First())?.Evaluate(evaluationContext, null, errorListener);
+							VHDLEvaluatedExpression eend = (r?.End ?? fce.Arguments.First())?.Evaluate(evaluationContext, null, errorListener);
 							long? iStart = r?.Direction == VHDLRangeDirection.To ? (estart.Result as VHDLIntegerValue)?.Value : (eend.Result as VHDLIntegerValue)?.Value;
 							long? iEnd = r?.Direction == VHDLRangeDirection.To ? (eend.Result as VHDLIntegerValue)?.Value : (estart.Result as VHDLIntegerValue)?.Value;
 							if (iStart == null || iEnd == null)
@@ -726,7 +726,7 @@ namespace vhdl4vs
 							VHDLType argType = null;
 							try
 							{
-								argType = arg.Evaluate(evaluationContext)?.Type;
+								argType = arg.Evaluate(evaluationContext, null, errorListener)?.Type;
 							}
 							catch (VHDLCodeException ce)
 							{
@@ -763,8 +763,8 @@ namespace vhdl4vs
 						if (aat.Dimension != 1)
 							continue;
 						VHDLRange r = aat.GetIndexRange(0);
-						VHDLEvaluatedExpression estart = r.Start.Evaluate(evaluationContext);
-						VHDLEvaluatedExpression eend = r.End.Evaluate(evaluationContext);
+						VHDLEvaluatedExpression estart = r.Start.Evaluate(evaluationContext, null, errorListener);
+						VHDLEvaluatedExpression eend = r.End.Evaluate(evaluationContext, null, errorListener);
 						long? iStart = r.Direction == VHDLRangeDirection.To ? (estart.Result as VHDLIntegerValue)?.Value : (eend.Result as VHDLIntegerValue)?.Value;
 						long? iEnd = r.Direction == VHDLRangeDirection.To ? (eend.Result as VHDLIntegerValue)?.Value : (estart.Result as VHDLIntegerValue)?.Value;
 						if (iStart == null || iEnd == null)
