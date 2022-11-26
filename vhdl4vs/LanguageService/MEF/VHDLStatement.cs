@@ -65,16 +65,37 @@ namespace vhdl4vs
 
 		public static void CheckReadable(VHDLExpression e, Action<VHDLError> errorListener)
 		{
-			if (e is VHDLReferenceExpression re && re.Declaration is VHDLPortDeclaration pd
+			if (e is VHDLFunctionCallOrIndexExpression fce)
+			{
+				// ... <= a(31 downto 0)
+				CheckReadable(fce.NameExpression, errorListener);
+			}
+			else if (e is VHDLMemberSelectExpression mse)
+			{
+				// ... <= a.b
+				CheckReadable(mse.Expression, errorListener);
+			}
+			else if (e is VHDLReferenceExpression re && re.Declaration is VHDLPortDeclaration pd
 					&& pd.Mode != VHDLSignalMode.In && pd.Mode != VHDLSignalMode.Inout)
 			{
+				// ... <= a
 				errorListener.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Cannot read from {0} port", pd.Mode.ToString().ToLower()), e.Span));
 			}
 		}
 		public static void CheckWritable(VHDLExpression e, Action<VHDLError> errorListener)
 		{
 			VHDLReferenceExpression re = e as VHDLReferenceExpression;
-			if (re.Declaration is VHDLPortDeclaration pd
+			if (e is VHDLFunctionCallOrIndexExpression fce)
+			{
+				// a(31 downto 0) <= ...
+				CheckWritable(fce.NameExpression, errorListener);
+			}
+			else if (e is VHDLMemberSelectExpression mse)
+			{
+				// a.b <= ...
+				CheckWritable(mse.Expression, errorListener);
+			}
+			else if (re.Declaration is VHDLPortDeclaration pd
 					&& pd.Mode != VHDLSignalMode.Out && pd.Mode != VHDLSignalMode.Inout && pd.Mode != VHDLSignalMode.Buffer)
 			{
 				errorListener.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Cannot write to {0} port", pd.Mode.ToString().ToLower()), e.Span));
