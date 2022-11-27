@@ -114,6 +114,15 @@ namespace vhdl4vs
 					yield return c;
 			}
 		}
+		public static IEnumerable<VHDLStatement> GetAllStatements(VHDLStatement stmt)
+		{
+			foreach (VHDLStatement s in stmt.Children.OfType<VHDLStatement>())
+			{
+				yield return s;
+				foreach (VHDLStatement c in GetAllStatements(s))
+					yield return c;
+			}
+		}
 	}
 	internal class VHDLStatement
 	{

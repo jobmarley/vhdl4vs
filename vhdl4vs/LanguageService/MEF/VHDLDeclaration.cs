@@ -599,6 +599,97 @@ namespace vhdl4vs
 					archContext.identifier()[1].GetSpan()));
 			}
 		}
+		class DrivenSignalInfo
+		{
+			public DrivenSignalInfo()
+			{
+			}
+			public List<Span> Assignments = new List<Span>();
+			public int DriverCount = 0;
+		}
+		public override void Check(DeepAnalysisResult deepAnalysisResult, Action<VHDLError> errorListener)
+		{
+			base.Check(deepAnalysisResult, errorListener);
+
+			Dictionary<VHDLAbstractVariableDeclaration, DrivenSignalInfo> signalAssignments = new Dictionary<VHDLAbstractVariableDeclaration, DrivenSignalInfo>();
+
+			foreach (var sas in Statements.OfType<VHDLSignalAssignmentStatement>())
+			{
+				VHDLAbstractVariableDeclaration avd = (sas.NameExpression as VHDLNameExpression)?.Declaration as VHDLAbstractVariableDeclaration;
+				if (avd == null || avd is VHDLConstantDeclaration)
+					continue;
+
+				if (!signalAssignments.ContainsKey(avd))
+					signalAssignments[avd] = new DrivenSignalInfo();
+
+				signalAssignments[avd].Assignments.Add(sas.NameExpression.Span);
+				++signalAssignments[avd].DriverCount;
+			}
+			foreach (var process in Children.OfType<VHDLProcessDeclaration>())
+			{
+				HashSet<VHDLAbstractVariableDeclaration> visitedSignals = new HashSet<VHDLAbstractVariableDeclaration>();
+				foreach (var sas in process.Statements.SelectMany(x => VHDLStatementUtilities.GetAllStatements(x).Prepend(x)).OfType<VHDLSignalAssignmentStatement>())
+				{
+					VHDLAbstractVariableDeclaration avd = (sas.NameExpression as VHDLNameExpression)?.Declaration as VHDLAbstractVariableDeclaration;
+					if (avd == null || avd is VHDLConstantDeclaration)
+						continue;
+
+					if (!visitedSignals.Add(avd))
+					{
+						// we ve already seen this signal, so its already in the dictionary
+						signalAssignments[avd].Assignments.Add(sas.NameExpression.Span);
+						continue;
+					}
+
+					// first time we meet this signal increment the driver count
+					if (!signalAssignments.ContainsKey(avd))
+						signalAssignments[avd] = new DrivenSignalInfo();
+
+					signalAssignments[avd].Assignments.Add(sas.NameExpression.Span);
+					++signalAssignments[avd].DriverCount;
+				}
+			}
+			foreach (var inst in Statements.OfType<VHDLComponentInstanciationStatement>())
+			{
+				VHDLComponentDeclaration decl = inst.ComponentNameExpression.Declaration as VHDLComponentDeclaration;
+				if (decl == null)
+					continue;
+
+				Func<VHDLExpression, VHDLPortDeclaration> nameToPort = (e) => decl.Ports.FirstOrDefault(p => string.Compare((e as VHDLNameExpression)?.Name, p.Name, true) == 0);
+				Func<VHDLPortDeclaration, bool> isOut = (p) => p?.Mode == VHDLSignalMode.Out || p?.Mode == VHDLSignalMode.Inout;
+				Func<VHDLExpression, VHDLAbstractVariableDeclaration> getAVD = (e) => (e as VHDLNameExpression)?.Declaration as VHDLAbstractVariableDeclaration;
+
+				IEnumerable<(VHDLAbstractVariableDeclaration, Span)> l = null; 
+
+				if (inst.Parameters.Any(x => x is VHDLArgumentAssociationExpression))
+				{
+					// select all params where corresponding port by name is out
+					l = inst.Parameters.OfType<VHDLArgumentAssociationExpression>()
+						.Where(x => x.Arguments.Any(e => isOut(nameToPort(e))))
+						.Select(x => (getAVD(x.Value), x.Value.Span));
+				}
+				else
+				{
+					// select all params where corresponding port by index is out
+					l = inst.Parameters.Zip(Enumerable.Range(0, inst.Parameters.Count), (x, y) => (index: y, param: x))
+						.Where(x => isOut(decl.Ports.ElementAt(x.index)))
+						.Select(x => ((x.param as VHDLNameExpression)?.Declaration as VHDLAbstractVariableDeclaration, x.param.Span));
+				}
+				foreach (var (avd, span) in l.Where(x => x.Item1 != null))
+				{
+					if (!signalAssignments.ContainsKey(avd))
+						signalAssignments[avd] = new DrivenSignalInfo();
+
+					signalAssignments[avd].Assignments.Add(span);
+					++signalAssignments[avd].DriverCount;
+				}
+			}
+			foreach (var (sd, sp) in signalAssignments.Where(x => x.Value.DriverCount > 1).SelectMany(x => x.Value.Assignments.Select(y => Tuple.Create(x.Key, y))))
+			{
+				errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError,
+					string.Format("The signal '{0}' is multiply driven", sd.Name), sp));
+			}
+		}
 	}
 	class VHDLEnumerationValueDeclaration
 		: VHDLConstantDeclaration
