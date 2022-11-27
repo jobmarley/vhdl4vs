@@ -15,6 +15,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vhdl4vsTests", "vhdl4vsTest
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vhdl4vs.VivadoIntegration", "vhdl4vs.VivadoIntegration\vhdl4vs.VivadoIntegration.csproj", "{376CDD7F-C43C-49A4-8C3F-CB497D7909AA}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hooks", "hooks", "{382C9717-EFE2-40A6-89D3-EE31E5989096}"
+	ProjectSection(SolutionItems) = preProject
+		hooks\pre-commit = hooks\pre-commit
+		hooks\pre-commit.py = hooks\pre-commit.py
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
