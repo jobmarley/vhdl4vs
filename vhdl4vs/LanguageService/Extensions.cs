@@ -58,6 +58,14 @@ namespace vhdl4vs
             return ~lower;
         }
 
+        /// <summary>
+        /// Returns the index of the element that match key, or the index of the first element smaller if not found
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="d"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public static int LowerBoundIndex<TKey, TValue>(this SortedList<TKey, TValue> d, TKey key)
         {
             int minNum = 0;
@@ -85,6 +93,14 @@ namespace vhdl4vs
                 return d.Values[i];
             return default(TValue);
         }
+        /// <summary>
+        /// Returns the index of the element that match key, or the index of the first element bigger if not found (-1 if beyond end of list)
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="d"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public static int UpperBoundIndex<TKey, TValue>(this SortedList<TKey, TValue> d, TKey key)
         {
             if (d.Count == 0)

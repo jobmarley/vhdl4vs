@@ -22,29 +22,13 @@ using System.Threading.Tasks;
 
 namespace vhdl4vs.ExpressionVisitors
 {
-	class VHDLFakeResolver
-		: IVHDLToResolve
-	{
-		public VHDLFakeResolver(IVHDLToResolve overriden, Action<IVHDLToResolve, DeepAnalysisResult, Action<VHDLError>> resolver)
-		{
-			Overriden = overriden;
-			Resolver = resolver;
-		}
-		public IVHDLToResolve Overriden { get; set; } = null;
-		public Action<IVHDLToResolve, DeepAnalysisResult, Action<VHDLError>> Resolver { get; set; } = null;
-
-		public void Resolve(DeepAnalysisResult deepAnalysisResult, Action<VHDLError> errorListener)
-		{
-			Resolver(Overriden, deepAnalysisResult, errorListener);
-		}
-	}
 	class VHDLExpressionVisitor
 		: vhdlBaseVisitor<VHDLExpression>
 	{
 		private Action<IVHDLToResolve, DeepAnalysisResult, Action<VHDLError>> m_resolveOverrider = null;
 		private Action<VHDLError> m_errorListener = null;
 		private AnalysisResult m_analysisResult = null;
-		private VHDLExpression m_assignedToExpression = null;
+		private IVHDLReference m_assignedToReference = null;
 
 		private void AddToResolve(IVHDLToResolve toResolve)
 		{
@@ -55,12 +39,12 @@ namespace vhdl4vs.ExpressionVisitors
 		}
 		public VHDLExpressionVisitor(AnalysisResult analysisResult, Action<VHDLError> errorListener,
 			Action<IVHDLToResolve, DeepAnalysisResult, Action<VHDLError>> resolveOverrider = null,
-			VHDLExpression assignedToExpression = null)
+			IVHDLReference assignedToReference = null)
 		{
 			m_analysisResult = analysisResult;
 			m_errorListener = errorListener;
 			m_resolveOverrider = resolveOverrider;
-			m_assignedToExpression = assignedToExpression;
+			m_assignedToReference = assignedToReference;
 		}
 		protected override VHDLExpression AggregateResult(VHDLExpression aggregate, VHDLExpression nextResult)
 		{
@@ -311,7 +295,7 @@ namespace vhdl4vs.ExpressionVisitors
 				if (expr == null)
 					return;
 
-				VHDLRecordType rt = ((m_assignedToExpression as VHDLReferenceExpression)?.Declaration as VHDLAbstractVariableDeclaration)?.Type?.Dereference() as VHDLRecordType;
+				VHDLRecordType rt = (m_assignedToReference?.Declaration as VHDLAbstractVariableDeclaration)?.Type?.Dereference() as VHDLRecordType;
 				if (rt == null)
 				{
 					// This is not a record, resolve the name normally

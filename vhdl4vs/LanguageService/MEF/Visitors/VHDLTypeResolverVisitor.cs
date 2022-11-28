@@ -298,7 +298,11 @@ namespace vhdl4vs.TypeVisitors
 				}
 				else if (x.identifier() != null)
 				{
-					type.Values.Add(new VHDLNameEnumerationValue(type, new VHDLEnumerationValueDeclaration(m_analysisResult, x.identifier(), x.identifier().GetText(), type)));
+					VHDLEnumerationValueDeclaration decl = new VHDLEnumerationValueDeclaration(m_analysisResult, x.identifier(), x.identifier().GetText(), type);
+					type.Values.Add(new VHDLNameEnumerationValue(type, decl));
+
+					VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, x.identifier().GetSpan(), x.identifier().GetText());
+					m_analysisResult.ToResolve.Add(new VHDLFakeResolver(nameExpr, decl));
 				}
 			}
 			return type;

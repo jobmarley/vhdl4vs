@@ -440,7 +440,7 @@ namespace vhdl4vs
 		private VHDLClassifiedText GetClassifiedDeclaration()
 		{
 			VHDLClassifiedText declText = new VHDLClassifiedText();
-			declText.Add("package ");
+			declText.Add("package ", "keyword");
 			declText.Add(GetClassifiedName(true));
 
 			return declText;

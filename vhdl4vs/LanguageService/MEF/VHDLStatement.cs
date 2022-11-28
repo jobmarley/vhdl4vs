@@ -857,11 +857,14 @@ namespace vhdl4vs
 			{
 				n.Declaration = VHDLDeclarationUtilities.GetMemberDeclaration(ComponentNameExpression.Declaration, n.Name);
 				if (n.Declaration != null)
+				{
 					deepAnalysisResult.SortedReferences.Add(n.Span.Start,
 						new VHDLNameReference(
 							Name,
 							n.Span,
 							n.Declaration));
+
+				}
 			}
 			else
 			{
@@ -880,11 +883,14 @@ namespace vhdl4vs
 					n.Declaration = gendecl;
 
 				if (n.Declaration != null)
+				{
 					deepAnalysisResult.SortedReferences.Add(n.Span.Start,
 						new VHDLNameReference(
 							Name,
 							n.Span,
 							n.Declaration));
+
+				}
 			}
 			else
 			{

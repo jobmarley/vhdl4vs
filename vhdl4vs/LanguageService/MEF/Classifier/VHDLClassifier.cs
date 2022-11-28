@@ -50,7 +50,7 @@ namespace vhdl4vs
 		private ITextSnapshot m_snapshot = null;
 
 		//	name of the "class" and the list of span in which it is defined
-		private AnalysisResult m_analysisResult = null;
+		private DeepAnalysisResult m_deepAnalysisResult = null;
 
 		private VHDLDocument m_document = null;
 		private WeakReference<ITextBuffer> m_textBuffer = null;
@@ -72,18 +72,18 @@ namespace vhdl4vs
 			m_document = m_vhdlDocumentTable.GetOrAddDocument(buffer);
 			m_document.Parser.DeepAnalysisComplete += OnDeepAnalysisComplete;
 
-			AnalysisResult result = m_document.Parser.AResult;
+			DeepAnalysisResult result = m_document.Parser.DAResult;
 			if (result != null)
-				m_analysisResult = result;
+				m_deepAnalysisResult = result;
         }
 		
         private void OnDeepAnalysisComplete(object sender, DeepAnalysisResultEventArgs e)
 		{
-			AnalysisResult aresult = e.Result.AnalysisResult;
-			m_analysisResult = aresult;
+			DeepAnalysisResult daresult = e.Result;
+			m_deepAnalysisResult = daresult;
 
 			// Should detect changes
-			ITextSnapshot snapshot = aresult.Snapshot;
+			ITextSnapshot snapshot = daresult.Snapshot;
 			ClassificationChanged?.Invoke(this, new ClassificationChangedEventArgs(new SnapshotSpan(snapshot, 0, snapshot.Length)));
 		}
 
@@ -124,82 +124,42 @@ namespace vhdl4vs
 
 #pragma warning restore 67
 
-        //	This is the state of the lexer at the end of each line. So we can resume parsing from one line to another.
-        //List<MSLexerState> m_lineStates = null;
-
-		class ScopeHelper
+		// this is used to quickly find declaration for token in a stream (one after another)
+		class TokenStreamHelper
 		{
 			private VHDLDocument m_document = null;
-			private AnalysisResult m_aresult = null;
+			private DeepAnalysisResult m_daresult = null;
 			private int m_hint = -1;
-			public ScopeHelper(VHDLDocument document, AnalysisResult aresult)
+			public TokenStreamHelper(VHDLDocument document, DeepAnalysisResult daresult)
 			{
 				m_document = document;
-				m_aresult = aresult;
+				m_daresult = daresult;
 			}
-			public VHDLDeclaration GetParentDeclaration(int index)
+			public VHDLDeclaration GetDeclaration(SnapshotSpan span)
 			{
-				if (m_aresult == null)
+				if (m_daresult == null)
 					return null;
+
+				SnapshotSpan oldSpan = span.TranslateTo(m_daresult.Snapshot, SpanTrackingMode.EdgeInclusive);
 
 				if (m_hint == -1)
 				{
-					// First time, need to lookup
-					m_hint = m_aresult.SortedScopedDeclarations.LowerBoundIndex(index);
-					return (m_hint > -1 && m_hint < m_aresult.SortedScopedDeclarations.Values.Count) ? m_aresult.SortedScopedDeclarations.Values[m_hint] : null;
+					m_hint = m_daresult.SortedReferences.UpperBoundIndex(oldSpan.Start);
+					if (m_hint == -1)
+						m_hint = m_daresult.SortedReferences.Count;
 				}
-				else
+
+				while (m_hint < m_daresult.SortedReferences.Count)
 				{
-					// Next, we just increment the index, and check if we got out of declaration
-					if (m_hint + 1 < m_aresult.SortedScopedDeclarations.Keys.Count && m_aresult.SortedScopedDeclarations.Keys[m_hint + 1] <= index)
-					{
-						// entered next declaration
-						++m_hint;
-					}
-					return m_aresult.SortedScopedDeclarations.Values[m_hint];
+					var r = m_daresult.SortedReferences.Values[m_hint];
+					if (r.Span.Start > oldSpan.Span.Start)
+						break;
+
+					if (r.Span == oldSpan.Span)
+						return r.Declaration;
+
+					++m_hint;
 				}
-			}
-
-			// Find declaration in stuff imported from external libraries
-			public VHDLDeclaration GetExternalDeclaration(VHDLDeclaration parentDeclaration, string text)
-			{
-				if (!(parentDeclaration is VHDLDesignUnit))
-					return null;
-
-				foreach (string useClause in (parentDeclaration as VHDLDesignUnit).UseClauses.Select(x => x.Name?.GetClassifiedText()?.Text).Prepend("STD.STANDARD.ALL"))
-				{
-					if (useClause == null)
-						continue;
-
-					string[] parts = useClause.Split('.');
-					if (parts.Length < 3)
-						continue;
-					string libraryName = parts[0];
-					string packageName = parts[1];
-					string declarationName = parts[2];
-
-					if (declarationName.ToLower() == "all" || string.Compare(declarationName, text, true) == 0)
-					{
-						// search for declaration if it was imported
-						try
-						{
-							VHDLDocument doc = m_document.Project?.GetLibraryPackage(libraryName + "." + packageName)?.Document;
-							string path = packageName + "@declaration." + text;
-							if (doc?.Parser?.AResult?.Declarations.ContainsKey(path) == true)
-								return doc.Parser.AResult.Declarations[path];
-
-							path = packageName + "@body." + text;
-							if (doc?.Parser?.AResult?.Declarations.ContainsKey(path) == true)
-								return doc.Parser.AResult.Declarations[path];
-						}
-						catch (Exception)
-						{
-
-						}
-					}
-
-				}
-
 				return null;
 			}
 		}
@@ -221,38 +181,26 @@ namespace vhdl4vs
 
 			vhdlLexer lexer = new vhdlLexer(new Antlr4.Runtime.AntlrInputStream(span.Snapshot.GetText(lineStartIndex, lineEndIndex - lineStartIndex)));
 			IList<Antlr4.Runtime.IToken> tokens = lexer.GetAllTokens();
-			//m_lexer.UpdateTokens(span.Snapshot);
 
-			AnalysisResult aresult = m_analysisResult;
+			DeepAnalysisResult daresult = m_deepAnalysisResult;
 
-			ScopeHelper scopeHelper = new ScopeHelper(m_document, aresult);
-
+			TokenStreamHelper helper = new TokenStreamHelper(m_document, daresult);
 			foreach (Antlr4.Runtime.IToken token in tokens)
             {
 				Span tokenSpan = new Span(token.StartIndex + lineStartIndex, token.Length());
-				VHDLDeclaration parentDeclaration = scopeHelper.GetParentDeclaration(tokenSpan.Start);
 
-                //Antlr4.Runtime.IToken token = tokens[i];
 				SnapshotSpan tokenSnapshotSpan = new SnapshotSpan(span.Snapshot, tokenSpan);
 				SnapshotSpan? classificationSpan = span.Intersection(tokenSpan);
 
                 if (classificationSpan.HasValue)
                 {
-                    //System.Diagnostics.Debug.WriteLine("token text : \"" + token.Text + "\", type = " + lexer.Vocabulary.GetSymbolicName(token.Type));
                     if (vhdlLexer.DefaultVocabulary.GetSymbolicName(token.Type) == "COMMENT")
                     {
                         result.Add(new ClassificationSpan(classificationSpan.Value, m_standardClassificationService.Comment));
                     }
                     else if (vhdlLexer.DefaultVocabulary.GetSymbolicName(token.Type) == "BASIC_IDENTIFIER")
                     {
-						VHDLDeclaration decl = null;
-						try
-						{
-							decl = VHDLDeclarationUtilities.FindName(parentDeclaration, token.Text);
-						}
-						catch (Exception)
-						{
-						}
+						VHDLDeclaration decl = helper.GetDeclaration(new SnapshotSpan(span.Snapshot, tokenSpan));
 
 						if (decl is VHDLEntityDeclaration)
 						{

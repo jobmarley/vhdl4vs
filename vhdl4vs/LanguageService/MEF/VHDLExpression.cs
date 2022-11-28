@@ -82,9 +82,23 @@ namespace vhdl4vs
 		public virtual IEnumerable<VHDLExpression> Children { get { return Array.Empty<VHDLExpression>(); } }
 	}
 
+	interface IVHDLReference
+	{
+		VHDLDeclaration Declaration { get; }
+	}
+	class VHDLStaticReference
+		: IVHDLReference
+	{
+		public VHDLStaticReference(VHDLDeclaration decl)
+		{
+			Declaration = decl;
+		}
+		public VHDLDeclaration Declaration { get; } = null;
+	}
 	abstract class VHDLReferenceExpression
 		: VHDLExpression,
-		IVHDLToResolve
+		IVHDLToResolve,
+		IVHDLReference
 	{
 		protected VHDLReferenceExpression(AnalysisResult analysisResult, Span span)
 			: base(analysisResult, span)
@@ -2502,11 +2516,13 @@ namespace vhdl4vs
 				if (Declaration == null)
 					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("The name '{0}' does not exist in the current context", Name), Span));
 				else
+				{
 					deepAnalysisResult.SortedReferences.Add(Span.Start,
 						new VHDLNameReference(
 							Name,
 							Span,
 							Declaration));
+				}
 			}
 			catch (VHDLNameNotFoundException e)
 			{
@@ -2816,11 +2832,13 @@ namespace vhdl4vs
 						Declaration = VHDLDeclarationUtilities.GetMemberDeclaration(decl, Name);
 
 						if (Declaration != null)
+						{
 							deepAnalysisResult.SortedReferences.Add(NameSpan.Start,
 								new VHDLNameReference(
 									Name,
 									NameSpan,
 									Declaration));
+						}
 					}
 				}
 			}

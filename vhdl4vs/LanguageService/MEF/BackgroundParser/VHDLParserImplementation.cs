@@ -293,15 +293,6 @@ namespace vhdl4vs
 			result.Tree = analysisResult.Tree;
 			result.Snapshot = analysisResult.Snapshot;
 
-
-			// init base references
-			foreach (VHDLDeclaration decl in analysisResult.DeclarationsByContext.Values)
-			{
-				if (decl.NameContext != null)
-					result.SortedReferences.Add(decl.NameContext.Start.StartIndex, new VHDLNameReference(decl.UndecoratedName, decl.NameContext.GetSpan(), decl));
-			}
-
-
 			ConcurrentBag<VHDLError> errors = new ConcurrentBag<VHDLError>();
 			List<Task> tasks = new List<Task>();
 			// Resolve stuff that needs to be resolved (means looking into other documents)
@@ -317,6 +308,12 @@ namespace vhdl4vs
 				}
 			}
 
+			var qzdqzd = analysisResult.ToResolve.Distinct().ToArray();
+
+			if (qzdqzd.Length != analysisResult.ToResolve.Count)
+			{
+				int qzdqd = 0;
+			}
 			// Wait to resolve because it's necessary for next steps
 			// /!\ Deep analysis should not be synchronously awaited upon because of this. But that should never happen
 			Task.WaitAll(tasks.ToArray());

@@ -45,6 +45,30 @@ namespace vhdl4vs
 		void Resolve(DeepAnalysisResult deepAnalysisResult, Action<VHDLError> errorListener);
 	}
 
+	class VHDLFakeResolver
+		: IVHDLToResolve
+	{
+		public VHDLFakeResolver(IVHDLToResolve overriden, Action<IVHDLToResolve, DeepAnalysisResult, Action<VHDLError>> resolver)
+		{
+			Overriden = overriden;
+			Resolver = resolver;
+		}
+		public VHDLFakeResolver(VHDLNameExpression e, VHDLDeclaration d)
+		{
+			Overriden = e;
+			Resolver = (r, dar, errList) =>
+			{
+				dar.SortedReferences.Add(e.Span.Start, new VHDLNameReference(e.Name, e.Span, d));
+			};
+		}
+		public IVHDLToResolve Overriden { get; set; } = null;
+		public Action<IVHDLToResolve, DeepAnalysisResult, Action<VHDLError>> Resolver { get; set; } = null;
+
+		public void Resolve(DeepAnalysisResult deepAnalysisResult, Action<VHDLError> errorListener)
+		{
+			Resolver(Overriden, deepAnalysisResult, errorListener);
+		}
+	}
 	class VHDLNameReference
 	{
 		public VHDLNameReference(string name, Span span, VHDLDeclaration declaration)

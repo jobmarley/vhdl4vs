@@ -116,7 +116,10 @@ namespace vhdl4vs
 			string typeName = context.identifier().GetText();
 
 			VHDLTypeDeclaration decl = new VHDLTypeDeclaration(m_analysisResult, context, context.identifier(), typeName, m_declarationStack.FirstOrDefault());
-			
+
+			VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, context.identifier().GetSpan(), typeName);
+			m_analysisResult.ToResolve.Add(new VHDLFakeResolver(nameExpr, decl));
+
 			PushScope(decl);
 
 			try // This should not cause an error
@@ -262,6 +265,9 @@ namespace vhdl4vs
 					m_declarationStack.Peek().Children.Add(decl);
 					decl.Type = type;
 
+					// Declarations don't have a VHDLNameExpression currently, and the ExpressionVisitor below requires one. So we create a fake one
+					VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, identifier_context.GetSpan(), identifier_context.GetText());
+					m_analysisResult.ToResolve.Add(new VHDLFakeResolver(nameExpr, decl));
 					declarationList.Add(decl);
 					decl.Mode = VisitSignalMode(context.signal_mode());
 				}
@@ -271,10 +277,7 @@ namespace vhdl4vs
 			{
 				try // This should not cause an error
 				{
-					// Declarations don't have a VHDLNameExpression currently, and the ExpressionVisitor requires one. So we create a fake one
-					VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, declarationList.First().NameContext.GetSpan(), declarationList.First().Name);
-					m_analysisResult.ToResolve.Add(nameExpr);
-					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, nameExpr);
+					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, new VHDLStaticReference(declarationList.First()));
 					expr = exprVisitor.Visit(context.expression());
 				}
 				catch (VHDLCodeException e)
@@ -328,6 +331,9 @@ namespace vhdl4vs
 					m_declarationStack.Peek().Children.Add(decl);
 
 					decl.Type = type;
+					// Declarations don't have a VHDLNameExpression currently, and the ExpressionVisitor below requires one. So we create a fake one
+					VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, identifier_context.GetSpan(), identifier_context.GetText());
+					m_analysisResult.ToResolve.Add(new VHDLFakeResolver(nameExpr, decl));
 					declarationList.Add(decl);
 				}
 			}
@@ -336,10 +342,7 @@ namespace vhdl4vs
 			{
 				try // This should not cause an error
 				{
-					// Declarations don't have a VHDLNameExpression currently, and the ExpressionVisitor requires one. So we create a fake one
-					VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, declarationList.First().NameContext.GetSpan(), declarationList.First().Name);
-					m_analysisResult.ToResolve.Add(nameExpr);
-					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, nameExpr);
+					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, new VHDLStaticReference(declarationList.First()));
 					expr = exprVisitor.Visit(context.expression());
 				}
 				catch (VHDLCodeException e)
@@ -388,6 +391,9 @@ namespace vhdl4vs
 					m_declarationStack.Peek().Children.Add(decl);
 					decl.Type = type;
 
+					// Declarations don't have a VHDLNameExpression currently, and the ExpressionVisitor below requires one. So we create a fake one
+					VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, identifier_context.GetSpan(), identifier_context.GetText());
+					m_analysisResult.ToResolve.Add(new VHDLFakeResolver(nameExpr, decl));
 					declarationList.Add(decl);
 					decl.Mode = VisitSignalMode(context.signal_mode());
 				}
@@ -397,10 +403,7 @@ namespace vhdl4vs
 			{
 				try // This should not cause an error
 				{
-					// Declarations don't have a VHDLNameExpression currently, and the ExpressionVisitor requires one. So we create a fake one
-					VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, declarationList.First().NameContext.GetSpan(), declarationList.First().Name);
-					m_analysisResult.ToResolve.Add(nameExpr);
-					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, nameExpr);
+					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, new VHDLStaticReference(declarationList.First()));
 					expr = exprVisitor.Visit(context.expression());
 				}
 				catch (VHDLCodeException e)
@@ -448,6 +451,9 @@ namespace vhdl4vs
 					m_declarationStack.Peek().Children.Add(decl);
 					decl.Type = type;
 
+					// Declarations don't have a VHDLNameExpression currently, and the ExpressionVisitor below requires one. So we create a fake one
+					VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, identifier_context.GetSpan(), identifier_context.GetText());
+					m_analysisResult.ToResolve.Add(new VHDLFakeResolver(nameExpr, decl));
 					declarationList.Add(decl);
 				}
 			}
@@ -456,10 +462,7 @@ namespace vhdl4vs
 			{
 				try // This should not cause an error
 				{
-					// Declarations don't have a VHDLNameExpression currently, and the ExpressionVisitor requires one. So we create a fake one
-					VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, declarationList.First().NameContext.GetSpan(), declarationList.First().Name);
-					m_analysisResult.ToResolve.Add(nameExpr);
-					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, nameExpr);
+					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, new VHDLStaticReference(declarationList.First()));
 					expr = exprVisitor.Visit(context.expression());
 				}
 				catch (Exception e)
@@ -505,6 +508,9 @@ namespace vhdl4vs
 					m_declarationStack.Peek().Children.Add(decl);
 					decl.Type = type;
 
+					// Declarations don't have a VHDLNameExpression currently, and the ExpressionVisitor below requires one. So we create a fake one
+					VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, identifier_context.GetSpan(), identifier_context.GetText());
+					m_analysisResult.ToResolve.Add(new VHDLFakeResolver(nameExpr, decl));
 					declarationList.Add(decl);
 				}
 			}
@@ -513,10 +519,7 @@ namespace vhdl4vs
 			{
 				try // This should not cause an error
 				{
-					// Declarations don't have a VHDLNameExpression currently, and the ExpressionVisitor requires one. So we create a fake one
-					VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, declarationList.First().NameContext.GetSpan(), declarationList.First().Name);
-					m_analysisResult.ToResolve.Add(nameExpr);
-					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, nameExpr);
+					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, new VHDLStaticReference(declarationList.First()));
 					expr = exprVisitor.Visit(context.expression());
 				}
 				catch (VHDLCodeException e)
@@ -565,6 +568,8 @@ namespace vhdl4vs
 					m_declarationStack.Peek().Children.Add(decl);
 					decl.Type = type;
 
+					VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, identifier_context.GetSpan(), decl.Name);
+					m_analysisResult.ToResolve.Add(new VHDLFakeResolver(nameExpr, decl));
 					declarationList.Add(decl);
 				}
 			}
@@ -573,10 +578,7 @@ namespace vhdl4vs
 			{
 				try // This should not cause an error
 				{
-					// Declarations don't have a VHDLNameExpression currently, and the ExpressionVisitor requires one. So we create a fake one
-					VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, declarationList.First().NameContext.GetSpan(), declarationList.First().Name);
-					m_analysisResult.ToResolve.Add(nameExpr);
-					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, nameExpr);
+					ExpressionVisitors.VHDLExpressionVisitor exprVisitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, new VHDLStaticReference(declarationList.First()));
 					expr = exprVisitor.Visit(context.expression());
 				}
 				catch (VHDLCodeException e)
@@ -641,6 +643,9 @@ namespace vhdl4vs
 						decl.Type = type;
 						decl.InitializationExpression = expr;
 
+						VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, identifier.GetSpan(), decl.Name);
+						m_analysisResult.ToResolve.Add(new VHDLFakeResolver(nameExpr, decl));
+
 						decl.Mode = VisitSignalMode(context.signal_mode());
 
 					}
@@ -669,6 +674,8 @@ namespace vhdl4vs
 					context.subprogram_specification()?.procedure_specification()?.designator(),
 					name,
 					m_declarationStack.Peek());
+				VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, context.subprogram_specification().procedure_specification().designator().GetSpan(), decl.Name);
+				m_analysisResult.ToResolve.Add(new VHDLFakeResolver(nameExpr, decl));
 
 				PushScope(decl);
 			}
@@ -685,6 +692,8 @@ namespace vhdl4vs
 					context.subprogram_specification()?.function_specification()?.designator(),
 					name,
 					m_declarationStack.FirstOrDefault());
+				VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, context.subprogram_specification().function_specification().designator().GetSpan(), decl.Name);
+				m_analysisResult.ToResolve.Add(new VHDLFakeResolver(nameExpr, decl));
 
 				try // This should not cause an error
 				{ 
@@ -731,6 +740,9 @@ namespace vhdl4vs
 					context.subprogram_specification()?.procedure_specification()?.designator(),
 					name,
 					m_declarationStack.FirstOrDefault());
+				VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, context.subprogram_specification().procedure_specification().designator().GetSpan(), decl.Name);
+				m_analysisResult.ToResolve.Add(new VHDLFakeResolver(nameExpr, decl));
+
 				PushScope(decl);
 
 				VisitSubprogram_specification(context.subprogram_specification());
@@ -774,6 +786,8 @@ namespace vhdl4vs
 					context.subprogram_specification()?.function_specification()?.designator(),
 					name,
 					m_declarationStack.Peek());
+				VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, context.subprogram_specification().function_specification().designator().GetSpan(), decl.Name);
+				m_analysisResult.ToResolve.Add(new VHDLFakeResolver(nameExpr, decl));
 
 				try // This should not cause an error
 				{
@@ -836,7 +850,12 @@ namespace vhdl4vs
 				throw new Exception("VHDLTypeListVisitor package identifier is null");
 			string name = context.identifier()?[0]?.GetText() + "@declaration";
 			VHDLPackageDeclaration decl = new VHDLPackageDeclaration(m_analysisResult, context, context.identifier()?[0], name, m_usedLibraries, m_declarationStack.FirstOrDefault());
-			
+			VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, context.identifier()[0].GetSpan(), decl.Name);
+			m_analysisResult.ToResolve.Add(new VHDLFakeResolver(nameExpr, decl));
+
+			if (context.identifier().Length >= 2)
+				m_analysisResult.ToResolve.Add(new VHDLNameExpression(m_analysisResult, context.identifier()[1].GetSpan(), context.identifier()[1].GetText()));
+
 			m_usedLibraries = new List<VHDLUseClause>();
 			PushScope(decl);
 
@@ -853,8 +872,14 @@ namespace vhdl4vs
 			if (context.identifier()?[0] == null)
 				throw new Exception("VHDLTypeListVisitor package identifier is null");
 			string name = context.identifier()?[0]?.GetText() + "@body";
+
 			VHDLPackageBodyDeclaration decl = new VHDLPackageBodyDeclaration(m_analysisResult, context, context.identifier()?[0], name, m_usedLibraries, m_declarationStack.FirstOrDefault());
-			
+			VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, context.identifier()[0].GetSpan(), decl.Name);
+			m_analysisResult.ToResolve.Add(new VHDLFakeResolver(nameExpr, decl));
+
+			if (context.identifier().Length >= 2)
+				m_analysisResult.ToResolve.Add(new VHDLNameExpression(m_analysisResult, context.identifier()[1].GetSpan(), context.identifier()[1].GetText()));
+
 			m_usedLibraries = new List<VHDLUseClause>();
 			PushScope(decl);
 
@@ -872,7 +897,14 @@ namespace vhdl4vs
 			string architecture_name = context.identifier()[0].GetText();
 
 			VHDLArchitectureDeclaration decl = new VHDLArchitectureDeclaration(m_analysisResult, context, context.identifier()[0], architecture_name, m_usedLibraries, m_declarationStack.FirstOrDefault());
-			
+			VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, context.identifier()[0].GetSpan(), decl.Name);
+			m_analysisResult.ToResolve.Add(new VHDLFakeResolver(nameExpr, decl));
+
+			if (context.identifier().Length >= 2)
+				m_analysisResult.ToResolve.Add(new VHDLNameExpression(m_analysisResult, context.identifier()[1].GetSpan(), context.identifier()[1].GetText()));
+			if (context.identifier().Length >= 3)
+				m_analysisResult.ToResolve.Add(new VHDLNameExpression(m_analysisResult, context.identifier()[2].GetSpan(), context.identifier()[2].GetText()));
+
 			m_usedLibraries = new List<VHDLUseClause>();
 			PushScope(decl);
 
@@ -994,6 +1026,8 @@ namespace vhdl4vs
 		public override bool VisitComponent_declaration([NotNull] vhdlParser.Component_declarationContext context)
 		{
 			VHDLComponentDeclaration decl = new VHDLComponentDeclaration(m_analysisResult, context, m_declarationStack.FirstOrDefault(), context.identifier()[0].GetText());
+			VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, context.identifier()[0].GetSpan(), decl.Name);
+			m_analysisResult.ToResolve.Add(new VHDLFakeResolver(nameExpr, decl));
 
 			PushScope(decl);
 
@@ -1014,7 +1048,12 @@ namespace vhdl4vs
 			string name = context.identifier()[0].GetText();
 
 			VHDLEntityDeclaration decl = new VHDLEntityDeclaration(m_analysisResult, context, context.identifier()[0], name, m_usedLibraries, m_declarationStack.FirstOrDefault());
-			
+			VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, context.identifier()[0].GetSpan(), name);
+			m_analysisResult.ToResolve.Add(new VHDLFakeResolver(nameExpr, decl));
+
+			if (context.identifier().Length >= 2)
+				m_analysisResult.ToResolve.Add(new VHDLNameExpression(m_analysisResult, context.identifier()[1].GetSpan(), context.identifier()[1].GetText()));
+
 			m_usedLibraries = new List<VHDLUseClause>();
 			PushScope(decl);
 
@@ -1072,6 +1111,8 @@ namespace vhdl4vs
 				context.alias_designator(),
 				context.alias_designator().GetText(),
 				m_declarationStack.FirstOrDefault());
+			m_analysisResult.ToResolve.Add(new VHDLNameExpression(m_analysisResult, context.alias_designator().GetSpan(), context.alias_designator().GetText()));
+
 			if (context.alias_indication()?.subtype_indication() != null)
 			{
 				TypeVisitors.VHDLTypeResolverVisitor visitor = new TypeVisitors.VHDLTypeResolverVisitor(m_analysisResult, m_errorListener);
@@ -1148,6 +1189,9 @@ namespace vhdl4vs
 				try
 				{
 					VHDLRecordElementDeclaration decl = new VHDLRecordElementDeclaration(m_analysisResult, context, m_declarationStack.FirstOrDefault(), identifierContext.GetText());
+					VHDLNameExpression nameExpr = new VHDLNameExpression(m_analysisResult, identifierContext.GetSpan(), identifierContext.GetText());
+					m_analysisResult.ToResolve.Add(new VHDLFakeResolver(nameExpr, decl));
+
 					decl.Type = type;
 					DeclarationsByContext.Add(context, decl);
 					if (m_declarationStack.Count > 0)
