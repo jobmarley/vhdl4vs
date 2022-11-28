@@ -3178,6 +3178,7 @@ namespace vhdl4vs
 				if (expectedType?.Dereference() is VHDLRecordType rt)
 				{
 					Dictionary<VHDLRecordElementDeclaration, VHDLEvaluatedExpression> assignedList = new Dictionary<VHDLRecordElementDeclaration, VHDLEvaluatedExpression>();
+					VHDLExpression othersValue = null;
 					foreach (var aae in Elements.Cast<VHDLArgumentAssociationExpression>())
 					{
 						if (aae.Arguments.Count() != 1)
@@ -3192,8 +3193,17 @@ namespace vhdl4vs
 							VHDLStatementUtilities.CheckExpressionType(aae.Value, field.Type, x => throw new VHDLCodeException(x.Message, x.Span));
 							assignedList[field] = null;
 						}
+						else if (aae.Arguments.First() is VHDLOthersExpression)
+						{
+							othersValue = aae.Value;
+						}
 						else
 							throw new VHDLCodeException("multiple choices not supported", Span);
+					}
+					foreach (var f in rt.Fields.Where(f => !assignedList.ContainsKey(f)))
+					{
+						VHDLStatementUtilities.CheckExpressionType(othersValue, f.Type, x => throw new VHDLCodeException(x.Message, x.Span));
+						assignedList[f] = null;
 					}
 
 					var notAssigned = rt.Fields.FirstOrDefault(x => !assignedList.ContainsKey(x));

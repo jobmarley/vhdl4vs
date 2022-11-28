@@ -310,12 +310,6 @@ namespace vhdl4vs
 				}
 			}
 
-			var qzdqzd = analysisResult.ToResolve.Distinct().ToArray();
-
-			if (qzdqzd.Length != analysisResult.ToResolve.Count)
-			{
-				int qzdqd = 0;
-			}
 			// Wait to resolve because it's necessary for next steps
 			// /!\ Deep analysis should not be synchronously awaited upon because of this. But that should never happen
 			Task.WaitAll(tasks.ToArray());
