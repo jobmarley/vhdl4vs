@@ -138,7 +138,7 @@ namespace vhdl4vs
 							doc.Filepath = absolutePath;
 							doc.TextDocument = null;
 							doc.Project = this;
-							doc.Parser.Parser = new VHDLSimpleParser(doc);
+							doc.Parser.SwitchToSimpleParser(doc);
 							if (m_documents.TryAdd(doc.Filepath, doc))
 							{
 								doc.Parser.AnalysisComplete += OnDocumentAnalysisCompleted;
@@ -220,7 +220,7 @@ namespace vhdl4vs
 							doc.Filepath = filepath;
 							doc.TextDocument = null;
 							doc.Project = this;
-							doc.Parser.Parser = new VHDLSimpleParser(doc);
+							doc.Parser.SwitchToSimpleParser(doc);
 
 							lib.Documents.Add(doc);
 

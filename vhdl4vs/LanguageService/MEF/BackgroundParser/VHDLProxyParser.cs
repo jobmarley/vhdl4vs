@@ -10,6 +10,7 @@
  You should have received a copy of the GNU General Public License along with Foobar. If not, see <https://www.gnu.org/licenses/>.
  */
 
+using Microsoft.VisualStudio.Text;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,31 +36,53 @@ namespace vhdl4vs
         {
             DeepAnalysisComplete?.Invoke(sender, e);
         }
+        public void SwitchToBackgroundParser(VHDLDocument doc, ITextBuffer buffer)
+        {
+            lock (m_lock)
+            {
+                if (m_parser is VHDLBackgroundParser)
+                    return;
+
+                if (m_parser != null)
+                {
+                    m_parser.ParseComplete -= OnParseComplete;
+                    m_parser.AnalysisComplete -= OnAnalysisComplete;
+                    m_parser.DeepAnalysisComplete -= OnDeepAnalysisComplete;
+                    m_parser.Dispose();
+                }
+
+                m_parser = new VHDLBackgroundParser(buffer, TaskScheduler.Default, doc);
+                m_parser.ParseComplete += OnParseComplete;
+                m_parser.AnalysisComplete += OnAnalysisComplete;
+                m_parser.DeepAnalysisComplete += OnDeepAnalysisComplete;
+            }
+        }
+        public void SwitchToSimpleParser(VHDLDocument doc)
+        {
+            lock (m_lock)
+            {
+                if (m_parser is VHDLSimpleParser)
+                    return;
+
+                if (m_parser != null)
+                {
+                    m_parser.ParseComplete -= OnParseComplete;
+                    m_parser.AnalysisComplete -= OnAnalysisComplete;
+                    m_parser.DeepAnalysisComplete -= OnDeepAnalysisComplete;
+                    m_parser.Dispose();
+                }
+
+                m_parser = new VHDLSimpleParser(doc);
+                m_parser.ParseComplete += OnParseComplete;
+                m_parser.AnalysisComplete += OnAnalysisComplete;
+                m_parser.DeepAnalysisComplete += OnDeepAnalysisComplete;
+            }
+        }
         public IVHDLParser Parser
         {
             get
             {
                 return m_parser;
-            }
-            set
-            {
-                lock (m_lock)
-                {
-                    IVHDLParser p = m_parser;
-                    if (p != null)
-                    {
-                        p.ParseComplete -= OnParseComplete;
-                        p.AnalysisComplete -= OnAnalysisComplete;
-                        p.DeepAnalysisComplete -= OnDeepAnalysisComplete;
-                    }
-                    if (value != null)
-                    {
-                        value.ParseComplete += OnParseComplete;
-                        value.AnalysisComplete += OnAnalysisComplete;
-                        value.DeepAnalysisComplete += OnDeepAnalysisComplete;
-                    }
-                    m_parser = value;
-                }
             }
         }
 

@@ -131,11 +131,8 @@ namespace vhdl4vs
 				return;
 
 			doc.TextDocument = null;
-			if (!(doc.Parser.Parser is VHDLSimpleParser)/* && buffer != null*/)
-			{
-				doc.Parser.Parser = new VHDLSimpleParser(doc);
-				DocumentClosed?.Invoke(this, new VHDLDocumentEventArgs(doc));
-			}
+			doc.Parser.SwitchToSimpleParser(doc);
+			DocumentClosed?.Invoke(this, new VHDLDocumentEventArgs(doc));
 		}
 
 		public VHDLDocument GetDocument(ITextBuffer buffer)
@@ -173,8 +170,7 @@ namespace vhdl4vs
 			{
 				if (!(vhdldoc.Parser.Parser is VHDLBackgroundParser))
 				{
-					VHDLBackgroundParser parser = new VHDLBackgroundParser(buffer, TaskScheduler.Default, vhdldoc);
-					vhdldoc.Parser.Parser = parser;
+					vhdldoc.Parser.SwitchToBackgroundParser(vhdldoc, buffer);
 					DocumentOpened?.Invoke(this, new VHDLDocumentEventArgs(vhdldoc));
 				}
 				return vhdldoc;
@@ -185,7 +181,7 @@ namespace vhdl4vs
 			vhdldoc.Filepath = doc.FilePath;
 			vhdldoc.TextDocument = doc;
 			vhdldoc.Project = m_projects.Values.FirstOrDefault(); // Add first project so libraries work kind of
-			vhdldoc.Parser.Parser = new VHDLBackgroundParser(buffer, TaskScheduler.Default, vhdldoc);
+			vhdldoc.Parser.SwitchToBackgroundParser(vhdldoc, buffer);
 
 			VHDLDocument addedDocument = m_orphanDocuments.GetOrAdd(doc.FilePath.ToLower(), vhdldoc);
 			if (addedDocument == vhdldoc)

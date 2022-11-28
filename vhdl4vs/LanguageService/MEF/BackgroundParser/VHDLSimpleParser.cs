@@ -92,6 +92,7 @@ namespace vhdl4vs
 		{
 			if (disposing)
 			{
+				m_watcher.Changed -= OnFileChanged;
 				m_watcher.Dispose();
 			}
 

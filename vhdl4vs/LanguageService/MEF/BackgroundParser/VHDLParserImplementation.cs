@@ -73,6 +73,7 @@ namespace vhdl4vs
 		public AnalysisResult AResult { get; private set; }
 		public DeepAnalysisResult DAResult { get; private set; }
 
+		private VHDLProject m_project = null;
 		protected VHDLParserImplementation(VHDLDocument document)
 		{
 			UseDeepAnalysis = true;
@@ -81,12 +82,12 @@ namespace vhdl4vs
 			DocumentTable = document.DocumentTable;
 
 			// Not sure if DocumentAdded/Removed are necessary...
-			VHDLProject proj = Document.Project;
+			m_project = Document.Project;
 			//Debug.WriteLine(string.Format("ParserImplementation created, document: {0}, project: {1}", document.Filepath, proj?.UnconfiguredProject?.FullPath ?? "null"));
-			if (proj != null)
+			if (m_project != null)
 			{
-				proj.LibraryChanged += OnLibraryChanged;
-				proj.DocumentChanged += OnDocumentChanged;
+				m_project.LibraryChanged += OnLibraryChanged;
+				m_project.DocumentChanged += OnDocumentChanged;
 			}
 		}
 
@@ -259,7 +260,8 @@ namespace vhdl4vs
 
 		private DeepAnalysisResult DeepAnalyse(AnalysisResult analysisResult)
 		{
-			Debug.WriteLine(string.Format("Deep analyzing file {0}", Document.Filepath));
+			bool isBackgroundParser = this is VHDLBackgroundParser;
+			Debug.WriteLine(string.Format("Deep analyzing file {0} from {1}", Document.Filepath, isBackgroundParser ? "BackgroundParser" : "SimpleParser"));
 			//if (analysisResult.Snapshot == null) // DeepAnalysis doesn't really makes sense if document is not displayed 
 			//	return null;
 
@@ -461,6 +463,8 @@ namespace vhdl4vs
 		{
 			if (disposing)
 			{
+				m_project.LibraryChanged -= OnLibraryChanged;
+				m_project.DocumentChanged -= OnDocumentChanged;
 			}
 
 			m_disposed = true;
