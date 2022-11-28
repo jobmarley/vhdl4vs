@@ -887,9 +887,8 @@ namespace vhdl4vs
 		{
 			get
 			{
-				if (m_declaration == null && Expression != null)
-					m_declaration = Expression.Declaration;
-				return m_declaration;
+				// declaration must not be cached, because redoing the deep analysis will update the reference
+				return m_declaration ?? Expression?.Declaration;
 			}
 		}
 
