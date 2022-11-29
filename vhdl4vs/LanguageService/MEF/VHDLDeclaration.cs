@@ -999,6 +999,82 @@ namespace vhdl4vs
 			return new VHDLClassifiedText(UndecoratedName, "vhdl.constant");
 		}
 	}
+	class VHDLFileDeclaration
+		: VHDLAbstractVariableDeclaration
+	{
+		public VHDLExpression Filename { get; set; } = null;
+		public VHDLFileDeclaration(AnalysisResult analysisResult, ParserRuleContext context, ParserRuleContext nameContext, string name, VHDLDeclaration parent, VHDLExpression filename)
+			: base(analysisResult, parent)
+		{
+			Context = context;
+			NameContext = nameContext;
+			Name = name;
+			Filename = filename;
+		}
+
+		private VHDLClassifiedText GetClassifiedDeclaration()
+		{
+			VHDLClassifiedText declText = new VHDLClassifiedText();
+			declText.Add("file ", "keyword");
+			declText.Add(GetClassifiedName(true));
+			declText.Add(" : ");
+			try
+			{
+				declText.Add(Type.GetClassifiedText());
+			}
+			catch (Exception e)
+			{
+				VHDLLogger.LogException(e);
+				declText.Add("<error type>");
+			}
+			declText.Add(" is ", "keyword");
+			try
+			{
+				declText.Add(Filename.GetClassifiedText());
+			}
+			catch (Exception e)
+			{
+				VHDLLogger.LogException(e);
+				declText.Add("<error>");
+			}
+
+			return declText;
+		}
+		public override async Task<object> BuildQuickInfoAsync()
+		{
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+			System.Windows.Controls.TextBlock textBlock = GetClassifiedDeclaration().ToTextBlock();
+
+			textBlock.Inlines.InsertBefore(textBlock.Inlines.FirstInline, VHDLQuickInfoHelper.glyphVariable());
+			textBlock.Inlines.InsertAfter(textBlock.Inlines.FirstInline, VHDLQuickInfoHelper.text(" "));
+			if (!string.IsNullOrWhiteSpace(Comment))
+				textBlock.Inlines.Add(VHDLQuickInfoHelper.text(Environment.NewLine + Comment));
+
+			return textBlock;
+		}
+		public override CompletionItem BuildCompletion(IAsyncCompletionSource source)
+		{
+			CompletionItem item = new CompletionItem(UndecoratedName, source, VHDLQuickInfoHelper.VariableImageElement);
+			item.Properties["declaration"] = this;
+			return item;
+		}
+		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)
+		{
+			if (fullyQualified && Parent != null && !(Parent is VHDLFileDeclaration))
+			{
+				VHDLClassifiedText text = Parent.GetClassifiedName(true);
+				text.Add(".");
+				text.Add(UndecoratedName, "vhdl.variable");
+				return text;
+			}
+			return new VHDLClassifiedText(UndecoratedName, "vhdl.variable");
+		}
+		public override void Check(DeepAnalysisResult deepAnalysisResult, Action<VHDLError> errorListener)
+		{
+			base.Check(deepAnalysisResult, errorListener);
+		}
+	}
+
 	class VHDLGenericDeclaration
 		: VHDLConstantDeclaration
 	{

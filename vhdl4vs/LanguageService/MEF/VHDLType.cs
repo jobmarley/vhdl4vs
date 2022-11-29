@@ -1059,4 +1059,57 @@ namespace vhdl4vs
 			return m_indexTypes[i];
 		}
 	}
+
+	class VHDLAccessType
+		: VHDLType
+	{
+		public VHDLType Type { get; set; } = null;
+		public VHDLAccessType(VHDLType type)
+		{
+			Type = type;
+		}
+		public override VHDLClassifiedText GetClassifiedText()
+		{
+			VHDLClassifiedText text = new VHDLClassifiedText("access ", "keyword");
+			try
+			{
+				text.Add(Type.GetClassifiedText());
+			}
+			catch (Exception e)
+			{
+				text.Add("<error type>");
+			}
+			return text;
+		}
+		public override VHDLType GetBaseType()
+		{
+			return this;
+		}
+	}
+	class VHDLFileType
+		: VHDLType
+	{
+		public VHDLType Type { get; set; } = null;
+		public VHDLFileType(VHDLType type)
+		{
+			Type = type;
+		}
+		public override VHDLClassifiedText GetClassifiedText()
+		{
+			VHDLClassifiedText text = new VHDLClassifiedText("file of ", "keyword");
+			try
+			{
+				text.Add(Type.GetClassifiedText());
+			}
+			catch (Exception e)
+			{
+				text.Add("<error type>");
+			}
+			return text;
+		}
+		public override VHDLType GetBaseType()
+		{
+			return this;
+		}
+	}
 }

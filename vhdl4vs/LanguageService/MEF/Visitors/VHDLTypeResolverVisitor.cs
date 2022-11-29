@@ -44,11 +44,13 @@ namespace vhdl4vs.TypeVisitors
 			}
 			else if (context.access_type_definition() != null)
 			{
-				return null;
+				VHDLTypeResolverVisitor visitor = new VHDLTypeResolverVisitor(m_analysisResult, m_errorListener);
+				return new VHDLAccessType(visitor.Visit(context.access_type_definition().subtype_indication()));
 			}
 			else if (context.file_type_definition() != null)
 			{
-				return null;
+				VHDLTypeResolverVisitor visitor = new VHDLTypeResolverVisitor(m_analysisResult, m_errorListener);
+				return new VHDLFileType(visitor.Visit(context.file_type_definition().subtype_indication()));
 			}
 			return null;
 		}
