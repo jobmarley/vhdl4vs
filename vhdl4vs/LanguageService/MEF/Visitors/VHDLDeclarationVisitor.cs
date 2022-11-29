@@ -41,7 +41,7 @@ namespace vhdl4vs
 			DeclarationsByContext = new Dictionary<RuleContext, VHDLDeclaration>();
 			SortedScopedDeclarations = new SortedList<int, VHDLDeclaration>();
 
-			VHDLFileDeclaration fileDecl = new VHDLFileDeclaration(analysisResult);
+			VHDLRootDeclaration fileDecl = new VHDLRootDeclaration(analysisResult);
 			SortedScopedDeclarations.Add(-1, fileDecl);
 			m_declarationStack.Push(fileDecl);
 

@@ -301,7 +301,7 @@ namespace vhdl4vs
 			foreach (var v in FindAllImpl(enclosingDeclaration.Parent, predicate, visited))
 				yield return v;
 
-			if (enclosingDeclaration.Parent is VHDLFileDeclaration)
+			if (enclosingDeclaration.Parent is VHDLRootDeclaration)
 			{
 				// Check if name exist in same project documents
 				// we do this here not to repeat it for each parent scope
@@ -331,7 +331,7 @@ namespace vhdl4vs
 
 			visited.Add(enclosingDeclaration);
 
-			if (!(enclosingDeclaration is VHDLFileDeclaration))
+			if (!(enclosingDeclaration is VHDLRootDeclaration))
 			{
 				if (string.Compare(enclosingDeclaration.UndecoratedName, name, true) == 0)
 					yield return enclosingDeclaration;

@@ -69,7 +69,7 @@ namespace vhdl4vs
 		{
 			get
 			{
-				if (Parent == null || Parent is VHDLFileDeclaration)
+				if (Parent == null || Parent is VHDLRootDeclaration)
 					return Name;
 				return Parent.TreePath + "." + Name;
 			}
@@ -355,10 +355,10 @@ namespace vhdl4vs
 		}
 	}
 
-	class VHDLFileDeclaration
+	class VHDLRootDeclaration
 		: VHDLModifiableDeclaration
 	{
-		public VHDLFileDeclaration(AnalysisResult analysisResult)
+		public VHDLRootDeclaration(AnalysisResult analysisResult)
 			: base(analysisResult, null)
 		{
 		}
@@ -405,7 +405,7 @@ namespace vhdl4vs
 		}
 		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)
 		{
-			if (fullyQualified && Parent != null && !(Parent is VHDLFileDeclaration))
+			if (fullyQualified && Parent != null && !(Parent is VHDLRootDeclaration))
 			{
 				VHDLClassifiedText text = Parent.GetClassifiedName(true);
 				text.Add(text.Text + "." + UndecoratedName);
@@ -465,7 +465,7 @@ namespace vhdl4vs
 		}
 		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)
 		{
-			if (fullyQualified && Parent != null && !(Parent is VHDLFileDeclaration))
+			if (fullyQualified && Parent != null && !(Parent is VHDLRootDeclaration))
 			{
 				VHDLClassifiedText text = Parent.GetClassifiedName(true);
 				text.Add("." + UndecoratedName);
@@ -516,7 +516,7 @@ namespace vhdl4vs
 		}
 		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)
 		{
-			if (fullyQualified && Parent != null && !(Parent is VHDLFileDeclaration))
+			if (fullyQualified && Parent != null && !(Parent is VHDLRootDeclaration))
 			{
 				VHDLClassifiedText text = Parent.GetClassifiedName(true);
 				text.Add(".");
@@ -571,7 +571,7 @@ namespace vhdl4vs
 		}
 		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)
 		{
-			if (fullyQualified && Parent != null && !(Parent is VHDLFileDeclaration))
+			if (fullyQualified && Parent != null && !(Parent is VHDLRootDeclaration))
 			{
 				VHDLClassifiedText text = Parent.GetClassifiedName(true);
 				text.Add(".");
@@ -750,7 +750,7 @@ namespace vhdl4vs
 		}
 		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)
 		{
-			if (fullyQualified && Parent != null && !(Parent is VHDLFileDeclaration))
+			if (fullyQualified && Parent != null && !(Parent is VHDLRootDeclaration))
 			{
 				VHDLClassifiedText text = Parent.GetClassifiedName(true);
 				text.Add(".");
@@ -847,7 +847,7 @@ namespace vhdl4vs
 		}
 		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)
 		{
-			if (fullyQualified && Parent != null && !(Parent is VHDLFileDeclaration))
+			if (fullyQualified && Parent != null && !(Parent is VHDLRootDeclaration))
 			{
 				VHDLClassifiedText text = Parent.GetClassifiedName(true);
 				text.Add(".");
@@ -908,7 +908,7 @@ namespace vhdl4vs
 		}
 		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)
 		{
-			if (fullyQualified && Parent != null && !(Parent is VHDLFileDeclaration))
+			if (fullyQualified && Parent != null && !(Parent is VHDLRootDeclaration))
 			{
 				VHDLClassifiedText text = Parent.GetClassifiedName(true);
 				text.Add(".");
@@ -989,7 +989,7 @@ namespace vhdl4vs
 		}
 		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)
 		{
-			if (fullyQualified && Parent != null && !(Parent is VHDLFileDeclaration))
+			if (fullyQualified && Parent != null && !(Parent is VHDLRootDeclaration))
 			{
 				VHDLClassifiedText text = Parent.GetClassifiedName(true);
 				text.Add(".");
@@ -1051,7 +1051,7 @@ namespace vhdl4vs
 		}
 		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)
 		{
-			if (fullyQualified && Parent != null && !(Parent is VHDLFileDeclaration))
+			if (fullyQualified && Parent != null && !(Parent is VHDLRootDeclaration))
 			{
 				VHDLClassifiedText text = Parent.GetClassifiedName(true);
 				text.Add(".");
@@ -1106,7 +1106,7 @@ namespace vhdl4vs
 		}
 		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)
 		{
-			if (fullyQualified && Parent != null && !(Parent is VHDLFileDeclaration))
+			if (fullyQualified && Parent != null && !(Parent is VHDLRootDeclaration))
 			{
 				VHDLClassifiedText text = Parent.GetClassifiedName(true);
 				text.Add(".");
@@ -1172,7 +1172,7 @@ namespace vhdl4vs
 		}
 		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)
 		{
-			if (fullyQualified && Parent != null && !(Parent is VHDLFileDeclaration))
+			if (fullyQualified && Parent != null && !(Parent is VHDLRootDeclaration))
 			{
 				VHDLClassifiedText text = Parent.GetClassifiedName(true);
 				text.Add("." + UndecoratedName);
@@ -1418,7 +1418,7 @@ namespace vhdl4vs
 		}
 		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)
 		{
-			if (fullyQualified && Parent != null && !(Parent is VHDLFileDeclaration))
+			if (fullyQualified && Parent != null && !(Parent is VHDLRootDeclaration))
 			{
 				VHDLClassifiedText text = Parent.GetClassifiedName(true);
 				text.Add(".");
@@ -1808,7 +1808,7 @@ namespace vhdl4vs
 		}
 		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)
 		{
-			if (fullyQualified && Parent != null && !(Parent is VHDLFileDeclaration))
+			if (fullyQualified && Parent != null && !(Parent is VHDLRootDeclaration))
 			{
 				VHDLClassifiedText text = Parent.GetClassifiedName(true);
 				text.Add(".");
@@ -1886,7 +1886,7 @@ namespace vhdl4vs
 		}
 		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)
 		{
-			if (fullyQualified && Parent != null && !(Parent is VHDLFileDeclaration))
+			if (fullyQualified && Parent != null && !(Parent is VHDLRootDeclaration))
 			{
 				VHDLClassifiedText text = Parent.GetClassifiedName(true);
 				text.Add(".");
@@ -1938,7 +1938,7 @@ namespace vhdl4vs
 		}
 		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)
 		{
-			if (fullyQualified && Parent != null && !(Parent is VHDLFileDeclaration))
+			if (fullyQualified && Parent != null && !(Parent is VHDLRootDeclaration))
 			{
 				VHDLClassifiedText text = Parent.GetClassifiedName(true);
 				text.Add(".");
@@ -2017,7 +2017,7 @@ namespace vhdl4vs
 		}
 		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)
 		{
-			if (fullyQualified && Parent != null && !(Parent is VHDLFileDeclaration))
+			if (fullyQualified && Parent != null && !(Parent is VHDLRootDeclaration))
 			{
 				VHDLClassifiedText text = Parent.GetClassifiedName(true);
 				text.Add(".");
@@ -2118,7 +2118,7 @@ namespace vhdl4vs
 		}
 		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)
 		{
-			if (fullyQualified && Parent != null && !(Parent is VHDLFileDeclaration))
+			if (fullyQualified && Parent != null && !(Parent is VHDLRootDeclaration))
 			{
 				VHDLClassifiedText text = Parent.GetClassifiedName(true);
 				text.Add(".");
