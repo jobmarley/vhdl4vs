@@ -2954,7 +2954,7 @@ namespace vhdl4vs
 	}
 
 	class VHDLAttributeExpression
-		: VHDLExpression
+		: VHDLReferenceExpression
 	{
 		public VHDLAttributeExpression(AnalysisResult analysisResult, Span span)
 			: base(analysisResult, span) { }
@@ -2974,8 +2974,7 @@ namespace vhdl4vs
 			text.Add("'" + Attribute);
 			return text;
 		}
-		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression };
-		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null, Action<VHDLError> errorListener = null)
+		public override void Resolve(DeepAnalysisResult deepAnalysisResult, Action<VHDLError> errorListener)
 		{
 			if (string.Compare(Attribute, "pos", true) == 0)
 			{
@@ -2984,19 +2983,107 @@ namespace vhdl4vs
 
 				t = (t as VHDLAccessType)?.Type?.Dereference() ?? t;
 
-				if (t is VHDLScalarType st)
+				if (t == null || !(t is VHDLScalarType || t is VHDLEnumerationType))
 				{
-					return null;
-					//return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, null);
+					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("'pos' attribute can only be used on scalars, got '{0}'",
+						t?.GetClassifiedText()?.Text ?? "<error type>"), Span));
+					return;
 				}
-				else if (t is VHDLEnumerationType et)
+
+				VHDLFunctionDeclaration decl = new VHDLFunctionDeclaration(AnalysisResult, null, null, "pos", null);
+				decl.ReturnType = VHDLBuiltinTypeInteger.Instance;
+				VHDLSignalDeclaration arg = new VHDLSignalDeclaration(AnalysisResult, null, null, "x", decl);
+				arg.Type = t;
+				decl.Parameters.Add(arg);
+				Declaration = decl;
+			}
+			else if (string.Compare(Attribute, "image", true) == 0)
+			{
+				VHDLType t = ((Expression as VHDLNameExpression)?.Declaration as VHDLTypeDeclaration)?.Type?.Dereference();
+				t = t ?? ((Expression as VHDLNameExpression)?.Declaration as VHDLSubTypeDeclaration)?.Type?.Dereference();
+
+				t = (t as VHDLAccessType)?.Type?.Dereference() ?? t;
+
+				if (t == null || !(t is VHDLScalarType || t is VHDLEnumerationType))
 				{
-					return null;
-					//int i = et.GetIndexOf(e?.Result);
-					//return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, i == -1 ? null : new VHDLIntegerValue(i));
+					errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("'image' attribute can only be used on scalars, got '{0}'",
+						t?.GetClassifiedText()?.Text ?? "<error type>"), Span));
+					return;
 				}
-				throw new VHDLCodeException(string.Format("'pos' attribute can only be used on scalars, got '{0}'",
-					t.GetClassifiedText()?.Text ?? "<error type>"), Span);
+
+				VHDLFunctionDeclaration decl = new VHDLFunctionDeclaration(AnalysisResult, null, null, "image", null);
+				decl.ReturnType = t;
+				decl.Parameters.Add(new VHDLSignalDeclaration(AnalysisResult, null, null, "x", decl));
+				Declaration = decl;
+			}
+			else if (string.Compare(Attribute, "length", true) == 0)
+			{
+				VHDLAttributeDeclaration decl = new VHDLAttributeDeclaration(AnalysisResult, null, null, "length", null);
+				decl.Type = VHDLBuiltinTypeInteger.Instance;
+				Declaration = decl;
+			}
+			else if (string.Compare(Attribute, "left", true) == 0)
+			{
+				VHDLAttributeDeclaration decl = new VHDLAttributeDeclaration(AnalysisResult, null, null, "left", null);
+				decl.Type = VHDLBuiltinTypeInteger.Instance;
+				Declaration = decl;
+			}
+			else if (string.Compare(Attribute, "right", true) == 0)
+			{
+				VHDLAttributeDeclaration decl = new VHDLAttributeDeclaration(AnalysisResult, null, null, "right", null);
+				decl.Type = VHDLBuiltinTypeInteger.Instance;
+				Declaration = decl;
+			}
+			else if (string.Compare(Attribute, "high", true) == 0)
+			{
+				VHDLAttributeDeclaration decl = new VHDLAttributeDeclaration(AnalysisResult, null, null, "high", null);
+				decl.Type = VHDLBuiltinTypeInteger.Instance;
+				Declaration = decl;
+			}
+			else if (string.Compare(Attribute, "low", true) == 0)
+			{
+				VHDLAttributeDeclaration decl = new VHDLAttributeDeclaration(AnalysisResult, null, null, "low", null);
+				decl.Type = VHDLBuiltinTypeInteger.Instance;
+				Declaration = decl;
+			}
+			else if (string.Compare(Attribute, "ascending", true) == 0)
+			{
+				VHDLAttributeDeclaration decl = new VHDLAttributeDeclaration(AnalysisResult, null, null, "ascending", null);
+				decl.Type = VHDLBuiltinTypeInteger.Instance;
+				Declaration = decl;
+			}
+			else
+			{
+				try
+				{
+					VHDLDeclaration enclosingDeclaration = VHDLDeclarationUtilities.GetEnclosingDeclaration(AnalysisResult, Span.Start);
+					Declaration = VHDLDeclarationUtilities.FindName(enclosingDeclaration, Attribute);
+					
+				}
+				catch (VHDLNameNotFoundException e)
+				{
+					//errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, e.Message, e.Span));
+				}
+			}
+			if (Declaration != null)
+			{
+				deepAnalysisResult.SortedReferences.Add(Span.Start,
+					new VHDLNameReference(
+						Attribute,
+						Span,
+						Declaration));
+			}
+			else
+				errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, string.Format("Unknown attribute '{0}'", Attribute), Span));
+
+		}
+		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression };
+		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null, Action<VHDLError> errorListener = null)
+		{
+			if (string.Compare(Attribute, "pos", true) == 0)
+			{
+				// This is a function, doesnt evaluate to anything
+				return null;
 			}
 			else if (string.Compare(Attribute, "image", true) == 0)
 			{
@@ -3161,6 +3248,11 @@ namespace vhdl4vs
 					e?.Type?.GetClassifiedText()?.Text ?? "<error type>"), Span);
 			}
 			throw new VHDLCodeException(string.Format("Unknown attribute '{0}'", Attribute), Span);
+		}
+
+		public override IEnumerable<VHDLDeclaration> GetDeclarations()
+		{
+			return new VHDLDeclaration[] { Declaration };
 		}
 	}
 

@@ -613,6 +613,7 @@ namespace vhdl4vs.ExpressionVisitors
 		public override VHDLExpression VisitAttribute_name_part([NotNull] vhdlParser.Attribute_name_partContext context)
 		{
 			m_currentExpression = new VHDLAttributeExpression(m_analysisResult, context.attribute_designator().GetSpan(), m_currentExpression, context.attribute_designator().GetText());
+			AddToResolve(m_currentExpression as VHDLAttributeExpression);
 			if (context.expression() != null)
 			{
 				VHDLExpression expr = new VHDLExpressionVisitor(m_analysisResult, m_errorListener).Visit(context.expression());

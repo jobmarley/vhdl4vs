@@ -1975,6 +1975,7 @@ namespace vhdl4vs
 	class VHDLAttributeDeclaration
 	   : VHDLModifiableDeclaration
 	{
+		public VHDLType Type { get; set; } = null;
 		public VHDLAttributeDeclaration(AnalysisResult analysisResult,
 			ParserRuleContext context,
 			ParserRuleContext nameContext,
@@ -2010,6 +2011,8 @@ namespace vhdl4vs
 			VHDLClassifiedText declText = new VHDLClassifiedText();
 			declText.Add("attribute ", "keyword");
 			declText.Add(GetClassifiedName(true));
+			declText.Add(" : ");
+			declText.Add(Type?.GetClassifiedText() ?? new VHDLClassifiedText("<error type>"));
 			return declText;
 		}
 		public override VHDLClassifiedText GetClassifiedName(bool fullyQualified = false)

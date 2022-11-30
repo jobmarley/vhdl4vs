@@ -1225,6 +1225,8 @@ namespace vhdl4vs
 				context.label_colon().identifier(),
 				context.label_colon().identifier().GetText(),
 				m_declarationStack.FirstOrDefault());
+			m_analysisResult.ToResolve.Add(new VHDLNameExpression(m_analysisResult, context.label_colon().identifier().GetSpan(), context.label_colon().identifier().GetText()));
+			decl.Type = new VHDLReferenceType(new ExpressionVisitors.VHDLNameExpressionVisitor(m_analysisResult, m_errorListener).Visit(context.name()) as VHDLReferenceExpression);
 			DeclarationsByContext.Add(context, decl);
 			m_declarationStack.Peek().Children.Add(decl);
 			return true;
