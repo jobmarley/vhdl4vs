@@ -73,7 +73,7 @@ NEXT : N E X T;
 NOISE : N O I S E;
 NOR : N O R;
 NOT : N O T;
-NULL : N U L L;
+NULL_ : N U L L;
 OF : O F;
 ON : O N;
 OPEN : O P E N;
@@ -550,8 +550,8 @@ disconnection_specification
   ;
 
 discrete_range
-  : subtype_indication 
-  | range_decl
+  : range_decl
+  | subtype_indication
   ;
 
 element_association
@@ -862,7 +862,7 @@ interface_quantity_declaration
   ;
 
 interface_port_declaration
-  : identifier_list COLON signal_mode subtype_indication
+  : identifier_list COLON ( signal_mode )? subtype_indication
     ( BUS )? ( VARASGN expression )?
   ;
 
@@ -897,14 +897,11 @@ library_unit
   : secondary_unit  | primary_unit
   ;
 
-// Removed enumeration_literal cause it was causing issues in primary
-// It is actually a name
 literal
-  : NULL
+  : NULL_
   | BIT_STRING_LITERAL
   | STRING_LITERAL
-  | CHARACTER_LITERAL
-  //| enumeration_literal
+  | enumeration_literal
   | numeric_literal
   ;
 
@@ -959,32 +956,37 @@ multiplying_operator
 //     ;
 // changed to avoid left-recursion to name (from selected_name, indexed_name,
 // slice_name, and attribute_name, respectively)
-// (2.2.2004, e.f.)
+// (2.2.2004, e.f.) + (12.07.2017, o.p.)
 name
-  : name_part ( DOT name_part)*
-  | selected_name
+  : ( identifier | STRING_LITERAL ) ( name_part )*
   ;
 
 name_part
-   : selected_name (name_attribute_part | name_function_call_or_indexed_part | (name_slice_part)+)?
-   ;
-   
-name_attribute_part
-   : APOSTROPHE attribute_designator
-   ;
-
-name_function_call_or_indexed_part
-   : LPAREN actual_parameter_part? RPAREN
-   ;
-
-name_slice_part
-   : ( LPAREN explicit_range ( COMMA explicit_range )* RPAREN )
+  : selected_name_part
+  | function_call_or_indexed_name_part
+  | slice_name_part
+  | attribute_name_part
    ;
 
 selected_name
    : identifier (DOT suffix)*
    ;
 
+selected_name_part
+  : ( DOT suffix )+
+  ;
+
+function_call_or_indexed_name_part
+  : LPAREN actual_parameter_part RPAREN
+  ;
+
+slice_name_part
+  : LPAREN discrete_range RPAREN
+  ;
+
+attribute_name_part
+  : ( signature )? APOSTROPHE attribute_designator ( LPAREN expression RPAREN )?
+  ;
 
 nature_declaration
   : NATURE identifier IS nature_definition SEMI
@@ -1053,6 +1055,7 @@ package_declaration
 
 package_declarative_item
   : subprogram_declaration
+  | subprogram_body
   | type_declaration
   | subtype_declaration
   | constant_declaration
@@ -1170,7 +1173,7 @@ process_declarative_part
 
 process_statement
   : ( label_colon )? ( POSTPONED )? PROCESS
-    ( LPAREN (sensitivity_list | ALL) RPAREN )? ( IS )?
+    ( LPAREN sensitivity_list RPAREN )? ( IS )?
     process_declarative_part
     BEGIN
     process_statement_part 
@@ -1202,8 +1205,8 @@ quantity_specification
   ;
 
 range_decl
-  : name
-  | explicit_range
+  : explicit_range
+  | name
   ;
 
 explicit_range
@@ -1297,7 +1300,7 @@ sequential_statement
   | next_statement
   | exit_statement
   | return_statement
-  | ( label_colon )? NULL SEMI
+  | ( label_colon )? NULL_ SEMI
   | break_statement
   | procedure_call_statement
   ;
@@ -1318,7 +1321,7 @@ shift_operator
 
 signal_assignment_statement
   : ( label_colon )?
-    target LE ( delay_mechanism )? conditional_waveforms SEMI
+    target LE ( delay_mechanism )? waveform SEMI
   ;
 
 signal_declaration
@@ -1383,7 +1386,7 @@ simultaneous_statement
   | simultaneous_if_statement
   | simultaneous_case_statement
   | simultaneous_procedural_statement
-  | ( label_colon )? NULL SEMI
+  | ( label_colon )? NULL_ SEMI
   ;
 
 simultaneous_statement_part
@@ -1540,11 +1543,7 @@ use_clause
   ;
 
 variable_assignment_statement
-  : ( label_colon )? target VARASGN conditional_expression SEMI
-  ;
-
-conditional_expression
-  : expression ( WHEN condition (ELSE conditional_expression)?)?
+  : ( label_colon )? target VARASGN expression SEMI
   ;
 
 variable_declaration
@@ -1644,7 +1643,18 @@ STRING_LITERAL
 
 OTHER_SPECIAL_CHARACTER
   : '!' | '$' | '%' | '@' | '?' | '^' | '`' | '{' | '}' | '~'
-  | ' ' 
+  | ' ' | 'Ў' | 'ў' | 'Ј' | '¤' | 'Ґ' | '¦' | '§'
+  | 'Ё' | '©' | 'Є' | '«' | '¬' | '­' | '®' | 'Ї'
+  | '°' | '±' | 'І' | 'і' | 'ґ' | 'µ' | '¶' | '·'
+  | 'ё' | '№' | 'є' | '»' | 'ј' | 'Ѕ' | 'ѕ' | 'ї'
+  | 'А' | 'Б' | 'В' | 'Г' | 'Д' | 'Е' | 'Ж' | 'З'
+  | 'И' | 'Й' | 'К' | 'Л' | 'М' | 'Н' | 'О' | 'П'
+  | 'Р' | 'С' | 'Т' | 'У' | 'Ф' | 'Х' | 'Ц' | 'Ч'
+  | 'Ш' | 'Щ' | 'Ъ' | 'Ы' | 'Ь' | 'Э' | 'Ю' | 'Я'
+  | 'а' | 'б' | 'в' | 'г' | 'д' | 'е' | 'ж' | 'з'
+  | 'и' | 'й' | 'к' | 'л' | 'м' | 'н' | 'о' | 'п'
+  | 'р' | 'с' | 'т' | 'у' | 'ф' | 'х' | 'ц' | 'ч'
+  | 'ш' | 'щ' | 'ъ' | 'ы' | 'ь' | 'э' | 'ю' | 'я'
   ;
 
 
@@ -1695,7 +1705,7 @@ DIGIT
   :  '0'..'9'
   ;
 
-fragment BASED_INTEGER
+BASED_INTEGER
   : EXTENDED_DIGIT ('_' | EXTENDED_DIGIT)*
   ;
 

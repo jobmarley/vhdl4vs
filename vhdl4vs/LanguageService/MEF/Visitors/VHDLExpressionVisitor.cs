@@ -394,34 +394,49 @@ namespace vhdl4vs.ExpressionVisitors
 			VHDLNameExpressionVisitor visitor = new VHDLNameExpressionVisitor(m_analysisResult, m_errorListener, m_resolveOverrider);
 			return visitor.Visit(context);
 		}
+
+		public VHDLExpression VisitSTRING_LITERAL(ITerminalNode node)
+		{
+			string s = node.GetText();
+			if (s.StartsWith("b") || s.StartsWith("B"))
+				return new VHDLBinaryStringLiteral(m_analysisResult, node.Symbol.GetSpan(), s.Substring(2, s.Length - 3));
+			else if (s.StartsWith("o") || s.StartsWith("O"))
+				return new VHDLOctalStringLiteral(m_analysisResult, node.Symbol.GetSpan(), s.Substring(2, s.Length - 3));
+			else if (s.StartsWith("x") || s.StartsWith("X"))
+				return new VHDLHexStringLiteral(m_analysisResult, node.Symbol.GetSpan(), s.Substring(2, s.Length - 3));
+			else
+			{
+				return new VHDLStringLiteral(m_analysisResult, node.Symbol.GetSpan(), s.Substring(1, s.Length - 2));
+			}
+		}
 		public override VHDLExpression VisitLiteral([NotNull] vhdlParser.LiteralContext context)
 		{
-			if (context.NULL() != null)
+			if (context.NULL_() != null)
 			{
-				return new VHDLNull(m_analysisResult, context.NULL().Symbol.GetSpan());
+				return new VHDLNull(m_analysisResult, context.NULL_().Symbol.GetSpan());
 			}
-			else if(context.BIT_STRING_LITERAL() != null)
+			else if (context.BIT_STRING_LITERAL() != null)
 			{
-				string s = context.BIT_STRING_LITERAL().GetText();
-				if (s.StartsWith("b") || s.StartsWith("B"))
-					return new VHDLBinaryStringLiteral(m_analysisResult, context.BIT_STRING_LITERAL().Symbol.GetSpan(), s.Substring(2, s.Length - 3));
-				else if (s.StartsWith("o") || s.StartsWith("O"))
-					return new VHDLOctalStringLiteral(m_analysisResult, context.BIT_STRING_LITERAL().Symbol.GetSpan(), s.Substring(2, s.Length - 3));
-				else if (s.StartsWith("x") || s.StartsWith("X"))
-					return new VHDLHexStringLiteral(m_analysisResult, context.BIT_STRING_LITERAL().Symbol.GetSpan(), s.Substring(2, s.Length - 3));
+				return VisitSTRING_LITERAL(context.BIT_STRING_LITERAL());
 			}
 			else if (context.STRING_LITERAL() != null)
 			{
-				string s = context.STRING_LITERAL().GetText();
-				return new VHDLStringLiteral(m_analysisResult, context.STRING_LITERAL().Symbol.GetSpan(), s.Substring(1, s.Length - 2));
-			}
-			else if (context.CHARACTER_LITERAL() != null)
-			{
-				return new VHDLCharacterLiteral(m_analysisResult, context.CHARACTER_LITERAL().Symbol.GetSpan(), context.CHARACTER_LITERAL().GetText()[1]);
+				return VisitSTRING_LITERAL(context.STRING_LITERAL());
 			}
 			else if (context.numeric_literal() != null)
 			{
 				return VisitNumeric_literal(context.numeric_literal());
+			}
+			else if (context.enumeration_literal() != null)
+			{
+				if (context.enumeration_literal().identifier() != null)
+				{
+					VHDLNameExpression nameExpression = new VHDLNameExpression(m_analysisResult, context.enumeration_literal().identifier().GetSpan(), context.enumeration_literal().identifier().GetText());
+					AddToResolve(nameExpression);
+					return nameExpression;
+				}
+				else if (context.enumeration_literal().CHARACTER_LITERAL() != null)
+					return new VHDLCharacterLiteral(m_analysisResult, context.enumeration_literal().CHARACTER_LITERAL().Symbol.GetSpan(), context.enumeration_literal().CHARACTER_LITERAL().GetText()[1]);
 			}
 			return null;
 		}
@@ -463,8 +478,23 @@ namespace vhdl4vs.ExpressionVisitors
 
 		public override VHDLExpression VisitDiscrete_range([NotNull] vhdlParser.Discrete_rangeContext context)
 		{
-			if (context.range_decl()?.explicit_range() != null)
-				return VisitExplicit_range(context.range_decl()?.explicit_range());
+			if (context.range_decl() != null)
+				return VisitRange_decl(context.range_decl());
+			else if (context.subtype_indication() != null)
+				return VisitSubtype_indication(context.subtype_indication());
+			return null;
+		}
+		public override VHDLExpression VisitSubtype_indication([NotNull] vhdlParser.Subtype_indicationContext context)
+		{
+			return null;
+		}
+
+		public override VHDLExpression VisitRange_decl([NotNull] vhdlParser.Range_declContext context)
+		{
+			if (context.explicit_range() != null)
+				return VisitExplicit_range(context.explicit_range());
+			else if (context.name() != null)
+				return VisitName(context.name());
 			return null;
 		}
 		public override VHDLExpression VisitExplicit_range([NotNull] vhdlParser.Explicit_rangeContext context)
@@ -513,20 +543,52 @@ namespace vhdl4vs.ExpressionVisitors
 		}
 		public override VHDLExpression VisitName([NotNull] vhdlParser.NameContext context)
 		{
-			if (context.selected_name() != null)
+			if (context.identifier() != null)
 			{
-				return VisitSelected_name(context.selected_name());
+				m_currentExpression = new VHDLNameExpression(m_analysisResult, context.identifier().GetSpan(), context.identifier().GetText());
+				AddToResolve(m_currentExpression as VHDLNameExpression);
 			}
-			else if (context.name_part() != null)
+			else if (context.STRING_LITERAL() != null)
+			{
+				m_currentExpression = new VHDLExpressionVisitor(m_analysisResult, m_errorListener).VisitSTRING_LITERAL(context.STRING_LITERAL());
+			}
+
+			if (context.name_part() != null)
 			{
 				foreach (var namePartContext in context.name_part())
 				{
 					m_currentExpression = VisitName_part(namePartContext);
 				}
-
+			}
+			return m_currentExpression;
+		}
+		public override VHDLExpression VisitSuffix([NotNull] vhdlParser.SuffixContext context)
+		{
+			if (context.identifier() != null)
+			{
+				m_currentExpression = new VHDLMemberSelectExpression(m_analysisResult,
+					m_currentExpression.Span.Union(context.identifier().GetSpan()),
+					context.identifier().GetSpan(),
+					m_currentExpression,
+					context.identifier().GetText());
+				AddToResolve(m_currentExpression as VHDLMemberSelectExpression);
 				return m_currentExpression;
 			}
-			return null;
+			else if (context.ALL() != null)
+			{
+				m_currentExpression = new VHDLMemberSelectExpression(m_analysisResult,
+					m_currentExpression.Span.Union(context.ALL().Symbol.GetSpan()),
+					context.ALL().Symbol.GetSpan(),
+					m_currentExpression,
+					context.ALL().GetText());
+				AddToResolve(m_currentExpression as VHDLMemberSelectExpression);
+				return m_currentExpression;
+			}
+			else
+			{
+				m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "strings and characters in names not supported", context.GetSpan()));
+				return null;
+			}
 		}
 		public override VHDLExpression VisitSelected_name([NotNull] vhdlParser.Selected_nameContext context)
 		{
@@ -543,89 +605,80 @@ namespace vhdl4vs.ExpressionVisitors
 			if (context.suffix() != null)
 			{
 				foreach (var suffixContext in context.suffix())
-				{
-					if (suffixContext.identifier() != null)
-					{
-						m_currentExpression = new VHDLMemberSelectExpression(m_analysisResult, 
-							m_currentExpression.Span.Union(suffixContext.identifier().GetSpan()),
-							suffixContext.identifier().GetSpan(),
-							m_currentExpression,
-							suffixContext.identifier().GetText());
-						AddToResolve(m_currentExpression as VHDLMemberSelectExpression);
-					}
-					else if (suffixContext.ALL() != null)
-					{
-						m_currentExpression = new VHDLMemberSelectExpression(m_analysisResult,
-							m_currentExpression.Span.Union(suffixContext.ALL().Symbol.GetSpan()),
-							suffixContext.ALL().Symbol.GetSpan(),
-							m_currentExpression,
-							suffixContext.ALL().GetText());
-						AddToResolve(m_currentExpression as VHDLMemberSelectExpression);
-					}
-					else
-					{
-						m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "strings and characters in names not supported", suffixContext.GetSpan()));
-						return null;
-					}
-				}
+					VisitSuffix(suffixContext);
 			}
+			return m_currentExpression;
+		}
+
+		public override VHDLExpression VisitAttribute_name_part([NotNull] vhdlParser.Attribute_name_partContext context)
+		{
+			m_currentExpression = new VHDLAttributeExpression(m_analysisResult, context.attribute_designator().GetSpan(), m_currentExpression, context.attribute_designator().GetText());
+			if (context.expression() != null)
+			{
+				VHDLExpression expr = new VHDLExpressionVisitor(m_analysisResult, m_errorListener).Visit(context.expression());
+				m_currentExpression = new VHDLFunctionCallOrIndexExpression(m_analysisResult, m_currentExpression.Span.Union(context.GetSpan()), m_currentExpression, new VHDLExpression[] { expr });
+			}
+
 			return m_currentExpression;
 		}
 		public override VHDLExpression VisitName_part([NotNull] vhdlParser.Name_partContext context)
 		{
-			VHDLExpression nameExpression = VisitSelected_name(context.selected_name());
-
-			if (context.name_attribute_part() != null)
+			if (context.selected_name_part() != null)
+				return VisitSelected_name_part(context.selected_name_part());
+			if (context.attribute_name_part() != null)
 			{
-				/*if (context.name_attribute_part().expression() != null && context.name_attribute_part().expression().Length > 0)
-				{
-					VHDLExpression expr = null;
-					try
-					{
-						expr = new VHDLExpressionVisitor(m_analysisResult, m_toResolve, m_errorListener).Visit(context.name_attribute_part().expression()[0]);
-					}
-					catch (Exception e)
-					{
-					}
-					m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "attributes with expressions not supported", context.name_attribute_part().GetSpan()));
-					return null;
-				}*/
-				return new VHDLAttributeExpression(m_analysisResult, context.name_attribute_part().GetSpan(), nameExpression, context.name_attribute_part().attribute_designator().GetText());
+				return VisitAttribute_name_part(context.attribute_name_part());
 			}
-			else if (context.name_function_call_or_indexed_part() != null)
+			else if (context.function_call_or_indexed_name_part() != null)
 			{
-				VHDLFunctionCallOrIndexExpression fce = new VHDLFunctionCallOrIndexExpression(m_analysisResult, nameExpression.Span.Union(context.name_function_call_or_indexed_part().GetSpan()), nameExpression, null);
+				VHDLFunctionCallOrIndexExpression fce = new VHDLFunctionCallOrIndexExpression(m_analysisResult, m_currentExpression.Span.Union(context.function_call_or_indexed_name_part().GetSpan()), m_currentExpression, null);
 				var tmpOverrider = m_resolveOverrider;
 				m_resolveOverrider = (x, y, z) => fce.ResolveFunctionParameter(x, y, z);
 				List<VHDLExpression> arguments = new List<VHDLExpression>();
-				if (context.name_function_call_or_indexed_part().actual_parameter_part()?.association_list()?.association_element() != null)
+				if (context.function_call_or_indexed_name_part().actual_parameter_part()?.association_list()?.association_element() != null)
 				{
-					foreach (var elementContext in context.name_function_call_or_indexed_part().actual_parameter_part()?.association_list()?.association_element())
+					foreach (var elementContext in context.function_call_or_indexed_name_part().actual_parameter_part()?.association_list()?.association_element())
 					{
 						arguments.Add(VisitAssociation_element(elementContext));
+						if (arguments.Last() == null)
+						{
+							int zqdqd = 0;
+						}
 					}
 				}
 				m_resolveOverrider = tmpOverrider;
 				fce.Arguments = arguments;
+				m_currentExpression = fce;
 				return fce;
 			}
-			else if (context.name_slice_part() != null)
+			else if (context.slice_name_part() != null)
 			{
-				foreach (var slicePartContext in context.name_slice_part())
-				{
-					List<VHDLExpression> arguments = new List<VHDLExpression>();
-					foreach (var rangeContext in slicePartContext.explicit_range())
-					{
-						arguments.Add(VisitExplicit_range(rangeContext));
-					}
-					nameExpression = new VHDLFunctionCallOrIndexExpression(m_analysisResult, nameExpression.Span.Union(slicePartContext.GetSpan()), nameExpression, arguments);
-				}
-				return nameExpression;
+				return VisitSlice_name_part(context.slice_name_part());
 			}
 
 			return m_currentExpression;
 		}
+		public override VHDLExpression VisitSlice_name_part([NotNull] vhdlParser.Slice_name_partContext context)
+		{
+			List<VHDLExpression> arguments = new List<VHDLExpression>();
+			arguments.Add(new VHDLExpressionVisitor(m_analysisResult, m_errorListener, m_resolveOverrider).VisitDiscrete_range(context.discrete_range()));
+			m_currentExpression = new VHDLFunctionCallOrIndexExpression(m_analysisResult, m_currentExpression.Span.Union(context.GetSpan()), m_currentExpression, arguments);
+			if (arguments.Last() == null)
+			{
+				int qqzqdqz = 0;
+			}
+			return m_currentExpression;
+		}
 
+		public override VHDLExpression VisitSelected_name_part([NotNull] vhdlParser.Selected_name_partContext context)
+		{
+			if (context.suffix() != null)
+			{
+				foreach (var suffixContext in context.suffix())
+					VisitSuffix(suffixContext);
+			}
+			return m_currentExpression;
+		}
 		public override VHDLExpression VisitAssociation_element([NotNull] vhdlParser.Association_elementContext context)
 		{
 			VHDLExpression formalPartExpression = null;

@@ -1047,13 +1047,10 @@ namespace vhdl4vs
 				m_declarationStack.FirstOrDefault());
 			PushScope(decl);
 
-			if (context.ALL() != null)
-				decl.SensitivityList.Add(new VHDLAllExpression(m_analysisResult, context.ALL().Symbol.GetSpan()));
-
 			foreach (var nameContext in context.sensitivity_list()?.name() ?? Array.Empty<vhdlParser.NameContext>())
 			{
 				try
-				{ 
+				{
 					ExpressionVisitors.VHDLExpressionVisitor visitor = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener);
 					decl.SensitivityList.Add(visitor.Visit(nameContext));
 				}
@@ -1235,7 +1232,7 @@ namespace vhdl4vs
 
 		public override bool VisitLoop_statement([NotNull] vhdlParser.Loop_statementContext context)
 		{
-			if (context.iteration_scheme().FOR() != null)
+			if (context.iteration_scheme()?.FOR() != null)
 			{
 				VHDLLoopDeclaration decl = new VHDLLoopDeclaration(m_analysisResult, context, m_declarationStack.FirstOrDefault());
 

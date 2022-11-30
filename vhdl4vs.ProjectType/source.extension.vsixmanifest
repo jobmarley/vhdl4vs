@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="vhdl4vs.64C4A3FF-900D-4A1A-930D-C83D15BB4199" Version="1.0.0.14" Language="en-US" Publisher="jobmarley" />
+        <Identity Id="vhdl4vs.64C4A3FF-900D-4A1A-930D-C83D15BB4199" Version="1.0.0.15" Language="en-US" Publisher="jobmarley" />
         <DisplayName>vhdl4vs</DisplayName>
         <Description xml:space="preserve">VHDL extension for Visual Studio</Description>
     </Metadata>

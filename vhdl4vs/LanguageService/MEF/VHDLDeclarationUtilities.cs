@@ -113,7 +113,9 @@ namespace vhdl4vs
 
 			if (previousDecl is VHDLAbstractVariableDeclaration avd)
 			{
-				if (avd.Type.Dereference() is VHDLRecordType recordType)
+				VHDLType t = avd.Type.Dereference();
+				t = (t as VHDLAccessType)?.Type?.Dereference() ?? t;
+				if (t is VHDLRecordType recordType)
 				{
 					foreach (var record in recordType.Fields.Where(x => string.Compare(x.Name, name, true) == 0))
 						yield return record;

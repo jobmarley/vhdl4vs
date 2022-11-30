@@ -913,7 +913,7 @@ namespace vhdl4vs
 
 		public override VHDLType Dereference()
 		{
-			return ResolvedType.Dereference();
+			return ResolvedType?.Dereference();
 		}
 		public override VHDLType GetBaseType()
 		{
@@ -1082,6 +1082,10 @@ namespace vhdl4vs
 			return text;
 		}
 		public override VHDLType GetBaseType()
+		{
+			return this;
+		}
+		public override VHDLType Dereference()
 		{
 			return this;
 		}

@@ -2664,6 +2664,10 @@ namespace vhdl4vs
 			bool enableFunctionExecution = AnalysisResult.Document.DocumentTable.Settings.EnableFunctionExecution;
 
 			VHDLEvaluatedExpression evaluatedName = NameExpression.Evaluate(evaluationContext, null, errorListener);
+			VHDLType t = evaluatedName?.Type?.Dereference();
+			if (t is VHDLAccessType accessType)
+				t = accessType.Type?.Dereference();
+
 			if (NameExpression is VHDLReferenceExpression r)
 			{
 				if (r == null)
@@ -2735,7 +2739,7 @@ namespace vhdl4vs
 				}
 				if (r.Declaration is VHDLTypeDeclaration || r.Declaration is VHDLSubTypeDeclaration)
 				{
-					VHDLType t = (r.Declaration as VHDLTypeDeclaration)?.Type ?? (r.Declaration as VHDLSubTypeDeclaration)?.Type;
+					t = (r.Declaration as VHDLTypeDeclaration)?.Type ?? (r.Declaration as VHDLSubTypeDeclaration)?.Type;
 
 					if (Arguments.Count() != 1)
 						throw new VHDLCodeException("Type cast can only have 1 argument", Span);
@@ -2755,7 +2759,7 @@ namespace vhdl4vs
 				}
 			}
 
-			if (evaluatedName?.Type?.Dereference() is VHDLAbstractArrayType aat)
+			if (t is VHDLAbstractArrayType aat)
 			{
 				if (aat.Dimension != Arguments.Count())
 					throw new VHDLCodeException(string.Format("Array of dimension {0} expects {0} arguments, {1} given", aat.Dimension, Arguments.Count()), Span);
@@ -2973,10 +2977,50 @@ namespace vhdl4vs
 		public override IEnumerable<VHDLExpression> Children => new VHDLExpression[] { Expression };
 		public override VHDLEvaluatedExpression Evaluate(EvaluationContext evaluationContext, VHDLType expectedType = null, Action<VHDLError> errorListener = null)
 		{
-			if (string.Compare(Attribute, "length", true) == 0)
+			if (string.Compare(Attribute, "pos", true) == 0)
+			{
+				VHDLType t = ((Expression as VHDLNameExpression)?.Declaration as VHDLTypeDeclaration)?.Type?.Dereference();
+				t = t ?? ((Expression as VHDLNameExpression)?.Declaration as VHDLSubTypeDeclaration)?.Type?.Dereference();
+
+				t = (t as VHDLAccessType)?.Type?.Dereference() ?? t;
+
+				if (t is VHDLScalarType st)
+				{
+					return null;
+					//return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, null);
+				}
+				else if (t is VHDLEnumerationType et)
+				{
+					return null;
+					//int i = et.GetIndexOf(e?.Result);
+					//return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, i == -1 ? null : new VHDLIntegerValue(i));
+				}
+				throw new VHDLCodeException(string.Format("'pos' attribute can only be used on scalars, got '{0}'",
+					t.GetClassifiedText()?.Text ?? "<error type>"), Span);
+			}
+			else if (string.Compare(Attribute, "image", true) == 0)
 			{
 				VHDLEvaluatedExpression e = Expression?.Evaluate(evaluationContext, null, errorListener);
 				VHDLType t = e?.Type?.Dereference();
+				t = (t as VHDLAccessType)?.Type?.Dereference() ?? t;
+
+				if (t is VHDLScalarType st)
+				{
+					return new VHDLEvaluatedExpression(VHDLStringLiteralType.Instance, this, null);
+				}
+				else if (t is VHDLEnumerationType et)
+				{
+					return new VHDLEvaluatedExpression(VHDLStringLiteralType.Instance, this, null);
+				}
+				throw new VHDLCodeException(string.Format("'image' attribute can only be used on scalars, got '{0}'",
+					e?.Type?.GetClassifiedText()?.Text ?? "<error type>"), Span);
+			}
+			else if (string.Compare(Attribute, "length", true) == 0)
+			{
+				VHDLEvaluatedExpression e = Expression?.Evaluate(evaluationContext, null, errorListener);
+				VHDLType t = e?.Type?.Dereference();
+				t = (t as VHDLAccessType)?.Type?.Dereference() ?? t;
+
 				if (t is VHDLAbstractArrayType aat && aat.IndexTypes.Count() == 1)
 				{
 					VHDLRange r = aat.GetIndexRange(0);
@@ -2996,6 +3040,7 @@ namespace vhdl4vs
 			{
 				VHDLEvaluatedExpression e = Expression?.Evaluate(evaluationContext, null, errorListener);
 				VHDLType t = e?.Type?.Dereference();
+				t = (t as VHDLAccessType)?.Type?.Dereference() ?? t;
 				if (t is VHDLAbstractArrayType aat && aat.IndexTypes.Count() == 1)
 				{
 					return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, null);
@@ -3011,6 +3056,7 @@ namespace vhdl4vs
 			{
 				VHDLEvaluatedExpression e = Expression?.Evaluate(evaluationContext, null, errorListener);
 				VHDLType t = e?.Type?.Dereference();
+				t = (t as VHDLAccessType)?.Type?.Dereference() ?? t;
 				if (t is VHDLAbstractArrayType aat && aat.IndexTypes.Count() == 1)
 				{
 					return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, null);
@@ -3026,6 +3072,7 @@ namespace vhdl4vs
 			{
 				VHDLEvaluatedExpression e = Expression?.Evaluate(evaluationContext, null, errorListener);
 				VHDLType t = e?.Type?.Dereference();
+				t = (t as VHDLAccessType)?.Type?.Dereference() ?? t;
 				if (t is VHDLAbstractArrayType aat && aat.IndexTypes.Count() == 1)
 				{
 					return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, null);
@@ -3063,6 +3110,7 @@ namespace vhdl4vs
 			{
 				VHDLEvaluatedExpression e = Expression?.Evaluate(evaluationContext, null, errorListener);
 				VHDLType t = e?.Type?.Dereference();
+				t = (t as VHDLAccessType)?.Type?.Dereference() ?? t;
 				if (t is VHDLAbstractArrayType aat && aat.IndexTypes.Count() == 1)
 				{
 					return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, null);
@@ -3100,6 +3148,7 @@ namespace vhdl4vs
 			{
 				VHDLEvaluatedExpression e = Expression?.Evaluate(evaluationContext, null, errorListener);
 				VHDLType t = e?.Type?.Dereference();
+				t = (t as VHDLAccessType)?.Type?.Dereference() ?? t;
 				if (t is VHDLAbstractArrayType aat && aat.IndexTypes.Count() == 1)
 				{
 					return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, null);

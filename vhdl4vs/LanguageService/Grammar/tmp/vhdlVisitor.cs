@@ -920,29 +920,35 @@ public interface IvhdlVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitName_part([NotNull] vhdlParser.Name_partContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="vhdlParser.name_attribute_part"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitName_attribute_part([NotNull] vhdlParser.Name_attribute_partContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="vhdlParser.name_function_call_or_indexed_part"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitName_function_call_or_indexed_part([NotNull] vhdlParser.Name_function_call_or_indexed_partContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="vhdlParser.name_slice_part"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitName_slice_part([NotNull] vhdlParser.Name_slice_partContext context);
-	/// <summary>
 	/// Visit a parse tree produced by <see cref="vhdlParser.selected_name"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitSelected_name([NotNull] vhdlParser.Selected_nameContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="vhdlParser.selected_name_part"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitSelected_name_part([NotNull] vhdlParser.Selected_name_partContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="vhdlParser.function_call_or_indexed_name_part"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitFunction_call_or_indexed_name_part([NotNull] vhdlParser.Function_call_or_indexed_name_partContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="vhdlParser.slice_name_part"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitSlice_name_part([NotNull] vhdlParser.Slice_name_partContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="vhdlParser.attribute_name_part"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitAttribute_name_part([NotNull] vhdlParser.Attribute_name_partContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="vhdlParser.nature_declaration"/>.
 	/// </summary>
@@ -1531,12 +1537,6 @@ public interface IvhdlVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitVariable_assignment_statement([NotNull] vhdlParser.Variable_assignment_statementContext context);
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="vhdlParser.conditional_expression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitConditional_expression([NotNull] vhdlParser.Conditional_expressionContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="vhdlParser.variable_declaration"/>.
 	/// </summary>

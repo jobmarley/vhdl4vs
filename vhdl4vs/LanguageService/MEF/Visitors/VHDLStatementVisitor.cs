@@ -87,7 +87,7 @@ namespace vhdl4vs
 			{
 				return Visit(context.return_statement());
 			}
-			else if (context.NULL() != null)
+			else if (context.NULL_() != null)
 			{
 
 			}
@@ -357,40 +357,32 @@ namespace vhdl4vs
 			else
 				statement.NameExpression = visitor.Visit(context.target().aggregate());
 
-			if (context.conditional_waveforms().waveform().UNAFFECTED() != null)
+			if (context.waveform().UNAFFECTED() != null)
 			{
-				m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "'unaffected' not supported", context.conditional_waveforms().waveform().UNAFFECTED().Symbol.GetSpan()));
+				m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "'unaffected' not supported", context.waveform().UNAFFECTED().Symbol.GetSpan()));
 				return null;
 			}
-			var conditionalWaveformContext = context.conditional_waveforms();
-			while (conditionalWaveformContext != null)
+			var waveformContext = context.waveform();
+
+			if (waveformContext.UNAFFECTED() != null)
 			{
-				VHDLExpression conditionExpression = null;
-				if (conditionalWaveformContext.condition()?.expression() != null)
-					conditionExpression = visitor.Visit(conditionalWaveformContext.condition().expression());
-
-				if (conditionalWaveformContext.waveform().UNAFFECTED() != null)
-				{
-					m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "'unaffected' not supported", context.conditional_waveforms().waveform().UNAFFECTED().Symbol.GetSpan()));
-					return null;
-				}
-
-				if (conditionalWaveformContext.waveform().waveform_element().Length > 1)
-				{
-					m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "multiple assignment values not supported", conditionalWaveformContext.waveform().GetSpan()));
-					return null;
-				}
-				var waveformElementContext = conditionalWaveformContext.waveform().waveform_element()[0];
-				if (waveformElementContext.AFTER() != null)
-				{
-				}
-				// we create a new visitor cause the value expression need the name expression for resolve in the case of aggregates (records)
-				VHDLExpression valueExpression = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, statement.NameExpression as IVHDLReference).Visit(waveformElementContext.expression()[0]);
-				statement.Values.Add(new VHDLConditionalExpression(conditionExpression, valueExpression));
-
-
-				conditionalWaveformContext = conditionalWaveformContext.conditional_waveforms();
+				m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "'unaffected' not supported", context.waveform().UNAFFECTED().Symbol.GetSpan()));
+				return null;
 			}
+
+			if (waveformContext.waveform_element().Length > 1)
+			{
+				m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.SyntaxError, "multiple assignment values not supported", waveformContext.GetSpan()));
+				return null;
+			}
+			var waveformElementContext = waveformContext.waveform_element()[0];
+			if (waveformElementContext.AFTER() != null)
+			{
+			}
+			// we create a new visitor cause the value expression need the name expression for resolve in the case of aggregates (records)
+			VHDLExpression valueExpression = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, statement.NameExpression as IVHDLReference).Visit(waveformElementContext.expression()[0]);
+			statement.Values.Add(new VHDLConditionalExpression(null, valueExpression));
+
 			m_analysisResult.AddStatement(context, statement);
 			return statement;
 		}
@@ -452,19 +444,10 @@ namespace vhdl4vs
 			else
 				statement.NameExpression = visitor.Visit(context.target().aggregate());
 
-			var conditionalExpressionContext = context.conditional_expression();
-			while (conditionalExpressionContext != null)
-			{
-				VHDLExpression conditionExpression = null;
-				if (conditionalExpressionContext.condition()?.expression() != null)
-					conditionExpression = visitor.Visit(conditionalExpressionContext.condition().expression());
+			// we create a new visitor cause the value expression need the name expression for resolve in the case of aggregates (records)
+			VHDLExpression valueExpression = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, statement.NameExpression as IVHDLReference).Visit(context.expression());
+			statement.Values.Add(new VHDLConditionalExpression(null, valueExpression));
 
-				// we create a new visitor cause the value expression need the name expression for resolve in the case of aggregates (records)
-				VHDLExpression valueExpression = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener, null, statement.NameExpression as IVHDLReference).Visit(conditionalExpressionContext.expression());
-				statement.Values.Add(new VHDLConditionalExpression(conditionExpression, valueExpression));
-
-				conditionalExpressionContext = conditionalExpressionContext.conditional_expression();
-			}
 			m_analysisResult.AddStatement(context, statement);
 			return statement;
 		}

@@ -1812,42 +1812,6 @@ public partial class vhdlBaseListener : IvhdlListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitName_part([NotNull] vhdlParser.Name_partContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="vhdlParser.name_attribute_part"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterName_attribute_part([NotNull] vhdlParser.Name_attribute_partContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="vhdlParser.name_attribute_part"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitName_attribute_part([NotNull] vhdlParser.Name_attribute_partContext context) { }
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="vhdlParser.name_function_call_or_indexed_part"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterName_function_call_or_indexed_part([NotNull] vhdlParser.Name_function_call_or_indexed_partContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="vhdlParser.name_function_call_or_indexed_part"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitName_function_call_or_indexed_part([NotNull] vhdlParser.Name_function_call_or_indexed_partContext context) { }
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="vhdlParser.name_slice_part"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterName_slice_part([NotNull] vhdlParser.Name_slice_partContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="vhdlParser.name_slice_part"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitName_slice_part([NotNull] vhdlParser.Name_slice_partContext context) { }
-	/// <summary>
 	/// Enter a parse tree produced by <see cref="vhdlParser.selected_name"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
@@ -1859,6 +1823,54 @@ public partial class vhdlBaseListener : IvhdlListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitSelected_name([NotNull] vhdlParser.Selected_nameContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="vhdlParser.selected_name_part"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterSelected_name_part([NotNull] vhdlParser.Selected_name_partContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="vhdlParser.selected_name_part"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitSelected_name_part([NotNull] vhdlParser.Selected_name_partContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="vhdlParser.function_call_or_indexed_name_part"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterFunction_call_or_indexed_name_part([NotNull] vhdlParser.Function_call_or_indexed_name_partContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="vhdlParser.function_call_or_indexed_name_part"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitFunction_call_or_indexed_name_part([NotNull] vhdlParser.Function_call_or_indexed_name_partContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="vhdlParser.slice_name_part"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterSlice_name_part([NotNull] vhdlParser.Slice_name_partContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="vhdlParser.slice_name_part"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitSlice_name_part([NotNull] vhdlParser.Slice_name_partContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="vhdlParser.attribute_name_part"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterAttribute_name_part([NotNull] vhdlParser.Attribute_name_partContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="vhdlParser.attribute_name_part"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitAttribute_name_part([NotNull] vhdlParser.Attribute_name_partContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="vhdlParser.nature_declaration"/>.
 	/// <para>The default implementation does nothing.</para>
@@ -3035,18 +3047,6 @@ public partial class vhdlBaseListener : IvhdlListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitVariable_assignment_statement([NotNull] vhdlParser.Variable_assignment_statementContext context) { }
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="vhdlParser.conditional_expression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterConditional_expression([NotNull] vhdlParser.Conditional_expressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="vhdlParser.conditional_expression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitConditional_expression([NotNull] vhdlParser.Conditional_expressionContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="vhdlParser.variable_declaration"/>.
 	/// <para>The default implementation does nothing.</para>
