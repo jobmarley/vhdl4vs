@@ -55,7 +55,7 @@ namespace vhdl4vs
 		{
 			VHDLAssertStatement statement = new VHDLAssertStatement(m_analysisResult, m_parent);
 			int i = 0;
-			var conditionExpressionContext = context.expression()?.ElementAtOrDefault(i++);
+			var conditionExpressionContext = context.condition()?.expression();
 			var reportExpressionContext = context.expression()?.ElementAtOrDefault(i++);
 			var severityExpressionContext = context.expression()?.ElementAtOrDefault(i++);
 

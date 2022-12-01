@@ -1039,7 +1039,7 @@ namespace vhdl4vs
 		public override IEnumerable<object> Children => new VHDLExpression[] { Condition, ReportExpression, Severity };
 		public override void Check(Action<VHDLError> errorListener)
 		{
-			VHDLStatementUtilities.CheckExpressionType(Condition, VHDLStringLiteralType.Instance, errorListener);
+			VHDLStatementUtilities.CheckExpressionType(Condition, AnalysisResult.BooleanType, errorListener);
 
 			if (ReportExpression != null)
 				VHDLStatementUtilities.CheckExpressionType(ReportExpression, VHDLStringLiteralType.Instance, errorListener);
