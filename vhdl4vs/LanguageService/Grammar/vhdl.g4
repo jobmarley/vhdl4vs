@@ -550,8 +550,8 @@ disconnection_specification
   ;
 
 discrete_range
-  : range_decl
-  | subtype_indication
+  : subtype_indication 
+  | range_decl
   ;
 
 element_association
@@ -1205,8 +1205,8 @@ quantity_specification
   ;
 
 range_decl
-  : explicit_range
-  | name
+  : name
+  | explicit_range
   ;
 
 explicit_range

@@ -1116,4 +1116,22 @@ namespace vhdl4vs
 			return this;
 		}
 	}
+
+	// This is a utility type, it should only appears for range attributes
+	class VHDLRangeType
+		: VHDLType
+	{
+		public VHDLType IndexType { get; set; } = null;
+		public VHDLRangeType(VHDLType indexType)
+			: base()
+		{
+			IndexType = indexType;
+		}
+
+		public override VHDLClassifiedText GetClassifiedText()
+		{
+			VHDLClassifiedText text = new VHDLClassifiedText("range", "keyword");
+			return text;
+		}
+	}
 }

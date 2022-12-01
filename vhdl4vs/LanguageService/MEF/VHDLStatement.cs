@@ -1008,4 +1008,43 @@ namespace vhdl4vs
 
 		public VHDLExpression Name { get; set; } = null;
 	}
+
+	class VHDLReportStatement
+		: VHDLStatement
+	{
+		public VHDLExpression Expression { get; set; } = null;
+		public VHDLExpression Severity { get; set; } = null;
+		public VHDLReportStatement(AnalysisResult analysisResult, VHDLDeclaration parent)
+			: base(analysisResult, parent)
+		{
+		}
+		public override IEnumerable<object> Children => new VHDLExpression[] { Expression, Severity };
+		public override void Check(Action<VHDLError> errorListener)
+		{
+			VHDLStatementUtilities.CheckExpressionType(Expression, VHDLStringLiteralType.Instance, errorListener);
+			if (Severity != null)
+				VHDLStatementUtilities.CheckExpressionType(Severity, AnalysisResult.SeverityLevelType, errorListener);
+		}
+	}
+	class VHDLAssertStatement
+		: VHDLStatement
+	{
+		public VHDLExpression Condition { get; set; } = null;
+		public VHDLExpression ReportExpression { get; set; } = null;
+		public VHDLExpression Severity { get; set; } = null;
+		public VHDLAssertStatement(AnalysisResult analysisResult, VHDLDeclaration parent)
+			: base(analysisResult, parent)
+		{
+		}
+		public override IEnumerable<object> Children => new VHDLExpression[] { Condition, ReportExpression, Severity };
+		public override void Check(Action<VHDLError> errorListener)
+		{
+			VHDLStatementUtilities.CheckExpressionType(Condition, VHDLStringLiteralType.Instance, errorListener);
+
+			if (ReportExpression != null)
+				VHDLStatementUtilities.CheckExpressionType(ReportExpression, VHDLStringLiteralType.Instance, errorListener);
+			if (Severity != null)
+				VHDLStatementUtilities.CheckExpressionType(Severity, AnalysisResult.SeverityLevelType, errorListener);
+		}
+	}
 }

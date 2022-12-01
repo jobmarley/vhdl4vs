@@ -41,6 +41,41 @@ namespace vhdl4vs
 		{
 			return false;
 		}
+		public override VHDLStatement VisitReport_statement([NotNull] vhdlParser.Report_statementContext context)
+		{
+			VHDLReportStatement statement = new VHDLReportStatement(m_analysisResult, m_parent);
+			if (context.expression()?.Length > 0)
+				statement.Expression = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener).Visit(context.expression()[0]);
+			if (context.expression()?.Length > 1)
+				statement.Severity = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener).Visit(context.expression()[1]);
+			m_analysisResult.AddStatement(context, statement);
+			return statement;
+		}
+		public override VHDLStatement VisitAssertion([NotNull] vhdlParser.AssertionContext context)
+		{
+			VHDLAssertStatement statement = new VHDLAssertStatement(m_analysisResult, m_parent);
+			int i = 0;
+			var conditionExpressionContext = context.expression()?.ElementAtOrDefault(i++);
+			var reportExpressionContext = context.expression()?.ElementAtOrDefault(i++);
+			var severityExpressionContext = context.expression()?.ElementAtOrDefault(i++);
+
+			if (conditionExpressionContext != null)
+				statement.Condition = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener).Visit(conditionExpressionContext);
+			if (reportExpressionContext != null)
+				statement.ReportExpression = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener).Visit(reportExpressionContext);
+			if (severityExpressionContext != null)
+				statement.Severity = new ExpressionVisitors.VHDLExpressionVisitor(m_analysisResult, m_errorListener).Visit(severityExpressionContext);
+			m_analysisResult.AddStatement(context, statement);
+			return statement;
+		}
+		public override VHDLStatement VisitConcurrent_assertion_statement([NotNull] vhdlParser.Concurrent_assertion_statementContext context)
+		{
+			return VisitAssertion(context.assertion());
+		}
+		public override VHDLStatement VisitAssertion_statement([NotNull] vhdlParser.Assertion_statementContext context)
+		{
+			return VisitAssertion(context.assertion());
+		}
 		public override VHDLStatement VisitSequential_statement([NotNull] vhdlParser.Sequential_statementContext context)
 		{
 			if (context.wait_statement() != null)
@@ -243,8 +278,7 @@ namespace vhdl4vs
 			}
 			else if (context.concurrent_assertion_statement() != null)
 			{
-				m_errorListener?.Invoke(new VHDLError(0, PredefinedErrorTypeNames.Warning, "assertion statements not supported", context.GetSpan()));
-				return null;
+				return Visit(context.concurrent_assertion_statement());
 			}
 			else if (context.concurrent_signal_assignment_statement() != null)
 			{

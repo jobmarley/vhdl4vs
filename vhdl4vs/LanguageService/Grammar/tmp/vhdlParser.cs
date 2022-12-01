@@ -6108,11 +6108,11 @@ public partial class vhdlParser : Parser {
 	}
 
 	public partial class Discrete_rangeContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public Range_declContext range_decl() {
-			return GetRuleContext<Range_declContext>(0);
-		}
 		[System.Diagnostics.DebuggerNonUserCode] public Subtype_indicationContext subtype_indication() {
 			return GetRuleContext<Subtype_indicationContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public Range_declContext range_decl() {
+			return GetRuleContext<Range_declContext>(0);
 		}
 		public Discrete_rangeContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
@@ -6149,14 +6149,14 @@ public partial class vhdlParser : Parser {
 				EnterOuterAlt(_localctx, 1);
 				{
 				State = 1105;
-				range_decl();
+				subtype_indication();
 				}
 				break;
 			case 2:
 				EnterOuterAlt(_localctx, 2);
 				{
 				State = 1106;
-				subtype_indication();
+				range_decl();
 				}
 				break;
 			}
@@ -15175,11 +15175,11 @@ public partial class vhdlParser : Parser {
 	}
 
 	public partial class Range_declContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public Explicit_rangeContext explicit_range() {
-			return GetRuleContext<Explicit_rangeContext>(0);
-		}
 		[System.Diagnostics.DebuggerNonUserCode] public NameContext name() {
 			return GetRuleContext<NameContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public Explicit_rangeContext explicit_range() {
+			return GetRuleContext<Explicit_rangeContext>(0);
 		}
 		public Range_declContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
@@ -15216,14 +15216,14 @@ public partial class vhdlParser : Parser {
 				EnterOuterAlt(_localctx, 1);
 				{
 				State = 2005;
-				explicit_range();
+				name();
 				}
 				break;
 			case 2:
 				EnterOuterAlt(_localctx, 2);
 				{
 				State = 2006;
-				name();
+				explicit_range();
 				}
 				break;
 			}
@@ -21835,8 +21835,8 @@ public partial class vhdlParser : Parser {
 		'\x5', '\xE6', 't', '\x2', '\x44F', '\x450', '\a', '\x6', '\x2', '\x2', 
 		'\x450', '\x451', '\x5', '\xC2', '\x62', '\x2', '\x451', '\x452', '\a', 
 		'\x8C', '\x2', '\x2', '\x452', '\x95', '\x3', '\x2', '\x2', '\x2', '\x453', 
-		'\x456', '\x5', '\x178', '\xBD', '\x2', '\x454', '\x456', '\x5', '\x1DA', 
-		'\xEE', '\x2', '\x455', '\x453', '\x3', '\x2', '\x2', '\x2', '\x455', 
+		'\x456', '\x5', '\x1DA', '\xEE', '\x2', '\x454', '\x456', '\x5', '\x178', 
+		'\xBD', '\x2', '\x455', '\x453', '\x3', '\x2', '\x2', '\x2', '\x455', 
 		'\x454', '\x3', '\x2', '\x2', '\x2', '\x456', '\x97', '\x3', '\x2', '\x2', 
 		'\x2', '\x457', '\x458', '\x5', 'V', ',', '\x2', '\x458', '\x459', '\a', 
 		'\x87', '\x2', '\x2', '\x459', '\x45B', '\x3', '\x2', '\x2', '\x2', '\x45A', 
@@ -22536,8 +22536,8 @@ public partial class vhdlParser : Parser {
 		'\x2', '\x7D2', '\x175', '\x3', '\x2', '\x2', '\x2', '\x7D3', '\x7D4', 
 		'\x5', '\x174', '\xBB', '\x2', '\x7D4', '\x7D5', '\a', '\x93', '\x2', 
 		'\x2', '\x7D5', '\x7D6', '\x5', '\x126', '\x94', '\x2', '\x7D6', '\x177', 
-		'\x3', '\x2', '\x2', '\x2', '\x7D7', '\x7DA', '\x5', '\x17A', '\xBE', 
-		'\x2', '\x7D8', '\x7DA', '\x5', '\x126', '\x94', '\x2', '\x7D9', '\x7D7', 
+		'\x3', '\x2', '\x2', '\x2', '\x7D7', '\x7DA', '\x5', '\x126', '\x94', 
+		'\x2', '\x7D8', '\x7DA', '\x5', '\x17A', '\xBE', '\x2', '\x7D9', '\x7D7', 
 		'\x3', '\x2', '\x2', '\x2', '\x7D9', '\x7D8', '\x3', '\x2', '\x2', '\x2', 
 		'\x7DA', '\x179', '\x3', '\x2', '\x2', '\x2', '\x7DB', '\x7DF', '\x5', 
 		'\x1AC', '\xD7', '\x2', '\x7DC', '\x7DD', '\x5', '\x92', 'J', '\x2', '\x7DD', 

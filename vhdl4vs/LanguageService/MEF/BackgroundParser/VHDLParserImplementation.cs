@@ -289,7 +289,17 @@ namespace vhdl4vs
 			{
 				VHDLLogger.LogException(e);
 			}
-
+			try
+			{
+				VHDLDeclaration severityDecl = Document.Project?.GetLibraryPackage("STD.STANDARD")?.AnalysisResult?.Declarations?["STANDARD@declaration.SEVERITY_LEVEL"];
+				if (severityDecl != null && severityDecl is VHDLTypeDeclaration)
+					analysisResult.SeverityLevelType = new VHDLReferenceType(severityDecl);
+			}
+			catch (Exception e)
+			{
+				VHDLLogger.LogException(e);
+			}
+			
 			DeepAnalysisResult result = new DeepAnalysisResult();
 			result.AnalysisResult = analysisResult;
 			result.Tree = analysisResult.Tree;

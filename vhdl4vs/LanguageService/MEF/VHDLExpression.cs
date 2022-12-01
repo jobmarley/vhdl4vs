@@ -194,6 +194,11 @@ namespace vhdl4vs
 	{
 		//public VHDLCharacterLiteral(AnalysisResult analysisResult, Span span)
 		//	: base(analysisResult, span) { }
+		public VHDLCharacterLiteral(char c)
+			: base(null, new Span(), "'" + c.ToString() + "'")
+		{
+			Value = c;
+		}
 		public VHDLCharacterLiteral(AnalysisResult analysisResult, Span span, char c)
 			: base(analysisResult, span, "'" + c.ToString() + "'")
 		{
@@ -552,7 +557,7 @@ namespace vhdl4vs
 
 			// Try to evaluate the size of the concatenation operation
 			VHDLExpression count = rightType.GetIndexRange(0)?.Count(rightType.GetIndexType(0));
-			if (count != null)
+			if (count != null && left?.Value != null)
 				count = VHDLAddExpression.AddConstant(count, left.Value.Count());
 			VHDLEvaluatedExpression eval = count?.Evaluate(evaluationContext, null, errorListener);
 			if (eval?.Result is VHDLIntegerValue v)
@@ -574,25 +579,25 @@ namespace vhdl4vs
 				return null;
 
 			// That's pretty ugly, but I don't see any other way to define an array type
-			VHDLConcatenatedArrayType at = new VHDLConcatenatedArrayType(rightType, new VHDLRange(new VHDLIntegerLiteral(left.Value.Count()), VHDLRangeDirection.DownTo, new VHDLIntegerLiteral(0)));
+			VHDLConcatenatedArrayType at = new VHDLConcatenatedArrayType(rightType, left?.Value == null ? null : new VHDLRange(new VHDLIntegerLiteral(left.Value.Count()), VHDLRangeDirection.DownTo, new VHDLIntegerLiteral(0)));
 			return new VHDLEvaluatedExpression(at, this, null); // should return literal if thats possible
 		}
 		VHDLEvaluatedExpression ConcatStringString(VHDLArrayValue left, VHDLArrayValue right)
 		{
 			// "010" & "101"
-			return new VHDLEvaluatedExpression(VHDLStringLiteralType.Instance, this, new VHDLArrayValue(left.Value.Concat(right.Value)));
+			return new VHDLEvaluatedExpression(VHDLStringLiteralType.Instance, this, left?.Value != null && right?.Value != null ? new VHDLArrayValue(left.Value.Concat(right.Value)) : null);
 		}
 		VHDLEvaluatedExpression ConcatCharString(VHDLCharValue left, VHDLArrayValue right, bool invert)
 		{
 			VHDLArrayValue v = null;
-			if (left != null && right != null)
+			if (left?.Value != null && right?.Value != null)
 				v = new VHDLArrayValue(invert ? right.Value.Append(left) : right.Value.Prepend(left));
 			return new VHDLEvaluatedExpression(VHDLStringLiteralType.Instance, this, v);
 		}
 		VHDLEvaluatedExpression ConcatCharChar(VHDLCharValue left, VHDLCharValue right)
 		{
 			// '0' & '1'
-			return new VHDLEvaluatedExpression(VHDLStringLiteralType.Instance, this, VHDLArrayValue.FromString(left.Value.ToString() + right.Value));
+			return new VHDLEvaluatedExpression(VHDLStringLiteralType.Instance, this, left?.Value == null || right?.Value == null ? null : VHDLArrayValue.FromString(left.Value.ToString() + right.Value));
 		}
 		VHDLEvaluatedExpression ConcatCharEnum(VHDLCharValue left, VHDLEnumerationType rightType)
 		{
@@ -2766,11 +2771,25 @@ namespace vhdl4vs
 
 				if (aat.Dimension == 1)
 				{
-					if (Arguments.First() is VHDLRangeExpression range)
+
+					VHDLExpression argSimplifiedExpression = null;
+					if (Arguments.First() is VHDLAttributeExpression ae && ae.Attribute.ToLower() == "range")
 					{
-						// This is wrong, we should make a slice
-						// it's not the same as the array type because the size is different
-						// But it keeps compatibility rules
+						VHDLEvaluatedExpression ee = ae.Expression?.Evaluate(evaluationContext);
+						if (ee.Type is VHDLAbstractArrayType aat2)
+						{
+							if (aat2.Dimension != 1)
+								throw new VHDLCodeException("range attribute is only available for arrays of dimension 1", Span);
+
+							argSimplifiedExpression = new VHDLRangeExpression(AnalysisResult, ee.Expression.Span, aat2.GetIndexRange(0));
+						}
+						else
+							throw new VHDLCodeException("range attribute is only available for arrays of dimension 1", Span);
+					}
+					argSimplifiedExpression = argSimplifiedExpression ?? Arguments.First();
+
+					if (argSimplifiedExpression is VHDLRangeExpression range)
+					{
 						return new VHDLEvaluatedExpression(new VHDLArraySliceType(aat.GetBaseType(), range?.Range), this, null);
 					}
 					else
@@ -2940,6 +2959,11 @@ namespace vhdl4vs
 		{
 			Range = new VHDLRange() { Start = expression1, End = expression2, Direction = direction };
 		}
+		public VHDLRangeExpression(AnalysisResult analysisResult, Span span, VHDLRange r)
+			: base(analysisResult, span)
+		{
+			Range = r;
+		}
 		public VHDLRange Range { get; set; } = null;
 
 		public override VHDLClassifiedText GetClassifiedText()
@@ -2978,8 +3002,8 @@ namespace vhdl4vs
 		{
 			if (string.Compare(Attribute, "pos", true) == 0)
 			{
-				VHDLType t = ((Expression as VHDLNameExpression)?.Declaration as VHDLTypeDeclaration)?.Type?.Dereference();
-				t = t ?? ((Expression as VHDLNameExpression)?.Declaration as VHDLSubTypeDeclaration)?.Type?.Dereference();
+				VHDLType t = ((Expression as IVHDLReference)?.Declaration as VHDLTypeDeclaration)?.Type?.Dereference();
+				t = t ?? ((Expression as IVHDLReference)?.Declaration as VHDLSubTypeDeclaration)?.Type?.Dereference();
 
 				t = (t as VHDLAccessType)?.Type?.Dereference() ?? t;
 
@@ -2999,8 +3023,8 @@ namespace vhdl4vs
 			}
 			else if (string.Compare(Attribute, "image", true) == 0)
 			{
-				VHDLType t = ((Expression as VHDLNameExpression)?.Declaration as VHDLTypeDeclaration)?.Type?.Dereference();
-				t = t ?? ((Expression as VHDLNameExpression)?.Declaration as VHDLSubTypeDeclaration)?.Type?.Dereference();
+				VHDLType t = ((Expression as IVHDLReference)?.Declaration as VHDLTypeDeclaration)?.Type?.Dereference();
+				t = t ?? ((Expression as IVHDLReference)?.Declaration as VHDLSubTypeDeclaration)?.Type?.Dereference();
 
 				t = (t as VHDLAccessType)?.Type?.Dereference() ?? t;
 
@@ -3012,8 +3036,10 @@ namespace vhdl4vs
 				}
 
 				VHDLFunctionDeclaration decl = new VHDLFunctionDeclaration(AnalysisResult, null, null, "image", null);
-				decl.ReturnType = t;
-				decl.Parameters.Add(new VHDLSignalDeclaration(AnalysisResult, null, null, "x", decl));
+				decl.ReturnType = VHDLStringLiteralType.Instance;
+				VHDLSignalDeclaration arg = new VHDLSignalDeclaration(AnalysisResult, null, null, "x", decl);
+				arg.Type = t;
+				decl.Parameters.Add(arg);
 				Declaration = decl;
 			}
 			else if (string.Compare(Attribute, "length", true) == 0)
@@ -3052,6 +3078,12 @@ namespace vhdl4vs
 				decl.Type = VHDLBuiltinTypeInteger.Instance;
 				Declaration = decl;
 			}
+			else if (string.Compare(Attribute, "range", true) == 0)
+			{
+				VHDLAttributeDeclaration decl = new VHDLAttributeDeclaration(AnalysisResult, null, null, "range", null);
+				decl.Type = new VHDLRangeType(null);
+				Declaration = decl;
+			}
 			else
 			{
 				try
@@ -3087,20 +3119,8 @@ namespace vhdl4vs
 			}
 			else if (string.Compare(Attribute, "image", true) == 0)
 			{
-				VHDLEvaluatedExpression e = Expression?.Evaluate(evaluationContext, null, errorListener);
-				VHDLType t = e?.Type?.Dereference();
-				t = (t as VHDLAccessType)?.Type?.Dereference() ?? t;
-
-				if (t is VHDLScalarType st)
-				{
-					return new VHDLEvaluatedExpression(VHDLStringLiteralType.Instance, this, null);
-				}
-				else if (t is VHDLEnumerationType et)
-				{
-					return new VHDLEvaluatedExpression(VHDLStringLiteralType.Instance, this, null);
-				}
-				throw new VHDLCodeException(string.Format("'image' attribute can only be used on scalars, got '{0}'",
-					e?.Type?.GetClassifiedText()?.Text ?? "<error type>"), Span);
+				// This is a function, doesnt evaluate to anything
+				return null;
 			}
 			else if (string.Compare(Attribute, "length", true) == 0)
 			{
@@ -3245,6 +3265,19 @@ namespace vhdl4vs
 					return new VHDLEvaluatedExpression(VHDLBuiltinTypeInteger.Instance, this, null);
 				}
 				throw new VHDLCodeException(string.Format("'ascending' attribute can only be used on array, got '{0}'",
+					e?.Type?.GetClassifiedText()?.Text ?? "<error type>"), Span);
+			}
+			else if (string.Compare(Attribute, "range", true) == 0)
+			{
+				VHDLEvaluatedExpression e = Expression?.Evaluate(evaluationContext, null, errorListener);
+				VHDLType t = e?.Type?.Dereference();
+				t = (t as VHDLAccessType)?.Type?.Dereference() ?? t;
+				if (t is VHDLAbstractArrayType aat && aat.IndexTypes.Count() == 1)
+				{
+					return new VHDLEvaluatedExpression(new VHDLRangeType(aat.IndexTypes.First()), this, null);
+				}
+
+				throw new VHDLCodeException(string.Format("'range' attribute can only be used on array, got '{0}'",
 					e?.Type?.GetClassifiedText()?.Text ?? "<error type>"), Span);
 			}
 			throw new VHDLCodeException(string.Format("Unknown attribute '{0}'", Attribute), Span);

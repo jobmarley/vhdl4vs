@@ -126,9 +126,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="LanguageService\Grammar\vhdl.g4" />
-	  <None Include="source.extension.vsixmanifest">
-		  <SubType>Designer</SubType>
-	  </None>
+    <None Include="source.extension.vsixmanifest">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="PresentationCore" />

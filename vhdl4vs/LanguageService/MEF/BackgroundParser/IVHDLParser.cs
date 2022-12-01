@@ -102,6 +102,8 @@ namespace vhdl4vs
 		public VHDLType BooleanType { get; set; } = null;
 		// Same for wait statements and such
 		public VHDLType TimeType { get; set; } = null;
+		// For report statements
+		public VHDLType SeverityLevelType { get; set; } = null;
 
 
 		public void AddStatement(Antlr4.Runtime.ParserRuleContext context, VHDLStatement statement)
