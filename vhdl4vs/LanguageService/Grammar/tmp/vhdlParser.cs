@@ -15175,11 +15175,11 @@ public partial class vhdlParser : Parser {
 	}
 
 	public partial class Range_declContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public NameContext name() {
-			return GetRuleContext<NameContext>(0);
-		}
 		[System.Diagnostics.DebuggerNonUserCode] public Explicit_rangeContext explicit_range() {
 			return GetRuleContext<Explicit_rangeContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public NameContext name() {
+			return GetRuleContext<NameContext>(0);
 		}
 		public Range_declContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
@@ -15216,14 +15216,14 @@ public partial class vhdlParser : Parser {
 				EnterOuterAlt(_localctx, 1);
 				{
 				State = 2005;
-				name();
+				explicit_range();
 				}
 				break;
 			case 2:
 				EnterOuterAlt(_localctx, 2);
 				{
 				State = 2006;
-				explicit_range();
+				name();
 				}
 				break;
 			}
@@ -22536,8 +22536,8 @@ public partial class vhdlParser : Parser {
 		'\x2', '\x7D2', '\x175', '\x3', '\x2', '\x2', '\x2', '\x7D3', '\x7D4', 
 		'\x5', '\x174', '\xBB', '\x2', '\x7D4', '\x7D5', '\a', '\x93', '\x2', 
 		'\x2', '\x7D5', '\x7D6', '\x5', '\x126', '\x94', '\x2', '\x7D6', '\x177', 
-		'\x3', '\x2', '\x2', '\x2', '\x7D7', '\x7DA', '\x5', '\x126', '\x94', 
-		'\x2', '\x7D8', '\x7DA', '\x5', '\x17A', '\xBE', '\x2', '\x7D9', '\x7D7', 
+		'\x3', '\x2', '\x2', '\x2', '\x7D7', '\x7DA', '\x5', '\x17A', '\xBE', 
+		'\x2', '\x7D8', '\x7DA', '\x5', '\x126', '\x94', '\x2', '\x7D9', '\x7D7', 
 		'\x3', '\x2', '\x2', '\x2', '\x7D9', '\x7D8', '\x3', '\x2', '\x2', '\x2', 
 		'\x7DA', '\x179', '\x3', '\x2', '\x2', '\x2', '\x7DB', '\x7DF', '\x5', 
 		'\x1AC', '\xD7', '\x2', '\x7DC', '\x7DD', '\x5', '\x92', 'J', '\x2', '\x7DD', 

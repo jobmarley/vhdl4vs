@@ -1205,8 +1205,8 @@ quantity_specification
   ;
 
 range_decl
-  : name
-  | explicit_range
+  : explicit_range
+  | name
   ;
 
 explicit_range
