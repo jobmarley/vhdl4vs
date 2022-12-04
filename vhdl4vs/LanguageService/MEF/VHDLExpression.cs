@@ -2776,7 +2776,11 @@ namespace vhdl4vs
 					if (Arguments.First() is VHDLAttributeExpression ae && ae.Attribute.ToLower() == "range")
 					{
 						VHDLEvaluatedExpression ee = ae.Expression?.Evaluate(evaluationContext);
-						if (ee.Type is VHDLAbstractArrayType aat2)
+						VHDLType eet = ee.Type?.Dereference();
+						if (eet is VHDLAccessType act)
+							eet = act.Type?.Dereference();
+
+						if (eet is VHDLAbstractArrayType aat2)
 						{
 							if (aat2.Dimension != 1)
 								throw new VHDLCodeException("range attribute is only available for arrays of dimension 1", Span);
