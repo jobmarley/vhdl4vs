@@ -109,14 +109,17 @@ namespace vhdl4vs
 		}
 		void BuildCompletionList(VHDLDocument document, VHDLDeclaration localScope, Dictionary<string, CompletionItem> items)
 		{
-			Func<VHDLDeclaration, bool> filter = decl =>
+			Func<VHDLDeclaration, VHDLDeclaration, bool> distinctby = (decl1, decl2) =>
 			{
-				return !(decl is VHDLPackageBodyDeclaration
-				|| decl is VHDLFunctionBodyDeclaration
-				|| decl is VHDLProcedureBodyDeclaration
-				|| (decl is VHDLFunctionDeclaration && ((VHDLFunctionDeclaration)decl).UndecoratedName.StartsWith("\"")));
+				if (decl1 is VHDLPackageDeclaration pd && pd.Body != null)
+					return pd.Body == decl2;
+				if (decl1 is VHDLProcedureDeclaration pd2 && pd2.Body != null)
+					return pd2.Body == decl2;
+				if (decl1 is VHDLFunctionDeclaration fd && fd.Body != null)
+					return fd.Body == decl2;
+				return decl1 == decl2;
 			};
-			foreach (VHDLDeclaration decl in VHDLDeclarationUtilities.FindAll(localScope, filter))
+			foreach (VHDLDeclaration decl in VHDLDeclarationUtilities.FindAll(localScope, x => true).DistinctBy(distinctby))
 			{
 				if (!items.ContainsKey(decl.UndecoratedName))
 					AddDeclarationCompletion(decl, items);
